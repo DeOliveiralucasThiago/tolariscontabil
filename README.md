@@ -3,8 +3,73 @@
 Plataforma SaaS para contadores: prospecção em minutos, planejamento tributário,
 simulação da Reforma Tributária e relatórios para clientes.
 
-Este repositório está na **Fase 0**: o **motor de cálculo** em Python, sem interface.
-Ele é a base de tudo: as telas, os PDFs e os painéis vão consumir este pacote.
+Este repositório está na **Fase 1**: o motor de cálculo (Fase 0) agora tem uma
+aplicação web multi-escritório em cima dele.
+
+## Estrutura
+
+| Pasta | O que é |
+|---|---|
+| `src/tolaris_motor/` | Motor de cálculo tributário (Python puro, sem dependências) |
+| `src/tolaris_api/` | API FastAPI: login, escritórios, clientes, CNPJ, simulações e PDF |
+| `migrations/` | Migrações do banco (Alembic) |
+| `web/` | Site em Next.js (React + TypeScript + Tailwind) |
+| `e2e/` | Teste ponta a ponta no navegador (Playwright) |
+| `tests/` | Testes do motor e da API (pytest) |
+
+## O que a aplicação faz (Fase 1)
+
+- **Cadastro e login** de escritórios. Cada escritório só enxerga os próprios dados.
+- **Marca do escritório:** logo, cor, CRC e contatos aplicados no sistema e nas propostas.
+- **Prospecção rápida:** digita o CNPJ, a Receita preenche razão social, CNAE e município, e o
+  sistema sugere a atividade (anexo do Simples). Com faturamento, folha e pró-labore, sai o
+  comparativo Simples × Presumido × Real com gráfico, alertas e memória de cálculo.
+- **Proposta em PDF** com logo e cor do escritório, comparativo, pontos de atenção,
+  assinatura do contador e memória de cálculo completa.
+- **Clientes:** cadastro, busca, situação (prospect/ativo/inativo), histórico de simulações
+  e **planejamento completo** (compras, despesas creditáveis, ISS/ICMS).
+- **Painel:** clientes, prospects, simulações do mês e economia identificada.
+
+## Rodando localmente
+
+```bash
+# API
+python -m venv .venv && .venv/bin/pip install -e ".[api,dev]"
+.venv/bin/alembic upgrade head            # cria o banco SQLite (tolaris.db)
+.venv/bin/uvicorn tolaris_api.main:app --reload --port 8000
+
+# Site (outro terminal)
+cd web && npm install && npm run dev      # http://localhost:3000
+```
+
+O site encaminha `/api/*` para a API (`TOLARIS_API_URL`, padrão `http://127.0.0.1:8000`).
+A documentação interativa da API fica em http://localhost:8000/api/docs.
+
+### Com Docker (PostgreSQL + API + site)
+
+```bash
+cp .env.example .env    # preencha POSTGRES_PASSWORD e TOLARIS_SECRET_KEY
+docker compose up -d --build
+```
+
+### Configuração da API (variáveis `TOLARIS_*`)
+
+| Variável | Padrão | Uso |
+|---|---|---|
+| `TOLARIS_DATABASE_URL` | `sqlite:///./tolaris.db` | Em produção: `postgresql+psycopg://...` |
+| `TOLARIS_SECRET_KEY` | chave de desenvolvimento | Assina a sessão. Obrigatória (32+ caracteres) quando `TOLARIS_AMBIENTE=producao` |
+| `TOLARIS_COOKIE_SECURE` | `false` | `true` atrás de HTTPS |
+| `TOLARIS_BRASILAPI_URL` | BrasilAPI pública | Consulta de CNPJ |
+| `TOLARIS_SESSAO_HORAS` | `12` | Duração da sessão |
+
+### Segurança adotada
+
+- Senhas com scrypt (biblioteca padrão do Python); login com tempo constante para e-mail inexistente.
+- Sessão em cookie `httpOnly` + `SameSite=Lax`; o JavaScript do site nunca vê o token.
+- Toda consulta filtra pelo escritório do usuário (testado: um escritório não acessa dados de outro).
+- Logo validada pelo conteúdo (PNG/JPG, até 512 KB).
+- O gerador de PDF só aceita recursos embutidos (`data:`); nunca busca URLs (evita SSRF),
+  e textos do cliente são escapados no HTML e no CSS do rodapé.
 
 ## O que o motor calcula
 
@@ -25,8 +90,9 @@ acrescenta-se uma vigência no JSON, sem mexer no código.
 ## Uso rápido
 
 ```bash
-python -m venv .venv && .venv/bin/pip install -e ".[dev]"
-.venv/bin/pytest
+python -m venv .venv && .venv/bin/pip install -e ".[api,dev]"
+.venv/bin/pytest                      # motor + API (SQLite)
+TOLARIS_TEST_DATABASE_URL=postgresql+psycopg://... .venv/bin/pytest tests/api   # API no PostgreSQL
 ```
 
 ```python
@@ -68,8 +134,8 @@ Premissas, fontes e pontos em aberto: [`docs/premissas.md`](docs/premissas.md).
 
 ## Roteiro
 
-- **Fase 0 (atual):** motor de cálculo testado e validado por contador.
-- **Fase 1:** login, cadastro de clientes, prospecção com CNPJ, proposta em PDF com a marca do escritório.
+- **Fase 0 (concluída):** motor de cálculo testado; validação com contador em andamento.
+- **Fase 1 (atual):** login, cadastro de clientes, prospecção com CNPJ, proposta em PDF com a marca do escritório.
 - **Fase 2:** simulador da reforma e módulo PF na interface.
 - **Fase 3:** painéis, portal do cliente, envio automático por e-mail, importação de XML/SPED.
 - **Fase 4:** integrações (Serpro Integra Contador, ERPs), WhatsApp, assistente de IA.

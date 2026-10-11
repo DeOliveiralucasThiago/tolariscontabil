@@ -10,6 +10,20 @@ requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
+api = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "pydantic-settings>=2.4",
+    "email-validator>=2.2",
+    "pyjwt>=2.8",
+    "httpx>=0.27",
+    "jinja2>=3.1",
+    "weasyprint>=62",
+    "python-multipart>=0.0.9",
+    "psycopg[binary]>=3.2",
+]
 dev = ["pytest>=8", "openpyxl>=3.1"]
 
 [tool.setuptools.packages.find]
@@ -17,6 +31,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 tolaris_motor = ["tabelas/*.json"]
+tolaris_api = ["templates/*.html", "templates/*.css"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

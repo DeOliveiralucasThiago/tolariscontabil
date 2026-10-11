@@ -1,0 +1,19 @@
+# API (FastAPI + motor de cálculo + geração de PDF)
+FROM python:3.12-slim
+
+# Bibliotecas do WeasyPrint (Pango) e fontes para o PDF
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-liberation \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY pyproject.toml alembic.ini ./
+COPY src ./src
+COPY migrations ./migrations
+RUN pip install --no-cache-dir ".[api]"
+
+RUN useradd --create-home tolaris
+USER tolaris
+EXPOSE 8000
+# Aplica as migrações e sobe a API
+CMD ["sh", "-c", "alembic upgrade head && uvicorn tolaris_api.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]

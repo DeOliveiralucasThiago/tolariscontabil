@@ -1,0 +1,6 @@
+.venv
+.git
+web
+**/__pycache__
+*.db
+validacao

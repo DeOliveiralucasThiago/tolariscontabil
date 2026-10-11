@@ -1,0 +1,46 @@
+# Sobe tudo localmente ou num servidor: banco, API e site.
+#   cp .env.example .env   (e preencha)
+#   docker compose up -d --build
+# Acesse http://localhost:3000
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: tolaris
+      POSTGRES_USER: tolaris
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - dados_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tolaris -d tolaris"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      TOLARIS_DATABASE_URL: postgresql+psycopg://tolaris:${POSTGRES_PASSWORD}@db:5432/tolaris
+      TOLARIS_SECRET_KEY: ${TOLARIS_SECRET_KEY:?defina TOLARIS_SECRET_KEY no .env}
+      TOLARIS_AMBIENTE: producao
+      TOLARIS_COOKIE_SECURE: ${TOLARIS_COOKIE_SECURE:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      args:
+        TOLARIS_API_URL: http://api:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  dados_postgres:

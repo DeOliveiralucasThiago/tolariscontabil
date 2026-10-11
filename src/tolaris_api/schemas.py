@@ -1,0 +1,211 @@
+"""Esquemas de entrada e saída da API (Pydantic)."""
+
+from __future__ import annotations
+
+import re
+from datetime import datetime
+from decimal import Decimal
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+
+from tolaris_motor import Atividade
+
+from .cnpj import cnpj_valido, so_digitos
+
+Dinheiro = Decimal
+Status = Literal["prospect", "ativo", "inativo"]
+Regime = Literal["mei", "simples", "presumido", "real", "outro"]
+
+
+# --- Autenticação -----------------------------------------------------------
+class CadastroEntrada(BaseModel):
+    escritorio_nome: str = Field(min_length=2, max_length=200)
+    nome: str = Field(min_length=2, max_length=200)
+    email: EmailStr
+    senha: str = Field(min_length=8, max_length=200)
+
+
+class LoginEntrada(BaseModel):
+    email: EmailStr
+    senha: str = Field(min_length=1, max_length=200)
+
+
+class UsuarioSaida(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    nome: str
+    email: str
+    papel: str
+
+
+class EscritorioSaida(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    nome: str
+    cnpj: str | None
+    contador_responsavel: str | None
+    crc: str | None
+    email: str | None
+    telefone: str | None
+    cor_primaria: str
+    tem_logo: bool = False
+
+
+class SessaoSaida(BaseModel):
+    usuario: UsuarioSaida
+    escritorio: EscritorioSaida
+
+
+class EscritorioAtualizar(BaseModel):
+    nome: str | None = Field(default=None, min_length=2, max_length=200)
+    cnpj: str | None = None
+    contador_responsavel: str | None = Field(default=None, max_length=200)
+    crc: str | None = Field(default=None, max_length=40)
+    email: EmailStr | None = None
+    telefone: str | None = Field(default=None, max_length=40)
+    cor_primaria: str | None = None
+
+    @field_validator("cor_primaria")
+    @classmethod
+    def _cor(cls, v: str | None) -> str | None:
+        if v is not None and not re.fullmatch(r"#[0-9a-fA-F]{6}", v):
+            raise ValueError("Cor deve estar no formato #RRGGBB")
+        return v
+
+    @field_validator("cnpj")
+    @classmethod
+    def _cnpj(cls, v: str | None) -> str | None:
+        return _validar_cnpj_opcional(v)
+
+
+def _validar_cnpj_opcional(v: str | None) -> str | None:
+    if v is None or not v.strip():
+        return None
+    d = so_digitos(v)
+    if not cnpj_valido(d):
+        raise ValueError("CNPJ inválido")
+    return d
+
+
+# --- Clientes ---------------------------------------------------------------
+class ClienteBase(BaseModel):
+    razao_social: str = Field(min_length=2, max_length=250)
+    nome_fantasia: str | None = Field(default=None, max_length=250)
+    cnpj: str | None = None
+    cnae_principal: str | None = Field(default=None, max_length=7)
+    cnae_descricao: str | None = Field(default=None, max_length=300)
+    municipio: str | None = Field(default=None, max_length=120)
+    uf: str | None = Field(default=None, max_length=2)
+    atividade: Atividade | None = None
+    regime_atual: Regime | None = None
+    status: Status = "prospect"
+    contato_nome: str | None = Field(default=None, max_length=200)
+    email: EmailStr | None = None
+    telefone: str | None = Field(default=None, max_length=40)
+    observacoes: str | None = Field(default=None, max_length=5000)
+
+    @field_validator("cnpj")
+    @classmethod
+    def _cnpj(cls, v: str | None) -> str | None:
+        return _validar_cnpj_opcional(v)
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def _email_vazio(cls, v: Any) -> Any:
+        return None if v == "" else v
+
+
+class ClienteEntrada(ClienteBase):
+    pass
+
+
+class ClienteAtualizar(ClienteBase):
+    razao_social: str | None = Field(default=None, min_length=2, max_length=250)  # type: ignore[assignment]
+    status: Status | None = None  # type: ignore[assignment]
+
+
+class ClienteSaida(ClienteBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    criado_em: datetime
+    atualizado_em: datetime
+    total_simulacoes: int = 0
+    ultima_simulacao_em: datetime | None = None
+
+
+# --- CNPJ -------------------------------------------------------------------
+class CnpjSaida(BaseModel):
+    cnpj: str
+    razao_social: str
+    nome_fantasia: str | None
+    situacao: str | None
+    cnae_principal: str | None
+    cnae_descricao: str | None
+    municipio: str | None
+    uf: str | None
+    email: str | None
+    telefone: str | None
+    opcao_simples: bool | None
+    opcao_mei: bool | None
+    regime_sugerido: Regime | None
+    atividade_sugerida: Atividade | None
+    atividade_justificativa: str
+
+
+# --- Simulações -------------------------------------------------------------
+class ExpressaEntrada(BaseModel):
+    faturamento_mensal: Dinheiro = Field(gt=0)
+    folha_mensal: Dinheiro = Field(ge=0)
+    pro_labore_mensal: Dinheiro = Field(default=Decimal(0), ge=0)
+    atividade: Atividade
+    margem_lucro: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
+    ano: int = Field(default=2026, ge=2025, le=2026)
+
+
+class CompletaEntrada(BaseModel):
+    atividade: Atividade
+    receita_bruta_anual: Dinheiro = Field(gt=0)
+    folha_clt_anual: Dinheiro = Field(default=Decimal(0), ge=0)
+    pro_labore_anual: Dinheiro = Field(default=Decimal(0), ge=0)
+    compras_anual: Dinheiro = Field(default=Decimal(0), ge=0)
+    despesas_creditaveis_anual: Dinheiro = Field(default=Decimal(0), ge=0)
+    outras_despesas_anual: Dinheiro = Field(default=Decimal(0), ge=0)
+    aliquota_iss: Decimal = Field(default=Decimal("0.05"), ge=0, le=Decimal("0.05"))
+    aliquota_icms: Decimal = Field(default=Decimal("0.18"), ge=0, le=Decimal("0.35"))
+    rat: Decimal = Field(default=Decimal("0.02"), ge=0, le=Decimal("0.06"))
+    terceiros: Decimal = Field(default=Decimal("0.058"), ge=0, le=Decimal("0.10"))
+    folha_fator_r_anual: Dinheiro | None = Field(default=None, ge=0)
+    ano: int = Field(default=2026, ge=2025, le=2026)
+
+
+class ProspeccaoEntrada(BaseModel):
+    """Salva um prospect (ou reaproveita o cliente com o mesmo CNPJ) e sua simulação expressa."""
+
+    cliente: ClienteEntrada
+    simulacao: ExpressaEntrada
+
+
+class SimulacaoSaida(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    cliente_id: int
+    tipo: str
+    titulo: str
+    entrada: dict[str, Any]
+    resultado: dict[str, Any]
+    versao_motor: str
+    criado_em: datetime
+
+
+class ProspeccaoSaida(BaseModel):
+    cliente: ClienteSaida
+    simulacao: SimulacaoSaida
+
+
+class PainelSaida(BaseModel):
+    clientes_ativos: int
+    prospects: int
+    simulacoes_mes: int
+    economia_identificada_mes: float
+    ultimas_simulacoes: list[dict[str, Any]]

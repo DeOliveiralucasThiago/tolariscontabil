@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+:root {
+  /* Cor da marca do escritório: sobrescrita em tempo de execução pelo AuthProvider. */
+  --marca: #1f3a5f;
+  --fundo: #f5f7f9;
+  --superficie: #ffffff;
+  --tinta: #1d2733;
+  --tinta-2: #5b6775;
+  --borda: #e3e8ec;
+  --neutro: #b8c2cc;
+}
+
+@theme inline {
+  --color-marca: var(--marca);
+  --color-fundo: var(--fundo);
+  --color-superficie: var(--superficie);
+  --color-tinta: var(--tinta);
+  --color-tinta-2: var(--tinta-2);
+  --color-borda: var(--borda);
+  --color-neutro: var(--neutro);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: var(--fundo);
+  color: var(--tinta);
+}
+
+/* Números alinhados em tabelas e valores */
+.num {
+  font-variant-numeric: tabular-nums;
+}
