@@ -1,0 +1,31 @@
+{
+  "fonte": "Lei 8.212/1991; EC 103/2019 (alíquotas progressivas); portarias interministeriais anuais",
+  "vigencias": [
+    {
+      "inicio": "2025-01-01",
+      "ato": "Portaria Interministerial MPS/MF nº 6/2025",
+      "salario_minimo": "1518.00",
+      "teto": "8157.41",
+      "empregado": [
+        {"ate": "1518.00", "aliquota": "0.075"},
+        {"ate": "2793.88", "aliquota": "0.09"},
+        {"ate": "4190.83", "aliquota": "0.12"},
+        {"ate": "8157.41", "aliquota": "0.14"}
+      ],
+      "contribuinte_individual_aliquota": "0.11"
+    },
+    {
+      "inicio": "2026-01-01",
+      "ato": "Portaria Interministerial MPS/MF nº 13/2026",
+      "salario_minimo": "1621.00",
+      "teto": "8475.55",
+      "empregado": [
+        {"ate": "1621.00", "aliquota": "0.075"},
+        {"ate": "2902.84", "aliquota": "0.09"},
+        {"ate": "4354.27", "aliquota": "0.12"},
+        {"ate": "8475.55", "aliquota": "0.14"}
+      ],
+      "contribuinte_individual_aliquota": "0.11"
+    }
+  ]
+}

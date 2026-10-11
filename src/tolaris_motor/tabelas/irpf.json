@@ -1,0 +1,62 @@
+{
+  "fonte": "Lei 11.482/2007 (tabela progressiva) com atualizações; Lei 15.270/2025 (redução a partir de 2026)",
+  "vigencias": [
+    {
+      "inicio": "2024-02-01",
+      "ato": "Lei 14.848/2024",
+      "faixas_mensais": [
+        {"ate": "2259.20", "aliquota": "0",     "deduzir": "0"},
+        {"ate": "2826.65", "aliquota": "0.075", "deduzir": "169.44"},
+        {"ate": "3751.05", "aliquota": "0.15",  "deduzir": "381.44"},
+        {"ate": "4664.68", "aliquota": "0.225", "deduzir": "662.77"},
+        {"ate": null,      "aliquota": "0.275", "deduzir": "896.00"}
+      ],
+      "desconto_simplificado_mensal": "564.80",
+      "deducao_dependente_mensal": "189.59",
+      "reducao_mensal": null
+    },
+    {
+      "inicio": "2025-05-01",
+      "ato": "Lei 15.191/2025",
+      "faixas_mensais": [
+        {"ate": "2428.80", "aliquota": "0",     "deduzir": "0"},
+        {"ate": "2826.65", "aliquota": "0.075", "deduzir": "182.16"},
+        {"ate": "3751.05", "aliquota": "0.15",  "deduzir": "394.16"},
+        {"ate": "4664.68", "aliquota": "0.225", "deduzir": "675.49"},
+        {"ate": null,      "aliquota": "0.275", "deduzir": "908.73"}
+      ],
+      "desconto_simplificado_mensal": "607.20",
+      "deducao_dependente_mensal": "189.59",
+      "reducao_mensal": null
+    },
+    {
+      "inicio": "2026-01-01",
+      "ato": "Lei 15.191/2025 (tabela) + Lei 15.270/2025 (redução)",
+      "faixas_mensais": [
+        {"ate": "2428.80", "aliquota": "0",     "deduzir": "0"},
+        {"ate": "2826.65", "aliquota": "0.075", "deduzir": "182.16"},
+        {"ate": "3751.05", "aliquota": "0.15",  "deduzir": "394.16"},
+        {"ate": "4664.68", "aliquota": "0.225", "deduzir": "675.49"},
+        {"ate": null,      "aliquota": "0.275", "deduzir": "908.73"}
+      ],
+      "desconto_simplificado_mensal": "607.20",
+      "deducao_dependente_mensal": "189.59",
+      "reducao_mensal": {
+        "isencao_ate": "5000.00",
+        "reducao_maxima": "312.89",
+        "reducao_parcial_ate": "7350.00",
+        "constante": "978.62",
+        "coeficiente": "0.133145"
+      }
+    }
+  ],
+  "dividendos": {
+    "inicio": "2026-01-01",
+    "ato": "Lei 15.270/2025 (art. 6º-A da Lei 9.249/1995)",
+    "limite_mensal_por_fonte": "50000.00",
+    "aliquota_retencao": "0.10",
+    "irpfm_renda_minima_anual": "600000.00",
+    "irpfm_renda_aliquota_maxima": "1200000.00",
+    "irpfm_aliquota_maxima": "0.10"
+  }
+}

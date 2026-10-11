@@ -1,0 +1,68 @@
+{
+  "fonte": "LC 123/2006, Anexos I a V (redação da LC 155/2016, vigente desde 01/2018)",
+  "vigencias": [
+    {
+      "inicio": "2018-01-01",
+      "limite_receita_anual": "4800000.00",
+      "sublimite_icms_iss": "3600000.00",
+      "fator_r_minimo": "0.28",
+      "anexos": {
+        "I": {
+          "descricao": "Comércio",
+          "faixas": [
+            {"ate": "180000.00",  "aliquota": "0.040", "deduzir": "0"},
+            {"ate": "360000.00",  "aliquota": "0.073", "deduzir": "5940"},
+            {"ate": "720000.00",  "aliquota": "0.095", "deduzir": "13860"},
+            {"ate": "1800000.00", "aliquota": "0.107", "deduzir": "22500"},
+            {"ate": "3600000.00", "aliquota": "0.143", "deduzir": "87300"},
+            {"ate": "4800000.00", "aliquota": "0.190", "deduzir": "378000"}
+          ]
+        },
+        "II": {
+          "descricao": "Indústria",
+          "faixas": [
+            {"ate": "180000.00",  "aliquota": "0.045", "deduzir": "0"},
+            {"ate": "360000.00",  "aliquota": "0.078", "deduzir": "5940"},
+            {"ate": "720000.00",  "aliquota": "0.100", "deduzir": "13860"},
+            {"ate": "1800000.00", "aliquota": "0.112", "deduzir": "22500"},
+            {"ate": "3600000.00", "aliquota": "0.147", "deduzir": "85500"},
+            {"ate": "4800000.00", "aliquota": "0.300", "deduzir": "720000"}
+          ]
+        },
+        "III": {
+          "descricao": "Serviços (locação de bens móveis e serviços do §5º-B/§5º-D)",
+          "faixas": [
+            {"ate": "180000.00",  "aliquota": "0.060", "deduzir": "0"},
+            {"ate": "360000.00",  "aliquota": "0.112", "deduzir": "9360"},
+            {"ate": "720000.00",  "aliquota": "0.135", "deduzir": "17640"},
+            {"ate": "1800000.00", "aliquota": "0.160", "deduzir": "35640"},
+            {"ate": "3600000.00", "aliquota": "0.210", "deduzir": "125640"},
+            {"ate": "4800000.00", "aliquota": "0.330", "deduzir": "648000"}
+          ]
+        },
+        "IV": {
+          "descricao": "Serviços do §5º-C (construção, vigilância, limpeza, advocacia) — CPP fora do DAS",
+          "faixas": [
+            {"ate": "180000.00",  "aliquota": "0.045", "deduzir": "0"},
+            {"ate": "360000.00",  "aliquota": "0.090", "deduzir": "8100"},
+            {"ate": "720000.00",  "aliquota": "0.102", "deduzir": "12420"},
+            {"ate": "1800000.00", "aliquota": "0.140", "deduzir": "39780"},
+            {"ate": "3600000.00", "aliquota": "0.220", "deduzir": "183780"},
+            {"ate": "4800000.00", "aliquota": "0.330", "deduzir": "828000"}
+          ]
+        },
+        "V": {
+          "descricao": "Serviços do §5º-I (intelectuais/técnicos) com fator R < 28%",
+          "faixas": [
+            {"ate": "180000.00",  "aliquota": "0.155", "deduzir": "0"},
+            {"ate": "360000.00",  "aliquota": "0.180", "deduzir": "4500"},
+            {"ate": "720000.00",  "aliquota": "0.195", "deduzir": "9900"},
+            {"ate": "1800000.00", "aliquota": "0.205", "deduzir": "17100"},
+            {"ate": "3600000.00", "aliquota": "0.230", "deduzir": "62100"},
+            {"ate": "4800000.00", "aliquota": "0.305", "deduzir": "540000"}
+          ]
+        }
+      }
+    }
+  ]
+}

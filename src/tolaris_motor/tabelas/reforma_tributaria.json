@@ -1,0 +1,19 @@
+{
+  "fonte": "EC 132/2023 (ADCT arts. 125 a 133); LC 214/2025 (arts. 343 a 348 e seguintes)",
+  "aliquotas_referencia_estimadas": {
+    "cbs": "0.088",
+    "ibs": "0.177",
+    "observacao": "Estimativa do Ministério da Fazenda (~26,5%). A alíquota de referência de 2027 ainda depende de cálculo do TCU e resolução do Senado. Substitua quando publicada."
+  },
+  "anos": {
+    "2025": {"pis_cofins": "1", "ipi": "1", "icms_iss": "1",   "cbs": "nenhum", "cbs_reducao_pp": "0",    "ibs_fracao": "0",   "ibs_fixo": "0",     "compensavel": false},
+    "2026": {"pis_cofins": "1", "ipi": "1", "icms_iss": "1",   "cbs": "fixo",  "cbs_fixo": "0.009",       "ibs_fracao": "0",   "ibs_fixo": "0.001", "compensavel": true},
+    "2027": {"pis_cofins": "0", "ipi": "0", "icms_iss": "1",   "cbs": "ref",   "cbs_reducao_pp": "0.001", "ibs_fracao": "0",   "ibs_fixo": "0.001", "compensavel": false},
+    "2028": {"pis_cofins": "0", "ipi": "0", "icms_iss": "1",   "cbs": "ref",   "cbs_reducao_pp": "0.001", "ibs_fracao": "0",   "ibs_fixo": "0.001", "compensavel": false},
+    "2029": {"pis_cofins": "0", "ipi": "0", "icms_iss": "0.9", "cbs": "ref",   "cbs_reducao_pp": "0",     "ibs_fracao": "0.1", "ibs_fixo": "0",     "compensavel": false},
+    "2030": {"pis_cofins": "0", "ipi": "0", "icms_iss": "0.8", "cbs": "ref",   "cbs_reducao_pp": "0",     "ibs_fracao": "0.2", "ibs_fixo": "0",     "compensavel": false},
+    "2031": {"pis_cofins": "0", "ipi": "0", "icms_iss": "0.7", "cbs": "ref",   "cbs_reducao_pp": "0",     "ibs_fracao": "0.3", "ibs_fixo": "0",     "compensavel": false},
+    "2032": {"pis_cofins": "0", "ipi": "0", "icms_iss": "0.6", "cbs": "ref",   "cbs_reducao_pp": "0",     "ibs_fracao": "0.4", "ibs_fixo": "0",     "compensavel": false},
+    "2033": {"pis_cofins": "0", "ipi": "0", "icms_iss": "0",   "cbs": "ref",   "cbs_reducao_pp": "0",     "ibs_fracao": "1",   "ibs_fixo": "0",     "compensavel": false}
+  }
+}

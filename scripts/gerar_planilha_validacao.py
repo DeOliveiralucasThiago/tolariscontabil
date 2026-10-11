@@ -1,0 +1,247 @@
+"""Gera validacao/casos_validacao.xlsx: casos reais para o contador conferir o motor.
+
+Uso: python scripts/gerar_planilha_validacao.py [caminho_saida.xlsx]
+
+Cada caso lista os valores calculados pelo motor; o contador preenche a coluna
+"Valor correto" e a planilha mostra a diferença. A aba "Memória de cálculo"
+traz cada passo com fórmula e base legal.
+"""
+
+from __future__ import annotations
+
+import sys
+from dataclasses import dataclass
+from datetime import date
+from pathlib import Path
+
+from openpyxl import Workbook
+from openpyxl.comments import Comment
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.worksheet.datavalidation import DataValidation
+
+from tolaris_motor import Atividade, PerfilEmpresa, Resultado, brl, pct
+from tolaris_motor import pessoa_fisica as pf
+from tolaris_motor import presumido, real, reforma, simples
+
+FONTE = "Arial"
+AZUL_ESCURO = "1F3A5F"
+AMARELO = PatternFill("solid", start_color="FFF2CC")
+CINZA = PatternFill("solid", start_color="F2F2F2")
+CABECALHO = PatternFill("solid", start_color=AZUL_ESCURO)
+BORDA = Border(bottom=Side(style="thin", color="D9D9D9"))
+MOEDA = '"R$" #,##0.00;-"R$" #,##0.00;"-"'
+JAN_2026 = date(2026, 1, 1)
+
+
+@dataclass
+class Caso:
+    codigo: str
+    modulo: str
+    descricao: str
+    resultado: Resultado
+
+
+def _perfil_desc(p: PerfilEmpresa) -> str:
+    partes = [f"{p.atividade.value}", f"receita {brl(p.receita_bruta_anual)}/ano"]
+    for campo, rotulo in (
+        ("folha_clt_anual", "folha CLT"),
+        ("pro_labore_anual", "pró-labore"),
+        ("compras_anual", "compras"),
+        ("despesas_creditaveis_anual", "desp. creditáveis"),
+        ("outras_despesas_anual", "outras desp."),
+    ):
+        v = getattr(p, campo)
+        if v:
+            partes.append(f"{rotulo} {brl(v)}")
+    partes.append(f"ano {p.ano}")
+    if p.atividade.vende_mercadoria:
+        partes.append(f"ICMS {pct(p.aliquota_icms, 0)}")
+    else:
+        partes.append(f"ISS {pct(p.aliquota_iss, 0)}")
+    return "; ".join(partes)
+
+
+def casos() -> list[Caso]:
+    lista: list[Caso] = []
+
+    perfis = {
+        "E1": PerfilEmpresa(Atividade.SERVICO_FATOR_R, 600_000, folha_clt_anual=96_000, pro_labore_anual=60_000),
+        "E2": PerfilEmpresa(Atividade.SERVICO_FATOR_R, 600_000, folha_clt_anual=96_000, pro_labore_anual=72_000),
+        "E3": PerfilEmpresa(Atividade.COMERCIO, 2_000_000, folha_clt_anual=240_000, pro_labore_anual=36_000,
+                            compras_anual=1_200_000, despesas_creditaveis_anual=80_000, outras_despesas_anual=150_000),
+        "E4": PerfilEmpresa(Atividade.INDUSTRIA, 3_000_000, folha_clt_anual=600_000, pro_labore_anual=60_000,
+                            compras_anual=1_500_000, despesas_creditaveis_anual=200_000, outras_despesas_anual=100_000),
+        "E5": PerfilEmpresa(Atividade.SERVICO_ANEXO_IV, 900_000, folha_clt_anual=300_000, pro_labore_anual=36_000,
+                            outras_despesas_anual=200_000, aliquota_iss="0.03"),
+        "E6": PerfilEmpresa(Atividade.SERVICO_ANEXO_III, 8_000_000, folha_clt_anual=1_500_000,
+                            pro_labore_anual=120_000, outras_despesas_anual=2_000_000),
+        "E7": PerfilEmpresa(Atividade.SERVICO_FATOR_R, 1_200_000, folha_clt_anual=150_000, pro_labore_anual=48_000,
+                            outras_despesas_anual=300_000, despesas_creditaveis_anual=60_000),
+    }
+    for cod, p in perfis.items():
+        for mod in (simples, presumido, real):
+            r = mod.calcular(p)
+            sigla = {"Simples Nacional": "SN", "Lucro Presumido": "LP", "Lucro Real": "LR"}[r.titulo]
+            lista.append(Caso(f"{cod}-{sigla}", r.titulo, _perfil_desc(p), r))
+
+    for i, (rend, dep) in enumerate(((3_500, 0), (5_000, 0), (5_900, 0), (7_000, 1), (12_000, 2)), start=1):
+        inss = pf.inss_empregado(rend, JAN_2026)
+        r = pf.irpf_mensal(rend, JAN_2026, inss=inss, dependentes=dep)
+        r.tributos = {"INSS empregado": inss, **r.tributos}
+        lista.append(Caso(f"PF{i}", "IRPF/INSS mensal (jan/2026)",
+                          f"salário {brl(rend)}; {dep} dependente(s); CLT", r))
+
+    for i, (retirada, regime) in enumerate(((15_000, "presumido"), (30_000, "real"), (80_000, "presumido")), start=1):
+        for cen in pf.comparar_pro_labore_dividendos(retirada, JAN_2026, regime=regime):
+            lista.append(Caso(f"SOC{i}-{'A' if cen.dividendos == 0 else 'B'}", f"Pró-labore x dividendos ({regime})",
+                              f"retirada {brl(retirada)}/mês; {cen.descricao}", cen.resultado))
+
+    entradas = {
+        "RT1": ("Comércio no Presumido",
+                reforma.EntradaReforma(2_000_000, vende_mercadoria=True, compras_anual=1_200_000)),
+        "RT2": ("Serviços (consultoria) no Presumido",
+                reforma.EntradaReforma(1_200_000, vende_mercadoria=False, despesas_creditaveis_anual=120_000)),
+        "RT3": ("Escritório contábil (redução de 30%)",
+                reforma.EntradaReforma(600_000, vende_mercadoria=False, despesas_creditaveis_anual=60_000,
+                                       reducao_setorial="0.3")),
+        "RT4": ("Indústria no Lucro Real",
+                reforma.EntradaReforma(3_000_000, vende_mercadoria=True, pis_cofins_nao_cumulativo=True,
+                                       compras_anual=1_500_000, despesas_creditaveis_anual=200_000,
+                                       aliquota_ipi="0.05")),
+    }
+    for cod, (desc, e) in entradas.items():
+        for a in reforma.simular(e):
+            if a.ano in (2025, 2027, 2029, 2033):
+                lista.append(Caso(f"{cod}-{a.ano}", f"Reforma - {a.ano}",
+                                  f"{desc}; receita {brl(e.receita_bruta_anual)}", a.resultado))
+    return lista
+
+
+def _cabecalho(ws, titulos: list[str], larguras: list[int]) -> None:
+    for col, (t, w) in enumerate(zip(titulos, larguras), start=1):
+        c = ws.cell(row=1, column=col, value=t)
+        c.font = Font(name=FONTE, bold=True, color="FFFFFF")
+        c.fill = CABECALHO
+        c.alignment = Alignment(vertical="center", wrap_text=True)
+        ws.column_dimensions[c.column_letter].width = w
+    ws.row_dimensions[1].height = 30
+    ws.freeze_panes = "A2"
+
+
+def gerar(saida: Path) -> Path:
+    wb = Workbook()
+    todos = casos()
+
+    # --- Instruções ---------------------------------------------------------
+    ins = wb.active
+    ins.title = "Instruções"
+    ins.column_dimensions["A"].width = 110
+    textos = [
+        ("Tolaris — validação do motor de cálculo (Fase 0)", Font(name=FONTE, bold=True, size=14, color=AZUL_ESCURO)),
+        (f"Gerado em {date.today().strftime('%d/%m/%Y')} com o motor tolaris_motor. {len(todos)} casos.", None),
+        ("", None),
+        ("Como conferir:", Font(name=FONTE, bold=True)),
+        ("1. Na aba 'Casos', cada linha é um tributo calculado pelo motor (coluna 'Valor do motor').", None),
+        ("2. Preencha a coluna amarela 'Valor correto' com o valor que você apuraria.", None),
+        ("3. A coluna 'Diferença' é calculada automaticamente; marque 'Confere?' e explique divergências em 'Observações'.", None),
+        ("4. A aba 'Memória de cálculo' mostra cada passo, a fórmula usada e a base legal.", None),
+        ("5. A aba 'Alertas' lista as premissas e limitações de cada caso.", None),
+        ("", None),
+        ("Premissas gerais:", Font(name=FONTE, bold=True)),
+        ("• Valores anuais com faturamento mensal constante (RBT12 = receita anual no Simples).", None),
+        ("• Encargos CLT no Presumido/Real: CPP 20% + RAT 2% + terceiros 5,8%; pró-labore: CPP 20%. FGTS não é tributo e fica fora do total.", None),
+        ("• ICMS não cumulativo (débito - crédito sobre compras), 18% nas vendas e nas compras, salvo indicação.", None),
+        ("• Lucro Real: estimativa gerencial sem LALUR detalhado; todo o estoque comprado é vendido no ano.", None),
+        ("• Reforma: alíquotas de referência estimadas CBS 8,8% e IBS 17,7% (ainda não fixadas pelo Senado).", None),
+        ("", None),
+        ("Exemplo de preenchimento: se o motor indicar R$ 28.800,00 de IRPJ e você apurar R$ 28.800,00, "
+         "digite 28800 em 'Valor correto' e escolha 'Sim' em 'Confere?'.", None),
+    ]
+    for i, (t, f) in enumerate(textos, start=1):
+        c = ins.cell(row=i, column=1, value=t)
+        c.font = f or Font(name=FONTE)
+        c.alignment = Alignment(wrap_text=True)
+
+    # --- Casos --------------------------------------------------------------
+    ws = wb.create_sheet("Casos")
+    _cabecalho(
+        ws,
+        ["Caso", "Módulo", "Entradas", "Tributo", "Valor do motor (R$)", "Valor correto (R$)",
+         "Diferença (R$)", "Confere?", "Observações do contador"],
+        [11, 30, 70, 32, 18, 18, 16, 11, 40],
+    )
+    ws["E1"].comment = Comment("Valor calculado pelo tolaris_motor (Python). Não editar.", "Tolaris")
+    ws["F1"].comment = Comment("Preencha com o valor que você apuraria para conferência.", "Tolaris")
+    dv = DataValidation(type="list", formula1='"Sim,Não,Revisar"', allow_blank=True)
+    ws.add_data_validation(dv)
+
+    linha = 2
+    for n, caso in enumerate(todos):
+        fill = CINZA if n % 2 else None
+        itens = list(caso.resultado.tributos.items()) + [("TOTAL", None)]
+        inicio = linha
+        for nome, valor in itens:
+            ws.cell(row=linha, column=1, value=caso.codigo)
+            ws.cell(row=linha, column=2, value=caso.modulo)
+            ws.cell(row=linha, column=3, value=caso.descricao)
+            ws.cell(row=linha, column=4, value=nome)
+            if nome == "TOTAL":
+                ws.cell(row=linha, column=5, value=f"=SUM(E{inicio}:E{linha - 1})" if linha > inicio else 0)
+                for col in range(1, 10):
+                    ws.cell(row=linha, column=col).font = Font(name=FONTE, bold=True)
+            else:
+                ws.cell(row=linha, column=5, value=float(round(valor, 2)))
+            ws.cell(row=linha, column=6).fill = AMARELO
+            ws.cell(row=linha, column=7, value=f'=IF(F{linha}="","",E{linha}-F{linha})')
+            dv.add(ws.cell(row=linha, column=8))
+            for col in range(1, 10):
+                c = ws.cell(row=linha, column=col)
+                if c.font.name != FONTE:
+                    c.font = Font(name=FONTE)
+                if fill and col != 6:
+                    c.fill = fill
+                c.border = BORDA
+                c.alignment = Alignment(vertical="top", wrap_text=col in (3, 9))
+                if col in (5, 6, 7):
+                    c.number_format = MOEDA
+            linha += 1
+    ws.auto_filter.ref = f"A1:I{linha - 1}"
+
+    # --- Memória de cálculo -------------------------------------------------
+    mem = wb.create_sheet("Memória de cálculo")
+    _cabecalho(mem, ["Caso", "Passo", "Fórmula", "Valor", "Base legal"], [11, 40, 90, 18, 45])
+    linha = 2
+    for caso in todos:
+        for p in caso.resultado.memoria:
+            valores = [caso.codigo, p.descricao, p.formula, float(p.valor), p.base_legal]
+            for col, v in enumerate(valores, start=1):
+                c = mem.cell(row=linha, column=col, value=v)
+                c.font = Font(name=FONTE)
+                c.alignment = Alignment(vertical="top", wrap_text=col in (2, 3, 5))
+                c.border = BORDA
+            eh_taxa = p.descricao.startswith(("Alíquota", "Fator R", "Percentuais"))
+            mem.cell(row=linha, column=4).number_format = "0.0000%" if eh_taxa else MOEDA
+            linha += 1
+    mem.auto_filter.ref = f"A1:E{linha - 1}"
+
+    # --- Alertas ------------------------------------------------------------
+    al = wb.create_sheet("Alertas")
+    _cabecalho(al, ["Caso", "Alerta / premissa"], [11, 140])
+    linha = 2
+    for caso in todos:
+        for a in caso.resultado.alertas:
+            for col, v in enumerate((caso.codigo, a), start=1):
+                c = al.cell(row=linha, column=col, value=v)
+                c.font = Font(name=FONTE)
+                c.alignment = Alignment(vertical="top", wrap_text=True)
+                c.border = BORDA
+            linha += 1
+
+    saida.parent.mkdir(parents=True, exist_ok=True)
+    wb.save(saida)
+    return saida
+
+
+if __name__ == "__main__":
+    destino = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parents[1] / "validacao" / "casos_validacao.xlsx"
+    print(gerar(destino))

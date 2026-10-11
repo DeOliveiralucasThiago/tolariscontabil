@@ -1,0 +1,41 @@
+{
+  "fonte": "Lei 9.249/1995 arts. 15 e 20; Lei 9.430/1996; LC 224/2025 (acréscimo de 10% na presunção)",
+  "vigencias": [
+    {
+      "inicio": "2018-01-01",
+      "limite_receita_anual": "78000000.00",
+      "irpj_aliquota": "0.15",
+      "irpj_adicional_aliquota": "0.10",
+      "irpj_adicional_limite_trimestral": "60000.00",
+      "csll_aliquota": "0.09",
+      "pis_cumulativo": "0.0065",
+      "cofins_cumulativo": "0.03",
+      "lc224": null
+    },
+    {
+      "inicio": "2026-01-01",
+      "limite_receita_anual": "78000000.00",
+      "irpj_aliquota": "0.15",
+      "irpj_adicional_aliquota": "0.10",
+      "irpj_adicional_limite_trimestral": "60000.00",
+      "csll_aliquota": "0.09",
+      "pis_cumulativo": "0.0065",
+      "cofins_cumulativo": "0.03",
+      "lc224": {
+        "receita_anual_isenta": "5000000.00",
+        "acrescimo_relativo": "0.10",
+        "irpj_inicio": "2026-01-01",
+        "csll_inicio": "2026-04-01"
+      }
+    }
+  ],
+  "presuncoes": {
+    "comercio":           {"irpj": "0.08", "csll": "0.12", "descricao": "Revenda de mercadorias"},
+    "industria":          {"irpj": "0.08", "csll": "0.12", "descricao": "Venda de produção própria"},
+    "servicos_gerais":    {"irpj": "0.32", "csll": "0.32", "descricao": "Prestação de serviços em geral"},
+    "servicos_hospitalares": {"irpj": "0.08", "csll": "0.12", "descricao": "Serviços hospitalares e afins (requisitos legais)"},
+    "transporte_cargas":  {"irpj": "0.08", "csll": "0.12", "descricao": "Transporte de cargas"},
+    "transporte_passageiros": {"irpj": "0.16", "csll": "0.12", "descricao": "Transporte que não seja de cargas"},
+    "revenda_combustiveis": {"irpj": "0.016", "csll": "0.12", "descricao": "Revenda de combustíveis"}
+  }
+}
