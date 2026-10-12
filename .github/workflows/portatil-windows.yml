@@ -1,0 +1,64 @@
+# Monta e testa a versão portátil para Windows. O .zip fica disponível em "Artifacts" na execução.
+name: Tolaris portátil (Windows)
+
+on:
+  push:
+    branches: [main, claude/tender-brahmagupta-l42ew4]
+    paths-ignore: ["**.md", "docs/**", "validacao/**", "e2e/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portatil-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: msys2/setup-msys2@v2
+        id: msys2
+        with:
+          msystem: UCRT64
+          update: false
+          install: mingw-w64-ucrt-x86_64-pango
+
+      - name: Montar a pasta portátil
+        shell: pwsh
+        run: ./portatil/montar-windows.ps1 -Saida dist/Tolaris -Msys "${{ steps.msys2.outputs.msys2-location }}"
+
+      - name: Testar a pasta portátil
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check pypdf
+          $p = Start-Process -PassThru -NoNewWindow dist/Tolaris/app/python/python.exe `
+            -ArgumentList "dist/Tolaris/app/iniciar.py", "--sem-navegador"
+          try {
+            python portatil/testar_portatil.py dist/Tolaris
+          } finally {
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+            Get-Process node, python -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "*dist*Tolaris*" } | Stop-Process -Force
+          }
+          Start-Sleep 2
+          Remove-Item -Recurse -Force dist/Tolaris/dados
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Tolaris-portatil-windows
+          path: dist/
+          retention-days: 14

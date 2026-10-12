@@ -1,0 +1,34 @@
+﻿TOLARIS CONTÁBIL - VERSÃO PORTÁTIL PARA TESTE (WINDOWS 10/11, 64 BITS)
+
+COMO USAR
+1. Descompacte esta pasta num lugar curto, por exemplo C:\Tolaris
+   (evite deixar dentro de Downloads com nomes muito longos).
+2. Dê dois cliques em "Iniciar Tolaris.bat".
+   - Se o Windows mostrar "O Windows protegeu o computador", clique em
+     "Mais informações" e depois em "Executar assim mesmo".
+   - Se o Firewall perguntar, marque "Redes privadas" e clique em "Permitir".
+3. O navegador abre sozinho. Na primeira vez, clique em "Criar conta".
+4. Mantenha a janela preta aberta enquanto usa. Para desligar, feche a janela.
+
+OUTROS COMPUTADORES E CELULARES
+A janela preta mostra o endereço para a rede, algo como http://192.168.0.15:3000 .
+Digite esse endereço no navegador de qualquer aparelho conectado à mesma rede
+(mesmo Wi-Fi ou cabo).
+
+SEUS DADOS
+Tudo fica na pasta "dados", ao lado deste arquivo:
+  dados\tolaris.db   banco com escritório, clientes e simulações
+  dados\emails       e-mails que seriam enviados (enquanto o e-mail não estiver configurado)
+  dados\registros    registros técnicos, úteis se algo der errado
+Para levar a outro computador ou atualizar para uma versão nova, copie a pasta "dados"
+para dentro da nova pasta do Tolaris. Para começar do zero, apague a pasta "dados".
+
+E-MAIL
+Sem configuração, nenhum e-mail sai: eles ficam em dados\emails (abra o .json no Bloco de Notas
+para ver o link de redefinição de senha ou de convite). Para enviar de verdade pelo Gmail,
+siga as instruções em configuracao.txt.
+
+LIMITAÇÕES
+- Funciona só para aparelhos da mesma rede; o computador precisa ficar ligado.
+- Sem HTTPS: use para teste, não como uso definitivo com dados de terceiros.
+- A consulta de CNPJ precisa de internet.
