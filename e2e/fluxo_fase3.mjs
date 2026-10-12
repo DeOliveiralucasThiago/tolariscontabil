@@ -148,6 +148,8 @@ const campoLink = page.getByLabel("Link do portal");
 await campoLink.waitFor();
 const urlPortal = (await campoLink.inputValue()).replace(/^https?:\/\/[^/]+/, BASE);
 await page.getByText("Link enviado para financeiro@boavista.com.br.").waitFor();
+await page.getByRole("button", { name: "Copiar" }).click(); // sem HTTPS (rede local) não há navigator.clipboard
+await page.getByRole("button", { name: "Copiado" }).waitFor();
 await page.screenshot({ path: `${OUT}/f3-3-cliente.png`, fullPage: true });
 const ctxCliente = await browser.newContext({ viewport: { width: 1360, height: 900 } });
 const cliente = await novaPagina(ctxCliente);

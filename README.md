@@ -79,6 +79,9 @@ cp .env.example .env    # preencha POSTGRES_PASSWORD e TOLARIS_SECRET_KEY
 docker compose up -d --build
 ```
 
+Para testar na rede do escritório (outros computadores e celulares acessando pelo IP da máquina),
+siga o passo a passo em [`docs/teste-rede-local.md`](docs/teste-rede-local.md).
+
 ### Configuração da API (variáveis `TOLARIS_*`)
 
 | Variável | Padrão | Uso |

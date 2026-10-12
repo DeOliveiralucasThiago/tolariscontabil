@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api, ErroApi } from "@/lib/api";
 import { dataHora } from "@/lib/formato";
@@ -17,6 +17,7 @@ export function PortalCliente({ clienteId, emailCliente, versao }: { clienteId: 
   const [erro, setErro] = useState("");
   const [gerando, setGerando] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const campoLink = useRef<HTMLInputElement>(null);
 
   const carregar = useCallback(() => {
     api<PortalEstado>(`/clientes/${clienteId}/portal`).then(setEstado).catch(() => setEstado(null));
@@ -54,7 +55,13 @@ export function PortalCliente({ clienteId, emailCliente, versao }: { clienteId: 
   }
 
   async function copiar() {
-    await navigator.clipboard.writeText(link);
+    // Fora de HTTPS (ex.: teste na rede local) o navegador não oferece navigator.clipboard
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(link);
+    } else {
+      campoLink.current?.select();
+      document.execCommand("copy");
+    }
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2000);
   }
@@ -76,7 +83,7 @@ export function PortalCliente({ clienteId, emailCliente, versao }: { clienteId: 
           <div className="flex flex-col gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
             <span className="text-xs text-emerald-900">Copie agora: por segurança, o link não fica salvo para ser mostrado de novo.</span>
             <div className="flex gap-2">
-              <input aria-label="Link do portal" readOnly className={`${classeCampo} num text-xs`} value={link} onFocus={(e) => e.target.select()} />
+              <input ref={campoLink} aria-label="Link do portal" readOnly className={`${classeCampo} num text-xs`} value={link} onFocus={(e) => e.target.select()} />
               <Botao type="button" variante="secundario" onClick={copiar}>{copiado ? "Copiado" : "Copiar"}</Botao>
             </div>
           </div>
