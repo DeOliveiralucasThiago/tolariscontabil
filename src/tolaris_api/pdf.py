@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import re
 from datetime import datetime
 from html import escape
 from typing import Any
@@ -36,6 +37,16 @@ def _css_string(valor: str) -> Markup:
 _env.filters["css"] = _css_string
 
 
+def _valor_passo(valor: float, descricao: str) -> str:
+    """Taxas (alíquotas, fator R, percentuais) em %; o resto em reais."""
+    if re.search(r"alíquota|fator r|percentua|fatia", descricao, re.IGNORECASE):
+        return pct(valor, 4)
+    return brl(valor)
+
+
+_env.filters["valor_passo"] = _valor_passo
+
+
 def _fetcher_somente_data():
     """O PDF só pode usar recursos embutidos (data:); nunca busca URLs na rede (evita SSRF)."""
     from weasyprint import URLFetcher
@@ -55,9 +66,10 @@ def cor_texto_sobre(hex_cor: str) -> str:
     return "#FFFFFF" if (1.05 / (lum + 0.05)) >= ((lum + 0.05) / 0.05) else TINTA
 
 
-def grafico_barras(regimes: list[dict[str, Any]], melhor: str, cor: str) -> Markup:
-    """Barras horizontais do total anual por regime; o recomendado na cor do escritório."""
-    largura, rotulo_w, valor_w = 620, 150, 150
+def grafico_barras(regimes: list[dict[str, Any]], melhor: str | set[str], cor: str) -> Markup:
+    """Barras horizontais do total por item; o(s) destacado(s) na cor do escritório."""
+    destaques = {melhor} if isinstance(melhor, str) else set(melhor)
+    largura, rotulo_w, valor_w = 620, 190, 150
     barra_h, passo, topo = 22, 40, 8
     area = largura - rotulo_w - valor_w
     aplicaveis = [r for r in regimes if r["aplicavel"]]
@@ -71,7 +83,7 @@ def grafico_barras(regimes: list[dict[str, Any]], melhor: str, cor: str) -> Mark
     for i, r in enumerate(regimes):
         y = topo + i * passo
         meio = y + barra_h / 2 + 4
-        destaque = r["titulo"] == melhor
+        destaque = r["titulo"] in destaques
         peso = "700" if destaque else "400"
         partes.append(
             f'<text x="{rotulo_w - 10}" y="{meio}" text-anchor="end" font-size="12" '
@@ -146,28 +158,22 @@ def _entradas_legiveis(sim: Simulacao) -> list[tuple[str, str]]:
     return linhas
 
 
-def montar_html(escritorio: Escritorio, cliente: Cliente, sim: Simulacao, usuario: Usuario) -> str:
-    res = sim.resultado
+def _contexto(escritorio: Escritorio, cliente: Cliente, sim: Simulacao, usuario: Usuario) -> dict[str, Any]:
     cor = escritorio.cor_primaria or "#1F3A5F"
     logo = None
     if escritorio.logo and escritorio.logo_mime:
         logo = f"data:{escritorio.logo_mime};base64,{base64.b64encode(escritorio.logo).decode()}"
-    colunas, linhas = tabela_tributos(res["regimes"])
     data = sim.criado_em
     if data.tzinfo is not None:
         data = data.astimezone(ZoneInfo("America/Sao_Paulo"))
-    return _env.get_template("proposta.html").render(
+    return dict(
         escritorio=escritorio,
         cliente=cliente,
         sim=sim,
-        res=res,
+        res=sim.resultado,
         cor=cor,
         cor_texto=cor_texto_sobre(cor),
         logo=logo,
-        grafico=grafico_barras(res["regimes"], res["melhor"], cor),
-        colunas=colunas,
-        linhas=linhas,
-        entradas=_entradas_legiveis(sim),
         atividade=ROTULOS_ATIVIDADE.get(cliente.atividade or "", None),
         responsavel=escritorio.contador_responsavel or usuario.nome,
         data=data.strftime("%d/%m/%Y"),
@@ -175,7 +181,270 @@ def montar_html(escritorio: Escritorio, cliente: Cliente, sim: Simulacao, usuari
     )
 
 
+def montar_html(escritorio: Escritorio, cliente: Cliente, sim: Simulacao, usuario: Usuario) -> str:
+    ctx = _contexto(escritorio, cliente, sim, usuario)
+    res = sim.resultado
+    if sim.tipo in RELATORIOS:
+        r = RELATORIOS[sim.tipo](sim, ctx["cor"])
+        alertas = list(dict.fromkeys(r.pop("alertas")))
+        return _env.get_template("relatorio.html").render(
+            **ctx, r=r, alertas=alertas, entradas=r.pop("entradas"),
+            titulo_doc=r["titulo"], subtitulo_doc=r["subtitulo"],
+        )
+    colunas, linhas = tabela_tributos(res["regimes"])
+    return _env.get_template("proposta.html").render(
+        **ctx,
+        titulo_doc="Diagnóstico tributário",
+        subtitulo_doc=f"Comparativo de regimes — ano-calendário {res['ano']}",
+        grafico=grafico_barras(res["regimes"], res["melhor"], ctx["cor"]),
+        colunas=colunas,
+        linhas=linhas,
+        entradas=_entradas_legiveis(sim),
+    )
+
+
 def gerar_proposta(escritorio: Escritorio, cliente: Cliente, sim: Simulacao, usuario: Usuario) -> bytes:
     from weasyprint import HTML  # import tardio: carrega Pango só quando gera PDF
 
     return HTML(string=montar_html(escritorio, cliente, sim, usuario), url_fetcher=_fetcher_somente_data()).write_pdf()
+
+
+# --- Relatórios da Fase 2 -------------------------------------------------------------
+SERIE_1 = "#2A78D6"  # categórica 1 (tributos atuais)
+SERIE_2 = "#EB6834"  # categórica 2 (IBS/CBS)
+
+
+def grafico_colunas_empilhadas(colunas: list[dict[str, Any]], cores: list[str]) -> Markup:
+    """Colunas por ano com segmentos empilhados (2px de respiro entre eles) e rótulo no topo."""
+    largura, altura, base_y, topo = 620, 210, 186, 18
+    n = len(colunas)
+    passo = largura / n
+    barra = min(44.0, passo * 0.6)
+    maximo = max((sum(c["valores"]) for c in colunas), default=0) or 1
+    escala = (base_y - topo) / maximo
+    partes = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{largura}" height="{altura}" viewBox="0 0 {largura} {altura}" '
+        'font-family="Helvetica, Arial, sans-serif" role="img">',
+        f'<line x1="0" y1="{base_y}" x2="{largura}" y2="{base_y}" stroke="#D5DBE1" stroke-width="1"/>',
+    ]
+    for i, c in enumerate(colunas):
+        x = i * passo + (passo - barra) / 2
+        y = base_y
+        ultimo = max((j for j, v in enumerate(c["valores"]) if v > 0), default=-1)
+        for j, v in enumerate(c["valores"]):
+            if v <= 0:
+                continue
+            h = v * escala
+            y -= h
+            if j == ultimo and h > 4:
+                d = (f"M{x},{y + h} v{-(h - 4)} a4,4 0 0 1 4,-4 h{barra - 8} a4,4 0 0 1 4,4 v{h - 4} z")
+            else:
+                d = f"M{x},{y + h} v{-h} h{barra} v{h} z"
+            partes.append(f'<path d="{d}" fill="{cores[j]}"/>')
+            y -= 2  # respiro entre segmentos
+        partes.append(
+            f'<text x="{x + barra / 2}" y="{y - 4}" text-anchor="middle" font-size="9" fill="{TINTA}">{escape(c["topo"])}</text>'
+        )
+        partes.append(
+            f'<text x="{x + barra / 2}" y="{base_y + 15}" text-anchor="middle" font-size="10" fill="{TINTA_SECUNDARIA}">'
+            f'{escape(str(c["rotulo"]))}</text>'
+        )
+    partes.append("</svg>")
+    return Markup("".join(partes))
+
+
+def _sim_nao(v: Any) -> str:
+    return "Sim" if v else "Não"
+
+
+def _rel_reforma(sim: Simulacao, cor: str) -> dict[str, Any]:
+    res, e = sim.resultado, sim.entrada
+    anos = res["anos"]
+    a0, an = anos[0], anos[-1]
+    variacao = res["variacao_total"]
+    sentido = "aumento" if variacao > 0 else "redução"
+    linhas = []
+    for a in anos:
+        t = {x["nome"]: x["valor"] for x in a["tributos"]}
+        local = t.get("ICMS", 0) + t.get("ISS", 0)
+        linhas.append({"valores": [
+            str(a["ano"]), brl(t.get("PIS/Cofins", 0)), brl(t.get("IPI", 0)), brl(local),
+            brl(t.get("CBS", 0)), brl(t.get("IBS", 0)), brl(a["total"]), pct(a["carga"]),
+        ]})
+    mostrar = {2025, 2027, 2029, 2033}
+    return {
+        "titulo": "Impacto da Reforma Tributária",
+        "subtitulo": "Tributos sobre o consumo ano a ano (EC 132/2023 e LC 214/2025)",
+        "destaque": {
+            "rotulo": f"Carga sobre o consumo em {an['ano']}",
+            "valor": pct(an["carga"]),
+            "detalhe": f"Hoje ({a0['ano']}): {pct(a0['carga'])} — {sentido} de {brl(abs(variacao))} por ano.",
+        },
+        "cartoes": [
+            {"rotulo": "Vendas sem tributos", "valor": brl(res["base_venda"])},
+            {"rotulo": "Aquisições com crédito", "valor": brl(res["base_credito"])},
+            {"rotulo": "CBS + IBS de referência", "valor": pct(res["cbs_referencia"] + res["ibs_referencia"], 1)},
+        ],
+        "grafico_titulo": "Tributos sobre o consumo por ano (R$)",
+        "legenda": [("Tributos atuais (PIS/Cofins, IPI, ICMS/ISS)", SERIE_1), ("CBS + IBS", SERIE_2)],
+        "grafico": grafico_colunas_empilhadas(
+            [{"rotulo": a["ano"], "valores": [a["atuais"], a["novos"]], "topo": pct(a["carga"], 1)} for a in anos],
+            [SERIE_1, SERIE_2],
+        ),
+        "grafico_nota": "No topo de cada coluna, a carga sobre o valor das vendas sem tributos. "
+                        "Em 2026, CBS e IBS de teste são dispensados e não aparecem.",
+        "tabelas": [{
+            "titulo": "Detalhamento por tributo (R$/ano)",
+            "colunas": ["Ano", "PIS/Cofins", "IPI", "ICMS/ISS", "CBS", "IBS", "Total", "Carga"],
+            "linhas": linhas,
+        }],
+        "entradas": [
+            ("Receita bruta anual", brl(e["receita_bruta_anual"])),
+            ("Vende", "Mercadorias" if e["vende_mercadoria"] else "Serviços"),
+            ("PIS/Cofins hoje", "Não cumulativo" if e.get("pis_cofins_nao_cumulativo") else "Cumulativo"),
+            ("Compras com crédito", brl(e.get("compras_anual", 0))),
+            ("Outras aquisições com crédito", brl(e.get("despesas_creditaveis_anual", 0))),
+            ("ICMS" if e["vende_mercadoria"] else "ISS", pct(e["aliquota_icms"] if e["vende_mercadoria"] else e["aliquota_iss"])),
+            ("IPI", pct(e.get("aliquota_ipi", 0))),
+            ("Redução setorial", pct(e.get("reducao_setorial", 0), 0)),
+        ],
+        "alertas": res["alertas"] + [x for a in anos for x in a["alertas"]],
+        "memorias": [{"titulo": f"{a['ano']} — total {brl(a['total'])}", "passos": a["memoria"]} for a in anos if a["ano"] in mostrar],
+        "aviso_extra": "As alíquotas de referência de CBS e IBS são estimativas até a fixação oficial.",
+    }
+
+
+def _rel_simples_reforma(sim: Simulacao, cor: str) -> dict[str, Any]:
+    res, e = sim.resultado, sim.entrada
+    cen = res["cenarios"]
+    final = cen[-1]
+    barras, melhores = [], set()
+    for c in cen:
+        dentro = {"titulo": f"{c['ano']} — dentro do DAS", "total": c["dentro_do_das"], "aplicavel": True}
+        fora = {"titulo": f"{c['ano']} — por fora", "total": c["por_fora"], "aplicavel": True}
+        barras += [dentro, fora]
+        melhores.add((fora if c["diferenca"] > 0 else dentro)["titulo"])
+    return {
+        "titulo": "Simples Nacional na Reforma",
+        "subtitulo": "Recolher IBS/CBS dentro do DAS ou pelo regime regular (por fora)",
+        "destaque": {
+            "rotulo": f"Recomendação para {final['ano']}",
+            "valor": final["recomendacao"],
+            "detalhe": f"Diferença estimada de {brl(abs(final['diferenca']))} por ano na receita líquida de tributos.",
+        },
+        "cartoes": [
+            {"rotulo": "Vendas a empresas (B2B)", "valor": pct(res["percentual_b2b"], 0)},
+            {"rotulo": f"Por fora compensa ({final['ano']})", "valor": final["equilibrio_texto"]},
+            {"rotulo": "Crédito ao cliente a cada R$ 100", "valor": f"{brl(final['credito_cliente_dentro'])} × {brl(final['credito_cliente_fora'])}"},
+        ],
+        "grafico_titulo": "Receita líquida de tributos por ano (R$)",
+        "grafico": grafico_barras(barras, melhores, cor),
+        "grafico_nota": "Destacada, a opção mais vantajosa em cada ano. Crédito ao cliente: dentro do DAS × por fora.",
+        "tabelas": [{
+            "titulo": "Comparativo",
+            "colunas": ["Ano", "Dentro do DAS", "Por fora", "Diferença", "Por fora compensa", "Recomendação"],
+            "linhas": [{"valores": [
+                str(c["ano"]), brl(c["dentro_do_das"]), brl(c["por_fora"]), brl(c["diferenca"]),
+                c["equilibrio_texto"], c["recomendacao"],
+            ]} for c in cen],
+        }],
+        "entradas": [
+            ("Atividade", ROTULOS_ATIVIDADE.get(e["atividade"], e["atividade"])),
+            ("Receita bruta anual", brl(e["receita_bruta_anual"])),
+            ("Vendas a empresas", pct(e["percentual_b2b"], 0)),
+            ("Compras com crédito", brl(e.get("compras_creditaveis_anual", 0))),
+            ("Redução setorial", pct(e.get("reducao_setorial", 0), 0)),
+        ],
+        "alertas": [x for c in cen for x in c["alertas"]],
+        "memorias": [{"titulo": str(c["ano"]), "passos": c["memoria"]} for c in cen],
+        "aviso_extra": "A partilha do DAS a partir de 2027 ainda será redefinida; os percentuais atuais são usados como aproximação.",
+    }
+
+
+def _rel_autonomo(sim: Simulacao, cor: str) -> dict[str, Any]:
+    res, e = sim.resultado, sim.entrada
+    aplicaveis = [o for o in res["opcoes"] if o["aplicavel"]]
+    barras = [{"titulo": o["nome"], "total": o["liquido_mensal"], "aplicavel": o["aplicavel"]} for o in res["opcoes"]]
+    ganho = res["ganho_vs_autonomo_anual"]
+    return {
+        "titulo": "Vale abrir CNPJ?",
+        "subtitulo": "Autônomo × MEI × Simples Nacional × Lucro Presumido (valores mensais)",
+        "destaque": {
+            "rotulo": "Opção mais vantajosa",
+            "valor": res["melhor"],
+            "detalhe": (f"Ganho de {brl(ganho)} por ano em relação a atuar como autônomo." if ganho > 0
+                        else "Atuar como autônomo é a opção mais vantajosa nestas condições."),
+        },
+        "cartoes": [
+            {"rotulo": "Receita mensal", "valor": brl(res["receita_mensal"])},
+            {"rotulo": "Despesas mensais", "valor": brl(e.get("despesas_mensais", 0))},
+            {"rotulo": "Contabilidade (CNPJ)", "valor": brl(e.get("contabilidade_mensal", 0))},
+        ],
+        "grafico_titulo": "Quanto sobra por mês (R$)",
+        "grafico": grafico_barras(barras, res["melhor"], cor),
+        "grafico_nota": "Receita menos despesas, tributos e contabilidade.",
+        "tabelas": [{
+            "titulo": "Comparativo mensal",
+            "colunas": ["Opção", "Tributos", "Contabilidade", "Sobra no mês", "Observação"],
+            "linhas": [{"valores": [o["nome"], brl(o["tributos_mensais"]), brl(o["custos_mensais"]),
+                                    brl(o["liquido_mensal"]), o["detalhe"] or "—"]} for o in aplicaveis],
+        }],
+        "entradas": [
+            ("Atividade", ROTULOS_ATIVIDADE.get(e["atividade"], e["atividade"])),
+            ("Receita mensal", brl(e["receita_mensal"])),
+            ("Despesas mensais", brl(e.get("despesas_mensais", 0))),
+            ("Dependentes", str(e.get("dependentes", 0))),
+            ("ISS da empresa", pct(e.get("aliquota_iss", 0))),
+            ("Pode ser MEI", _sim_nao(e.get("mei_permitido"))),
+        ],
+        "alertas": res["alertas"] + [x for o in res["opcoes"] for x in o["alertas"]],
+        "memorias": [{"titulo": o["nome"], "passos": o["memoria"]} for o in aplicaveis],
+        "aviso_extra": "Supõe receita constante e retirada do lucro como dividendos isentos.",
+    }
+
+
+def _rel_pro_labore(sim: Simulacao, cor: str) -> dict[str, Any]:
+    res, e = sim.resultado, sim.entrada
+    cen = res["cenarios"]
+    curtos = ["100% pró-labore", "Pró-labore + dividendos"]
+    barras = [{"titulo": t, "total": c["custo_mensal"], "aplicavel": True} for t, c in zip(curtos, cen)]
+    mais_barata = curtos[0] if cen[0]["custo_mensal"] <= cen[1]["custo_mensal"] else curtos[1]
+    regimes = {"simples": "Simples (anexos I, II, III e V)", "simples_anexo_iv": "Simples — Anexo IV",
+               "presumido": "Lucro Presumido", "real": "Lucro Real"}
+    return {
+        "titulo": "Pró-labore × distribuição de lucros",
+        "subtitulo": "Retirada mensal do sócio com as regras de 2026 (Lei 15.270/2025)",
+        "destaque": {
+            "rotulo": "Estratégia recomendada",
+            "valor": res["melhor"],
+            "detalhe": f"Economia de {brl(abs(res['economia_anual']))} por ano ({brl(abs(res['economia_mensal']))} por mês).",
+        },
+        "cartoes": [
+            {"rotulo": "Retirada mensal", "valor": brl(e["retirada_mensal"])},
+            {"rotulo": "Regime da empresa", "valor": regimes.get(res["regime"], res["regime"])},
+            {"rotulo": "Economia anual", "valor": brl(abs(res["economia_anual"]))},
+        ],
+        "grafico_titulo": "Custo tributário mensal da retirada (R$)",
+        "grafico": grafico_barras(barras, mais_barata, cor),
+        "tabelas": [{
+            "titulo": "Cenários",
+            "colunas": ["Cenário", "Pró-labore", "Dividendos", "Custo tributário/mês", "Líquido ao sócio/mês"],
+            "linhas": [{"valores": [c["descricao"], brl(c["pro_labore"]), brl(c["dividendos"]),
+                                    brl(c["custo_mensal"]), brl(c["liquido_mensal"])]} for c in cen],
+        }],
+        "entradas": [
+            ("Retirada mensal", brl(e["retirada_mensal"])),
+            ("Regime da empresa", regimes.get(e.get("regime", ""), e.get("regime", ""))),
+        ],
+        "alertas": [x for c in cen for x in c["alertas"]],
+        "memorias": [{"titulo": c["descricao"], "passos": c["memoria"]} for c in cen],
+        "aviso_extra": "Custo tributário inclui INSS do sócio e da empresa, IRPF e retenção sobre dividendos.",
+    }
+
+
+RELATORIOS = {
+    "reforma": _rel_reforma,
+    "simples_reforma": _rel_simples_reforma,
+    "autonomo": _rel_autonomo,
+    "pro_labore": _rel_pro_labore,
+}

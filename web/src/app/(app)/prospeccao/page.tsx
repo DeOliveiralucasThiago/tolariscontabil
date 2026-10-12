@@ -91,7 +91,7 @@ export default function Prospeccao() {
         Prospecção rápida
       </Titulo>
 
-      <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
         <form onSubmit={simular} className="flex flex-col gap-4">
           <Cartao titulo="Empresa">
             <div className="flex flex-col gap-4">

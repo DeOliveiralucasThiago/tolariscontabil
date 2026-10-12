@@ -20,3 +20,10 @@ cd e2e && npm install && npx playwright install chromium && npm run fluxo
 ```
 
 Rode sempre com um banco novo: o fluxo cadastra o e-mail `marcos@silva.com.br`.
+
+O fluxo da Fase 2 (reforma, Simples na reforma, autônomo × CNPJ, pró-labore, salário líquido,
+histórico do cliente e celular) usa um e-mail novo a cada execução:
+
+```bash
+node fluxo_fase2.mjs saida
+```

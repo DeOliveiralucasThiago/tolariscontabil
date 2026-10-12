@@ -10,6 +10,8 @@ const MENU = [
   { href: "/painel", rotulo: "Painel", icone: "▦" },
   { href: "/prospeccao", rotulo: "Prospecção", icone: "⚡" },
   { href: "/clientes", rotulo: "Clientes", icone: "☰" },
+  { href: "/reforma", rotulo: "Reforma Tributária", icone: "⇄" },
+  { href: "/pessoa-fisica", rotulo: "Pessoa física", icone: "◉" },
   { href: "/configuracoes", rotulo: "Configurações", icone: "⚙" },
 ];
 
@@ -68,7 +70,7 @@ export function Shell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
+    <div className="min-h-screen lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="sticky top-0 hidden h-screen flex-col justify-between border-r border-borda bg-superficie p-4 lg:flex">
         <div className="flex flex-col gap-6">
           {marca}

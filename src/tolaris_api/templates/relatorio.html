@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block corpo %}
+  <div class="destaque">
+    <div class="rotulo">{{ r.destaque.rotulo }}</div>
+    <div class="regime">{{ r.destaque.valor }}</div>
+    {% if r.destaque.detalhe %}<div class="economia">{{ r.destaque.detalhe }}</div>{% endif %}
+  </div>
+
+  {% if r.cartoes %}
+  <div class="grade">
+    {% for c in r.cartoes %}<div class="card"><span>{{ c.rotulo }}</span><strong>{{ c.valor }}</strong></div>{% endfor %}
+  </div>
+  {% endif %}
+
+  {% if r.grafico %}
+  <h2>{{ r.grafico_titulo }}</h2>
+  {% if r.legenda %}<div class="legenda">{% for nome, cor in r.legenda %}<i style="background: {{ cor }}"></i>{{ nome }}{% endfor %}</div>{% endif %}
+  {{ r.grafico }}
+  {% if r.grafico_nota %}<p class="subtitulo" style="font-size:8pt;margin-top:4px">{{ r.grafico_nota }}</p>{% endif %}
+  {% endif %}
+
+  {% for t in r.tabelas %}
+  <h2>{{ t.titulo }}</h2>
+  <table>
+    <thead><tr>{% for c in t.colunas %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for l in t.linhas %}<tr class="{{ 'total' if l.total }}">{% for v in l.valores %}<td>{{ v }}</td>{% endfor %}</tr>{% endfor %}
+    </tbody>
+  </table>
+  {% endfor %}
+
+  <h2>Dados considerados</h2>
+  <div class="premissas">
+    {% for rotulo, valor in entradas %}<div><span>{{ rotulo }}</span><strong>{{ valor }}</strong></div>{% endfor %}
+  </div>
+
+  {% if alertas %}
+  <h2>Pontos de atenção</h2>
+  <ul class="alertas">{% for a in alertas %}<li>{{ a }}</li>{% endfor %}</ul>
+  {% endif %}
+{% endblock %}
+
+{% block aviso %}
+  <p class="aviso">Estimativa elaborada com base nas informações fornecidas e na legislação vigente na data de emissão.
+    {{ r.aviso_extra }} Os valores não substituem a apuração oficial. A memória de cálculo está nas páginas seguintes.</p>
+{% endblock %}
+
+{% block memoria %}
+  <div class="quebra memoria">
+    <h2>Memória de cálculo</h2>
+    {% for m in r.memorias %}
+    <h3>{{ m.titulo }}</h3>
+    <table>
+      <thead><tr><th>Passo</th><th style="text-align:left">Fórmula</th><th>Valor</th><th style="text-align:left">Base legal</th></tr></thead>
+      <tbody>
+      {% for p in m.passos %}
+        <tr><td>{{ p.descricao }}</td><td class="formula">{{ p.formula }}</td>
+          <td class="valor">{{ p.valor|valor_passo(p.descricao) }}</td>
+          <td class="lei">{{ p.base_legal }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endfor %}
+    <p class="aviso">Gerado em {{ gerado_em }} · motor de cálculo v{{ sim.versao_motor }}</p>
+  </div>
+{% endblock %}

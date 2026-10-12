@@ -7,7 +7,7 @@ from fastapi import APIRouter, FastAPI
 import tolaris_motor
 
 from .config import get_settings
-from .routers import auth, clientes, cnpj, escritorio, simulacoes
+from .routers import auth, calculadoras, clientes, cnpj, escritorio, simulacoes
 
 CHAVE_PADRAO = "dev-somente-local-troque-esta-chave-em-producao"
 
@@ -24,7 +24,7 @@ def criar_app() -> FastAPI:
         openapi_url="/api/openapi.json",
     )
     api = APIRouter(prefix="/api")
-    for r in (auth.router, escritorio.router, clientes.router, cnpj.router, simulacoes.router):
+    for r in (auth.router, escritorio.router, clientes.router, cnpj.router, simulacoes.router, calculadoras.router):
         api.include_router(r)
 
     @api.get("/saude", tags=["infra"])

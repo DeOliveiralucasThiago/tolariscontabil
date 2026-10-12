@@ -7,6 +7,9 @@ const moedaCurta = new Intl.NumberFormat("pt-BR", {
 });
 
 export const brl = (v: number | null | undefined) => (v == null ? "—" : moeda.format(v));
+const decimal = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/** Valor sem o símbolo (para tabelas largas cujo cabeçalho já diz "R$"). */
+export const numero = (v: number) => decimal.format(v);
 export const brlCurto = (v: number) => moedaCurta.format(v);
 
 export const pct = (v: number | null | undefined, casas = 2) =>

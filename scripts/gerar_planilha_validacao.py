@@ -21,7 +21,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 from tolaris_motor import Atividade, PerfilEmpresa, Resultado, brl, pct
 from tolaris_motor import pessoa_fisica as pf
-from tolaris_motor import presumido, real, reforma, simples
+from tolaris_motor import autonomo, presumido, real, reforma, reforma_simples, simples
 
 FONTE = "Arial"
 AZUL_ESCURO = "1F3A5F"
@@ -114,6 +114,30 @@ def casos() -> list[Caso]:
             if a.ano in (2025, 2027, 2029, 2033):
                 lista.append(Caso(f"{cod}-{a.ano}", f"Reforma - {a.ano}",
                                   f"{desc}; receita {brl(e.receita_bruta_anual)}", a.resultado))
+
+    simples_b2b = {
+        "SR1": ("Comércio, 80% B2B, compras de fornecedores do regime regular",
+                reforma_simples.EntradaSimplesReforma("comercio", 2_000_000, "0.8", compras_creditaveis_anual=1_200_000)),
+        "SR2": ("Serviços (Anexo III), 100% B2B, sem compras",
+                reforma_simples.EntradaSimplesReforma("servico_anexo_iii", 600_000, 1)),
+        "SR3": ("Serviços com fator R, 30% B2B",
+                reforma_simples.EntradaSimplesReforma("servico_fator_r", 1_200_000, "0.3", folha_fator_r_anual=400_000)),
+    }
+    for cod, (desc, e) in simples_b2b.items():
+        for c in reforma_simples.simular(e):
+            lista.append(Caso(f"{cod}-{c.ano}", f"Simples na Reforma - {c.ano}",
+                              f"{desc}; receita {brl(e.receita_bruta_anual)}", c.resultado))
+
+    profissionais = {
+        "AU1": ("Receita R$ 6.000/mês, pode ser MEI", autonomo.EntradaAutonomo(6000, mei_permitido=True, contabilidade_mensal=300)),
+        "AU2": ("Receita R$ 15.000/mês, despesas R$ 1.000", autonomo.EntradaAutonomo(15000, despesas_mensais=1000, contabilidade_mensal=400)),
+        "AU3": ("Receita R$ 40.000/mês, 1 dependente", autonomo.EntradaAutonomo(40000, dependentes=1, contabilidade_mensal=600)),
+    }
+    for cod, (desc, e) in profissionais.items():
+        for o in autonomo.comparar(e).opcoes:
+            if o.aplicavel:
+                sigla = {"Autônomo (pessoa física)": "PF", "MEI": "MEI", "Simples Nacional": "SN", "Lucro Presumido": "LP"}[o.nome]
+                lista.append(Caso(f"{cod}-{sigla}", f"Autônomo × CNPJ — {o.nome} (mensal)", desc, o.resultado))
     return lista
 
 
@@ -178,7 +202,10 @@ def gerar(saida: Path) -> Path:
     linha = 2
     for n, caso in enumerate(todos):
         fill = CINZA if n % 2 else None
-        itens = list(caso.resultado.tributos.items()) + [("TOTAL", None)]
+        itens = list(caso.resultado.tributos.items())
+        # No Simples na Reforma as linhas são alternativas (no DAS × por fora): somá-las não faz sentido
+        if not caso.modulo.startswith("Simples na Reforma"):
+            itens.append(("TOTAL", None))
         inicio = linha
         for nome, valor in itens:
             ws.cell(row=linha, column=1, value=caso.codigo)

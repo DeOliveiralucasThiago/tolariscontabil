@@ -136,3 +136,29 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
         )
     res.alerta("Estimativa com faturamento mensal constante; o DAS real varia mês a mês com o RBT12.")
     return res
+
+
+TRIBUTOS_FEDERAIS = ("irpj", "csll", "cofins", "pis", "cpp", "ipi")
+
+
+def partilha(anexo: str, rbt12: Numero, data: date | None = None) -> dict[str, Decimal]:
+    """Fração do DAS que cabe a cada tributo na faixa do RBT12.
+
+    Aplica o teto de 5% de ISS efetivo: o excesso vai, proporcionalmente, para os
+    tributos federais da mesma faixa (LC 123/2006, Anexo III, nota da 5ª faixa).
+    """
+    data = data or date.today()
+    _, f = faixa(anexo, rbt12, data)
+    fracoes = {k: D(v) for k, v in f["partilha"].items()}
+    teto_iss = D(_tabela(data)["iss_efetivo_maximo"])
+    aliq = aliquota_efetiva(anexo, rbt12, data)
+    iss = fracoes.get("iss", ZERO)
+    if aliq > 0 and aliq * iss > teto_iss:
+        nova = teto_iss / aliq
+        excesso = iss - nova
+        federais = {k: v for k, v in fracoes.items() if k in TRIBUTOS_FEDERAIS}
+        soma = sum(federais.values(), ZERO)
+        for k, v in federais.items():
+            fracoes[k] = v + excesso * v / soma
+        fracoes["iss"] = nova
+    return fracoes

@@ -6,11 +6,19 @@ import { useCallback, useEffect, useState } from "react";
 
 import { FormCliente } from "@/components/FormCliente";
 import { FormCompleta } from "@/components/FormCompleta";
-import { ResultadoComparativo } from "@/components/ResultadoComparativo";
-import { Botao, Cartao, Etiqueta, MensagemErro, Titulo } from "@/components/ui";
+import { ResultadoSimulacao } from "@/components/ResultadoSimulacao";
+import { Botao, BotaoLink, Cartao, Etiqueta, MensagemErro, Titulo } from "@/components/ui";
 import { api, ErroApi, urlProposta } from "@/lib/api";
 import { brl, dataHora, mascaraCnpj } from "@/lib/formato";
-import { ROTULO_ATIVIDADE, ROTULO_REGIME, ROTULO_STATUS, type Cliente, type CompletaEntrada, type Simulacao } from "@/lib/tipos";
+import {
+  ROTULO_ATIVIDADE,
+  ROTULO_REGIME,
+  ROTULO_STATUS,
+  ROTULO_TIPO,
+  type Cliente,
+  type CompletaEntrada,
+  type Simulacao,
+} from "@/lib/tipos";
 
 type Aba = "simulacoes" | "planejamento" | "dados";
 
@@ -82,6 +90,12 @@ export default function DetalheCliente() {
         <Link href="/clientes" className="text-tinta-2 hover:text-tinta">← Clientes</Link>
       </div>
       <Titulo
+        acoes={
+          <>
+            <BotaoLink variante="secundario" href={`/reforma?cliente=${cliente.id}`}>Reforma Tributária</BotaoLink>
+            <BotaoLink variante="secundario" href={`/pessoa-fisica?cliente=${cliente.id}&aba=prolabore`}>Pró-labore</BotaoLink>
+          </>
+        }
         sub={
           <span className="flex flex-wrap items-center gap-2">
             <Etiqueta tom={cliente.status}>{ROTULO_STATUS[cliente.status]}</Etiqueta>
@@ -129,7 +143,8 @@ export default function DetalheCliente() {
                     <button onClick={() => setAberta(aberta?.id === s.id ? null : s)} className="text-left">
                       <div className="text-sm font-medium hover:text-marca">{s.titulo}</div>
                       <div className="num text-xs text-tinta-2">
-                        {dataHora(s.criado_em)} · {s.tipo === "expressa" ? "Expressa" : "Completa"} · economia de {brl(s.resultado.economia_vs_pior)}/ano
+                        {dataHora(s.criado_em)} · {ROTULO_TIPO[s.tipo] ?? s.tipo}
+                        {s.resultado.economia_vs_pior > 0 && <> · economia de {brl(s.resultado.economia_vs_pior)}/ano</>}
                       </div>
                     </button>
                     <div className="flex gap-2">
@@ -149,11 +164,11 @@ export default function DetalheCliente() {
             </Cartao>
           )}
           {aberta && (
-            <ResultadoComparativo
-              resultado={aberta.resultado}
+            <ResultadoSimulacao
+              sim={aberta}
               acoes={
                 <a href={urlProposta(aberta.id)} target="_blank" className="inline-flex h-10 items-center rounded-lg bg-marca px-4 text-sm font-medium text-white">
-                  Abrir proposta em PDF
+                  Abrir relatório em PDF
                 </a>
               }
             />

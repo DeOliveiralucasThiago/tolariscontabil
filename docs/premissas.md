@@ -30,6 +30,31 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 8. **Pró-labore × dividendos:** no Lucro Real, pró-labore e CPP reduzem o IRPJ/CSLL a 34%; o IRPFM é só sinalizado, não calculado.
 9. **Reforma:** o valor das vendas sem tributos fica constante; as compras são desembutidas (ICMS de crédito + 9,25%) para formar a base de crédito; Imposto Seletivo fora; redução setorial aplicada só na venda.
 
+## Premissas da Fase 2
+
+10. **Simples na Reforma (IBS/CBS no DAS ou por fora):**
+    - Fatia do DAS substituída por IBS/CBS = partilha atual da LC 123/2006 (PIS + Cofins em 2027;
+      PIS + Cofins + ICMS + ISS + IPI em 2033). A LC 214/2025 vai redefinir a partilha; até lá é aproximação.
+    - Comparação por real vendido com preços ajustados para o cliente pagar o mesmo custo líquido:
+      cliente empresa (B2B) se credita do IBS/CBS; consumidor final (B2C) paga o mesmo preço final.
+    - Recolhendo por fora, a empresa se credita do IBS/CBS das compras de fornecedores do regime regular.
+    - Conclusão do modelo: para vendas B2B a escolha é quase neutra; o que decide são os créditos nas compras
+      (a favor de recolher por fora) e a fatia de vendas ao consumidor final (contra).
+11. **Autônomo × CNPJ (valores mensais):**
+    - Autônomo: INSS de 20% até o teto; carnê-leão com livro-caixa ou desconto simplificado (o maior) e a
+      redução de 2026; ISS fixo municipal informado à parte.
+    - MEI: R$ 81.000/ano; DAS 2026 = 5% do salário mínimo (R$ 81,05) + R$ 5 (ISS) ou R$ 1 (ICMS).
+    - Simples: compara pró-labore de um salário mínimo com o pró-labore que leva o fator R a 28% e escolhe
+      o melhor; sócio paga INSS de 11% e IRPF sobre o pró-labore; lucro distribuído isento.
+    - Presumido: pró-labore de um salário mínimo; CPP de 20% sobre ele.
+    - Honorários contábeis entram como custo das opções com CNPJ.
+12. **Salário líquido:** INSS progressivo de 2026 e IRRF com a redução da Lei 15.270/2025.
+
+| Tabela | Valores | Fonte |
+|---|---|---|
+| Partilha do DAS | Percentuais por tributo de cada faixa dos Anexos I a V; ISS limitado a 5% efetivo | LC 123/2006, Anexos I a V |
+| MEI | Limite R$ 81.000/ano; INSS 5% do salário mínimo; ISS R$ 5; ICMS R$ 1 | LC 123/2006, art. 18-A |
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias?).
@@ -37,13 +62,14 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Tratamento da LC 224/2025 diante das liminares e ADIs 7920/7936.
 - [ ] Premissa de margem de 20% na simulação expressa do Lucro Real.
 - [ ] Desembutir tributos das compras na reforma (fator padrão 27,25% para mercadorias).
-- [ ] Casos da planilha `validacao/casos_validacao.xlsx`.
+- [ ] Percentuais de partilha do DAS (tabela em `simples_nacional.json`, campo `partilha`).
+- [ ] Modelo da decisão do Simples na Reforma (preços ajustados para o mesmo custo líquido do cliente).
+- [ ] Carnê-leão: livro-caixa × desconto simplificado (o motor usa o maior dos dois).
+- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (64 casos, incluindo SR* e AU*).
 
 ## Fora do escopo da Fase 0 (próximos passos do motor)
 
 - Repartição do DAS por tributo e ICMS/ISS fora do DAS acima do sublimite.
-- Simples na reforma: opção por recolher IBS/CBS fora do DAS (regime regular).
-- MEI e comparativo autônomo PF (carnê-leão) × PJ.
 - IRPF anual (declaração) e cálculo completo do IRPFM com redutor.
 - Imposto Seletivo, ZFM, regimes específicos (combustíveis, financeiro, imobiliário).
 - Substituição tributária de ICMS, DIFAL e benefícios fiscais estaduais.

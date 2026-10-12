@@ -212,3 +212,22 @@ def comparar_pro_labore_dividendos(
             "verifique com simples.pro_labore_minimo_fator_r()."
         )
     return a, b
+
+
+def salario_liquido(
+    salario_bruto: Numero, data: date, dependentes: int = 0, pensao_alimenticia: Numero = 0, outros_descontos: Numero = 0
+) -> Resultado:
+    """Holerite simplificado do empregado CLT: INSS progressivo e IRRF (com a redução de 2026)."""
+    bruto = D(salario_bruto)
+    res = Resultado("Salário líquido (CLT)")
+    inss = res.passo("INSS do empregado (progressivo)", f"tabela sobre {brl(bruto)}", inss_empregado(bruto, data), "EC 103/2019, art. 28")
+    ir = irpf_mensal(bruto, data, inss=inss, dependentes=dependentes, pensao_alimenticia=pensao_alimenticia)
+    res.memoria.extend(ir.memoria)
+    res.tributos["INSS"] = inss
+    res.tributos["IRRF"] = ir.tributos["IRPF"]
+    if D(pensao_alimenticia):
+        res.tributos["Pensão alimentícia"] = D(pensao_alimenticia)
+    if D(outros_descontos):
+        res.tributos["Outros descontos"] = D(outros_descontos)
+    res.passo("Salário líquido", f"{brl(bruto)} - {brl(res.total)}", bruto - res.total)
+    return res

@@ -131,13 +131,25 @@ export interface Comparativo {
   alertas: string[];
 }
 
+export type TipoSimulacao = "expressa" | "completa" | "reforma" | "simples_reforma" | "autonomo" | "pro_labore";
+
+export const ROTULO_TIPO: Record<TipoSimulacao, string> = {
+  expressa: "Expressa",
+  completa: "Planejamento",
+  reforma: "Reforma",
+  simples_reforma: "Simples na Reforma",
+  autonomo: "Autônomo × CNPJ",
+  pro_labore: "Pró-labore",
+};
+
 export interface Simulacao {
   id: number;
   cliente_id: number;
-  tipo: "expressa" | "completa";
+  tipo: TipoSimulacao;
   titulo: string;
   entrada: Record<string, unknown>;
-  resultado: Comparativo;
+  // O formato do resultado depende do tipo (Comparativo, ResultadoReforma, ...)
+  resultado: Comparativo & { melhor: string; economia_vs_pior: number };
   versao_motor: string;
   criado_em: string;
 }
@@ -177,4 +189,89 @@ export interface Painel {
     economia: number;
     criado_em: string;
   }[];
+}
+
+// --- Fase 2 ----------------------------------------------------------------------
+export interface BlocoCalculo {
+  tributos: { nome: string; valor: number }[];
+  memoria: PassoMemoria[];
+  alertas: string[];
+}
+
+export interface AnoReforma extends BlocoCalculo {
+  ano: number;
+  total: number;
+  carga: number;
+  atuais: number;
+  novos: number;
+}
+
+export interface ResultadoReforma {
+  base_venda: number;
+  base_credito: number;
+  cbs_referencia: number;
+  ibs_referencia: number;
+  anos: AnoReforma[];
+  variacao_total: number;
+  variacao_carga_pp: number;
+  melhor: string;
+  alertas: string[];
+}
+
+export interface CenarioSimplesReforma extends BlocoCalculo {
+  ano: number;
+  dentro_do_das: number;
+  por_fora: number;
+  diferenca: number;
+  equilibrio_b2b: number | null;
+  equilibrio_texto: string;
+  credito_cliente_dentro: number;
+  credito_cliente_fora: number;
+  recomendacao: string;
+}
+
+export interface ResultadoSimplesReforma {
+  cenarios: CenarioSimplesReforma[];
+  curvas: Record<string, { b2b: number; diferenca: number }[]>;
+  percentual_b2b: number;
+  melhor: string;
+}
+
+export interface OpcaoAutonomo extends BlocoCalculo {
+  nome: string;
+  aplicavel: boolean;
+  tributos_mensais: number;
+  custos_mensais: number;
+  liquido_mensal: number;
+  detalhe: string;
+}
+
+export interface ResultadoAutonomo {
+  opcoes: OpcaoAutonomo[];
+  receita_mensal: number;
+  melhor: string;
+  ranking: string[];
+  ganho_vs_autonomo_anual: number;
+  alertas: string[];
+}
+
+export interface CenarioProLabore extends BlocoCalculo {
+  descricao: string;
+  pro_labore: number;
+  dividendos: number;
+  custo_mensal: number;
+  liquido_mensal: number;
+}
+
+export interface ResultadoProLabore {
+  cenarios: CenarioProLabore[];
+  regime: string;
+  economia_mensal: number;
+  economia_anual: number;
+  melhor: string;
+}
+
+export interface ResultadoSalario extends BlocoCalculo {
+  salario_bruto: number;
+  liquido: number;
 }

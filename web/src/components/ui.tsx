@@ -157,3 +157,31 @@ export function Titulo({ children, sub, acoes }: { children: ReactNode; sub?: Re
     </div>
   );
 }
+
+export function Abas<T extends string>({
+  abas,
+  ativa,
+  onChange,
+}: {
+  abas: { id: T; rotulo: string }[];
+  ativa: T;
+  onChange: (id: T) => void;
+}) {
+  return (
+    <div className="mb-5 flex gap-1 overflow-x-auto border-b border-borda" role="tablist">
+      {abas.map((a) => (
+        <button
+          key={a.id}
+          role="tab"
+          aria-selected={ativa === a.id}
+          onClick={() => onChange(a.id)}
+          className={`-mb-px shrink-0 border-b-2 px-4 py-2 text-sm font-medium ${
+            ativa === a.id ? "border-marca text-tinta" : "border-transparent text-tinta-2 hover:text-tinta"
+          }`}
+        >
+          {a.rotulo}
+        </button>
+      ))}
+    </div>
+  );
+}

@@ -3,8 +3,8 @@
 Plataforma SaaS para contadores: prospecção em minutos, planejamento tributário,
 simulação da Reforma Tributária e relatórios para clientes.
 
-Este repositório está na **Fase 1**: o motor de cálculo (Fase 0) agora tem uma
-aplicação web multi-escritório em cima dele.
+Este repositório está na **Fase 2**: aplicação web multi-escritório sobre o motor de
+cálculo, com simulador da Reforma Tributária e módulo de pessoa física.
 
 ## Estrutura
 
@@ -29,6 +29,17 @@ aplicação web multi-escritório em cima dele.
 - **Clientes:** cadastro, busca, situação (prospect/ativo/inativo), histórico de simulações
   e **planejamento completo** (compras, despesas creditáveis, ISS/ICMS).
 - **Painel:** clientes, prospects, simulações do mês e economia identificada.
+
+## Fase 2
+
+- **Reforma Tributária — transição 2025–2033:** carga sobre o consumo ano a ano (PIS/Cofins,
+  IPI e ICMS/ISS dando lugar a CBS e IBS), com créditos sobre compras, redução setorial
+  (30%, 60%, alíquota zero) e alíquotas de referência ajustáveis.
+- **Simples na Reforma:** recolher IBS/CBS dentro do DAS ou por fora (regime regular), em 2027 e
+  2033, com o peso das vendas a empresas (B2B), ponto de equilíbrio e créditos nas compras.
+- **Pessoa física:** "vale abrir CNPJ?" (autônomo × MEI × Simples × Presumido, com honorários
+  contábeis), pró-labore × dividendos (Lei 15.270/2025) e salário líquido.
+- Tudo pode ser **salvo no cliente** e vira **relatório em PDF** com a marca do escritório.
 
 ## Rodando localmente
 
@@ -79,6 +90,8 @@ docker compose up -d --build
 | `presumido` | Lucro Presumido trimestral: presunções por atividade, adicional de IRPJ, PIS/Cofins cumulativos, ISS/ICMS, INSS patronal, acréscimo da LC 224/2025 |
 | `real` | Lucro Real anual (estimativa gerencial): PIS/Cofins não cumulativos com créditos, IRPJ + adicional, CSLL, prejuízo fiscal |
 | `comparativo` | Comparação entre os três regimes e **simulação expressa** com 3 entradas (faturamento, folha, atividade) |
+| `reforma_simples` | Simples na Reforma: partilha do DAS, IBS/CBS no DAS × por fora, ponto de equilíbrio B2B |
+| `autonomo` | Autônomo (carnê-leão) × MEI × Simples × Presumido, valores mensais |
 | `pessoa_fisica` | INSS 2025/2026, IRPF mensal com a redução da Lei 15.270/2025, retenção de 10% sobre dividendos, alíquota do IRPFM, pró-labore × dividendos |
 | `reforma` | Transição IBS/CBS ano a ano (2025–2033) com créditos, redução setorial e alíquotas de referência configuráveis |
 
@@ -122,7 +135,7 @@ print(reforma.tabela_resumo(anos))
 
 ## Validação com contador
 
-`validacao/casos_validacao.xlsx` traz 48 casos (empresas, PF, sócios e reforma) com os
+`validacao/casos_validacao.xlsx` traz 64 casos (empresas, PF, sócios, reforma, Simples na reforma e autônomo × CNPJ) com os
 valores do motor, a memória de cálculo e os alertas. O contador preenche a coluna
 amarela "Valor correto" e a planilha mostra a diferença. Para regenerar:
 
@@ -135,8 +148,8 @@ Premissas, fontes e pontos em aberto: [`docs/premissas.md`](docs/premissas.md).
 ## Roteiro
 
 - **Fase 0 (concluída):** motor de cálculo testado; validação com contador em andamento.
-- **Fase 1 (atual):** login, cadastro de clientes, prospecção com CNPJ, proposta em PDF com a marca do escritório.
-- **Fase 2:** simulador da reforma e módulo PF na interface.
+- **Fase 1 (concluída):** login, cadastro de clientes, prospecção com CNPJ, proposta em PDF com a marca do escritório.
+- **Fase 2 (atual):** simulador da reforma, Simples na reforma e módulo de pessoa física, com relatórios em PDF.
 - **Fase 3:** painéis, portal do cliente, envio automático por e-mail, importação de XML/SPED.
 - **Fase 4:** integrações (Serpro Integra Contador, ERPs), WhatsApp, assistente de IA.
 

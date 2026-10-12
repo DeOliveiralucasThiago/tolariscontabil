@@ -209,3 +209,56 @@ class PainelSaida(BaseModel):
     simulacoes_mes: int
     economia_identificada_mes: float
     ultimas_simulacoes: list[dict[str, Any]]
+
+
+# --- Fase 2: calculadoras ---------------------------------------------------------
+Fracao = Decimal
+
+
+class ReformaEntrada(BaseModel):
+    receita_bruta_anual: Dinheiro = Field(gt=0)
+    vende_mercadoria: bool
+    pis_cofins_nao_cumulativo: bool = False
+    compras_anual: Dinheiro = Field(default=Decimal(0), ge=0)
+    despesas_creditaveis_anual: Dinheiro = Field(default=Decimal(0), ge=0)
+    aliquota_icms: Fracao = Field(default=Decimal("0.18"), ge=0, le=Decimal("0.35"))
+    aliquota_iss: Fracao = Field(default=Decimal("0.05"), ge=0, le=Decimal("0.05"))
+    aliquota_ipi: Fracao = Field(default=Decimal(0), ge=0, le=Decimal("0.5"))
+    reducao_setorial: Fracao = Field(default=Decimal(0), ge=0, le=1)
+    fracao_credito_compras: Fracao = Field(default=Decimal(1), ge=0, le=1)
+    cbs_referencia: Fracao | None = Field(default=None, ge=0, le=Decimal("0.2"))
+    ibs_referencia: Fracao | None = Field(default=None, ge=0, le=Decimal("0.3"))
+
+
+class SimplesReformaEntrada(BaseModel):
+    atividade: Atividade
+    receita_bruta_anual: Dinheiro = Field(gt=0, le=Decimal("4800000"))
+    percentual_b2b: Fracao = Field(ge=0, le=1)
+    compras_creditaveis_anual: Dinheiro = Field(default=Decimal(0), ge=0)
+    folha_fator_r_anual: Dinheiro | None = Field(default=None, ge=0)
+    reducao_setorial: Fracao = Field(default=Decimal(0), ge=0, le=1)
+    cbs_referencia: Fracao | None = Field(default=None, ge=0, le=Decimal("0.2"))
+    ibs_referencia: Fracao | None = Field(default=None, ge=0, le=Decimal("0.3"))
+
+
+class AutonomoEntrada(BaseModel):
+    receita_mensal: Dinheiro = Field(gt=0)
+    atividade: Atividade = Atividade.SERVICO_FATOR_R
+    despesas_mensais: Dinheiro = Field(default=Decimal(0), ge=0)
+    dependentes: int = Field(default=0, ge=0, le=20)
+    iss_fixo_autonomo_mensal: Dinheiro = Field(default=Decimal(0), ge=0)
+    aliquota_iss: Fracao = Field(default=Decimal("0.05"), ge=0, le=Decimal("0.05"))
+    mei_permitido: bool = False
+    contabilidade_mensal: Dinheiro = Field(default=Decimal(0), ge=0)
+
+
+class ProLaboreEntrada(BaseModel):
+    retirada_mensal: Dinheiro = Field(gt=0)
+    regime: Literal["simples", "simples_anexo_iv", "presumido", "real"] = "presumido"
+    pro_labore_otimizado: Dinheiro | None = Field(default=None, ge=0)
+
+
+class SalarioEntrada(BaseModel):
+    salario_bruto: Dinheiro = Field(gt=0)
+    dependentes: int = Field(default=0, ge=0, le=20)
+    pensao_alimenticia: Dinheiro = Field(default=Decimal(0), ge=0)

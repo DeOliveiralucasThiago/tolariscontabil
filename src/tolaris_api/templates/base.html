@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>{{ titulo_doc }} — {{ cliente.razao_social }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 20mm 16mm;
+    @bottom-left { content: {{ (escritorio.nome ~ " · " ~ titulo_doc ~ " · " ~ cliente.razao_social|truncate(40))|css }}; font-family: "Helvetica", "Arial", "Liberation Sans", "DejaVu Sans", sans-serif; font-size: 8pt; color: #5B6775; }
+    @bottom-right { content: "Página " counter(page) " de " counter(pages); font-family: "Helvetica", "Arial", "Liberation Sans", "DejaVu Sans", sans-serif; font-size: 8pt; color: #5B6775; }
+  }
+  * { box-sizing: border-box; }
+  body { font-family: "Helvetica", "Arial", "Liberation Sans", "DejaVu Sans", sans-serif; color: #1D2733; font-size: 10pt; line-height: 1.45; margin: 0; }
+  .faixa { background: {{ cor }}; color: {{ cor_texto }}; padding: 14px 18px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; }
+  .faixa .marca { display: flex; align-items: center; gap: 12px; }
+  .faixa img { max-height: 46px; max-width: 160px; background: #fff; padding: 4px; border-radius: 4px; }
+  .faixa .nome { font-size: 13pt; font-weight: 700; }
+  .faixa .contato { font-size: 8.5pt; text-align: right; opacity: .92; }
+  h1 { font-size: 19pt; margin: 22px 0 2px; }
+  h2 { font-size: 12pt; margin: 22px 0 8px; color: {{ cor }}; border-bottom: 1px solid #D5DBE1; padding-bottom: 4px; }
+  .subtitulo { color: #5B6775; margin: 0 0 14px; }
+  .cliente { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; background: #F5F7F9; border-radius: 6px; padding: 10px 14px; }
+  .cliente div span { color: #5B6775; display: block; font-size: 8pt; text-transform: uppercase; letter-spacing: .04em; }
+  .destaque { border: 2px solid {{ cor }}; border-radius: 8px; padding: 14px 18px; margin: 18px 0 6px; }
+  .destaque .rotulo { color: #5B6775; font-size: 9pt; text-transform: uppercase; letter-spacing: .05em; }
+  .destaque .regime { font-size: 18pt; font-weight: 700; }
+  .destaque .economia { font-size: 11pt; margin-top: 4px; }
+  .destaque .economia strong { font-size: 14pt; }
+  table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  th, td { padding: 5px 6px; border-bottom: 1px solid #E3E8EC; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { color: #5B6775; font-weight: 600; font-size: 8.5pt; border-bottom: 1.5px solid #B8C2CC; }
+  tr.total td { font-weight: 700; border-top: 1.5px solid #B8C2CC; border-bottom: none; }
+  th.melhor, td.melhor { background: #F5F7F9; }
+  .premissas { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 24px; font-size: 9pt; }
+  .premissas div { display: flex; justify-content: space-between; border-bottom: 1px dotted #D5DBE1; padding: 2px 0; }
+  ul.alertas { padding-left: 16px; margin: 0; font-size: 9pt; }
+  ul.alertas li { margin-bottom: 3px; }
+  .assinatura { margin-top: 34px; width: 60%; border-top: 1px solid #1D2733; padding-top: 6px; font-size: 9pt; }
+  .aviso { margin-top: 18px; font-size: 7.8pt; color: #5B6775; }
+  .quebra { page-break-before: always; }
+  .memoria h3 { font-size: 10.5pt; margin: 16px 0 6px; }
+  .memoria table { font-size: 7.8pt; }
+  .memoria td { vertical-align: top; }
+  .memoria td.formula { text-align: left; color: #3A4654; }
+  .memoria td.lei { text-align: left; color: #5B6775; width: 22%; }
+  .memoria td.valor { white-space: nowrap; width: 15%; }
+  .grade { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; }
+  .grade .card { border: 1px solid #E3E8EC; border-radius: 6px; padding: 8px 10px; }
+  .grade .card span { display: block; color: #5B6775; font-size: 8pt; text-transform: uppercase; letter-spacing: .04em; }
+  .grade .card strong { font-size: 12pt; }
+  .legenda { font-size: 8pt; color: #5B6775; margin: 2px 0 4px; }
+  .legenda i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin: 0 4px -1px 10px; }
+</style>
+</head>
+<body>
+  <div class="faixa">
+    <div class="marca">
+      {% if logo %}<img src="{{ logo }}" alt="Logo {{ escritorio.nome }}">{% endif %}
+      <div class="nome">{{ escritorio.nome }}</div>
+    </div>
+    <div class="contato">
+      {% if escritorio.email %}{{ escritorio.email }}<br>{% endif %}
+      {% if escritorio.telefone %}{{ escritorio.telefone }}<br>{% endif %}
+      {% if escritorio.cnpj %}CNPJ {{ escritorio.cnpj|cnpj }}{% endif %}
+    </div>
+  </div>
+
+  <h1>{{ titulo_doc }}</h1>
+  <p class="subtitulo">{{ subtitulo_doc }} · emitido em {{ data }}</p>
+
+  <div class="cliente">
+    <div><span>Cliente</span>{{ cliente.razao_social }}</div>
+    <div><span>CNPJ</span>{{ cliente.cnpj|cnpj }}</div>
+    <div><span>Atividade</span>{{ atividade or "—" }}{% if cliente.cnae_principal %} · CNAE {{ cliente.cnae_principal }}{% endif %}</div>
+    <div><span>Município</span>{% if cliente.municipio %}{{ cliente.municipio }}/{{ cliente.uf }}{% else %}—{% endif %}</div>
+  </div>
+
+{% block corpo %}{% endblock %}
+
+  <div class="assinatura">
+    {{ responsavel }}{% if escritorio.crc %} · CRC {{ escritorio.crc }}{% endif %}<br>
+    {{ escritorio.nome }}
+  </div>
+
+{% block aviso %}{% endblock %}
+{% block memoria %}{% endblock %}
+</body>
+</html>
