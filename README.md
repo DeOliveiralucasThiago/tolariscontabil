@@ -80,7 +80,8 @@ docker compose up -d --build
 ```
 
 Para testar na rede do escritório (outros computadores e celulares acessando pelo IP da máquina),
-siga o passo a passo em [`docs/teste-rede-local.md`](docs/teste-rede-local.md).
+siga o passo a passo em [`docs/teste-rede-local.md`](docs/teste-rede-local.md). Sem Docker, há uma
+versão portátil para Windows (pasta `portatil/`), montada e testada pelo GitHub Actions.
 
 ### Configuração da API (variáveis `TOLARIS_*`)
 

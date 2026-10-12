@@ -6,6 +6,21 @@ Um computador do escritório roda o Tolaris e os outros computadores e celulares
 O computador que roda o sistema precisa ficar ligado durante o uso. A consulta de CNPJ e o envio
 de e-mail continuam precisando de internet nesse computador.
 
+## Sem Docker: versão portátil para Windows (mais simples)
+
+Uma pasta com tudo dentro (Python, Node.js e as bibliotecas do PDF), sem instalar nada:
+
+1. No GitHub, abra **Actions → Tolaris portátil (Windows)**, clique na execução mais recente
+   (com ✓ verde) e baixe o arquivo **Tolaris-portatil-windows** em *Artifacts*.
+2. Descompacte num caminho curto, por exemplo `C:\Tolaris`.
+3. Dê dois cliques em **Iniciar Tolaris.bat** e siga o `LEIA-ME.txt`.
+
+O banco fica em `dados\tolaris.db` (SQLite). O e-mail é configurado em `configuracao.txt`.
+A pasta é montada e testada automaticamente num Windows do GitHub a cada envio de código
+(`portatil/montar-windows.ps1` e `.github/workflows/portatil-windows.yml`).
+
+O restante deste guia usa Docker (PostgreSQL, mais próximo da hospedagem definitiva).
+
 ## 1. Instalar o Docker
 
 Baixe e instale o **Docker Desktop** (Windows ou Mac): https://www.docker.com/products/docker-desktop/
