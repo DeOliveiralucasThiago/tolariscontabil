@@ -9,8 +9,49 @@ import { api, ErroApi } from "@/lib/api";
 import { cnpjValido, mascaraCnpj, soDigitos } from "@/lib/formato";
 import type { Sessao } from "@/lib/tipos";
 
+function AlterarSenha() {
+  const { atualizar } = useSessao();
+  const [f, setF] = useState({ senha_atual: "", nova_senha: "", confirmacao: "" });
+  const [erro, setErro] = useState("");
+  const [ok, setOk] = useState("");
+  const [salvando, setSalvando] = useState(false);
+
+  async function salvar(e: React.FormEvent) {
+    e.preventDefault();
+    setErro("");
+    setOk("");
+    if (f.nova_senha !== f.confirmacao) return setErro("As senhas não conferem.");
+    setSalvando(true);
+    try {
+      atualizar(await api<Sessao>("/auth/alterar-senha", { method: "POST", json: { senha_atual: f.senha_atual, nova_senha: f.nova_senha } }));
+      setF({ senha_atual: "", nova_senha: "", confirmacao: "" });
+      setOk("Senha alterada. As sessões em outros aparelhos foram encerradas.");
+    } catch (e) {
+      setErro(e instanceof ErroApi ? e.message : "Falha ao alterar a senha");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <Cartao titulo="Minha senha">
+      <form onSubmit={salvar} className="grid gap-4 sm:grid-cols-3">
+        <Campo rotulo="Senha atual" name="senha_atual" type="password" autoComplete="current-password" required value={f.senha_atual} onChange={(e) => setF((x) => ({ ...x, senha_atual: e.target.value }))} />
+        <Campo rotulo="Nova senha" name="nova_senha" type="password" autoComplete="new-password" required minLength={8} value={f.nova_senha} onChange={(e) => setF((x) => ({ ...x, nova_senha: e.target.value }))} />
+        <Campo rotulo="Confirme" name="confirmacao_senha" type="password" autoComplete="new-password" required minLength={8} value={f.confirmacao} onChange={(e) => setF((x) => ({ ...x, confirmacao: e.target.value }))} />
+        <div className="sm:col-span-3 flex flex-col gap-2">
+          <MensagemErro>{erro}</MensagemErro>
+          {ok && <p className="text-sm text-emerald-700">{ok}</p>}
+          <div><Botao type="submit" variante="secundario" carregando={salvando}>Alterar senha</Botao></div>
+        </div>
+      </form>
+    </Cartao>
+  );
+}
+
 function Configuracoes() {
   const { sessao, atualizar } = useSessao();
+  const admin = sessao.usuario.papel === "admin";
   const bemVindo = useSearchParams().get("bemvindo");
   const esc = sessao.escritorio;
   const [f, setF] = useState({
@@ -80,9 +121,15 @@ function Configuracoes() {
           Conta criada! Envie a logo e escolha a cor do escritório para personalizar as propostas.
         </div>
       )}
+      {!admin && (
+        <div className="mb-4 rounded-lg border border-borda bg-superficie px-4 py-3 text-sm text-tinta-2">
+          Apenas administradores alteram os dados e a marca do escritório.
+        </div>
+      )}
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <Cartao titulo="Identificação">
           <form onSubmit={salvar} className="flex flex-col gap-4">
+            <fieldset disabled={!admin} className="flex flex-col gap-4 disabled:opacity-70">
             <div className="grid gap-4 sm:grid-cols-2">
               <Campo rotulo="Nome do escritório" name="nome" required minLength={2} value={f.nome} onChange={muda("nome")} />
               <Campo rotulo="CNPJ" name="cnpj_escritorio" inputMode="numeric" value={f.cnpj} onChange={(e) => setF((x) => ({ ...x, cnpj: mascaraCnpj(e.target.value) }))} />
@@ -107,11 +154,14 @@ function Configuracoes() {
                 <span className="num text-sm text-tinta-2">{f.cor_primaria.toUpperCase()}</span>
               </div>
             </div>
+            </fieldset>
             <MensagemErro>{erro}</MensagemErro>
             {ok && <p className="text-sm text-emerald-700">{ok}</p>}
-            <div>
-              <Botao type="submit" carregando={salvando}>Salvar</Botao>
-            </div>
+            {admin && (
+              <div>
+                <Botao type="submit" carregando={salvando}>Salvar</Botao>
+              </div>
+            )}
           </form>
         </Cartao>
 
@@ -133,12 +183,17 @@ function Configuracoes() {
               className="hidden"
               onChange={(e) => e.target.files?.[0] && enviarLogo(e.target.files[0])}
             />
-            <div className="flex gap-2">
-              <Botao variante="secundario" onClick={() => arquivo.current?.click()}>Enviar logo</Botao>
-              {esc.tem_logo && <Botao variante="fantasma" onClick={removerLogo}>Remover</Botao>}
-            </div>
+            {admin && (
+              <div className="flex gap-2">
+                <Botao variante="secundario" onClick={() => arquivo.current?.click()}>Enviar logo</Botao>
+                {esc.tem_logo && <Botao variante="fantasma" onClick={removerLogo}>Remover</Botao>}
+              </div>
+            )}
           </div>
         </Cartao>
+      </div>
+      <div className="mt-6">
+        <AlterarSenha />
       </div>
     </>
   );

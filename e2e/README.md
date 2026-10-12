@@ -27,3 +27,12 @@ histórico do cliente e celular) usa um e-mail novo a cada execução:
 ```bash
 node fluxo_fase2.mjs saida
 ```
+
+O fluxo da Fase 3 (esqueci a senha, convite, importação, envio por e-mail e portal) lê os e-mails
+de uma pasta. Suba a API com o backend de arquivo:
+
+```bash
+export TOLARIS_EMAIL_BACKEND=arquivo TOLARIS_EMAIL_PASTA=/tmp/emails TOLARIS_URL_PUBLICA=http://127.0.0.1:3000
+uvicorn tolaris_api.main:app --port 8000 &
+cd e2e && EMAIL_DIR=/tmp/emails node fluxo_fase3.mjs saida
+```

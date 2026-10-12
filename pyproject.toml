@@ -23,6 +23,7 @@ api = [
     "weasyprint>=62",
     "python-multipart>=0.0.9",
     "psycopg[binary]>=3.2",
+    "defusedxml>=0.7",
 ]
 dev = ["pytest>=8", "openpyxl>=3.1"]
 

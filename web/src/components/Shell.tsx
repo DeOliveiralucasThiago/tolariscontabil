@@ -12,6 +12,7 @@ const MENU = [
   { href: "/clientes", rotulo: "Clientes", icone: "☰" },
   { href: "/reforma", rotulo: "Reforma Tributária", icone: "⇄" },
   { href: "/pessoa-fisica", rotulo: "Pessoa física", icone: "◉" },
+  { href: "/equipe", rotulo: "Equipe", icone: "☺" },
   { href: "/configuracoes", rotulo: "Configurações", icone: "⚙" },
 ];
 

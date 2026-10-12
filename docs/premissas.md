@@ -55,6 +55,17 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 | Partilha do DAS | Percentuais por tributo de cada faixa dos Anexos I a V; ISS limitado a 5% efetivo | LC 123/2006, Anexos I a V |
 | MEI | Limite R$ 81.000/ano; INSS 5% do salário mínimo; ISS R$ 5; ICMS R$ 1 | LC 123/2006, art. 18-A |
 
+## Premissas da Fase 3 (importação fiscal)
+
+13. **Classificação:** nota emitida pelo CNPJ do cliente com tipo "saída" = venda; nota em que o cliente
+    é destinatário = compra. Notas sem o CNPJ do cliente são ignoradas.
+14. **Situação:** só notas autorizadas (status 100/150) ou sem protocolo no XML; no SPED, documentos
+    cancelados, denegados e inutilizados ficam de fora.
+15. **Valores:** valor total da nota (vNF / VL_DOC). Devoluções, notas de ajuste e CFOPs que não são
+    venda (remessas, transferências) ainda entram como vendas ou compras: o contador deve conferir.
+16. **Anualização:** com menos de 12 meses importados, o planejamento usa a média mensal × 12.
+17. **NFS-e:** ainda não importada (formatos municipais e padrão nacional em transição).
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias?).
@@ -66,6 +77,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Modelo da decisão do Simples na Reforma (preços ajustados para o mesmo custo líquido do cliente).
 - [ ] Carnê-leão: livro-caixa × desconto simplificado (o motor usa o maior dos dois).
 - [ ] Casos da planilha `validacao/casos_validacao.xlsx` (64 casos, incluindo SR* e AU*).
+- [ ] Importação: quais CFOPs excluir da receita (remessas, devoluções, transferências).
 
 ## Fora do escopo da Fase 0 (próximos passos do motor)
 

@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, FastAPI
 
 import tolaris_motor
 
 from .config import get_settings
-from .routers import auth, calculadoras, clientes, cnpj, escritorio, simulacoes
+from .routers import auth, calculadoras, clientes, cnpj, compartilhamento, equipe, escritorio, fiscal, simulacoes
 
 CHAVE_PADRAO = "dev-somente-local-troque-esta-chave-em-producao"
 
@@ -16,6 +18,11 @@ def criar_app() -> FastAPI:
     cfg = get_settings()
     if cfg.ambiente == "producao" and (cfg.secret_key == CHAVE_PADRAO or len(cfg.secret_key) < 32):
         raise RuntimeError("Defina TOLARIS_SECRET_KEY com pelo menos 32 caracteres em produção")
+    if cfg.ambiente == "producao" and cfg.email_backend in ("console", "arquivo"):
+        logging.getLogger("tolaris").warning(
+            "TOLARIS_EMAIL_BACKEND=%s em produção: e-mails (senha, convites, relatórios) não serão entregues.",
+            cfg.email_backend,
+        )
 
     app = FastAPI(
         title="Tolaris Contábil API",
@@ -24,7 +31,7 @@ def criar_app() -> FastAPI:
         openapi_url="/api/openapi.json",
     )
     api = APIRouter(prefix="/api")
-    for r in (auth.router, escritorio.router, clientes.router, cnpj.router, simulacoes.router, calculadoras.router):
+    for r in (auth.router, escritorio.router, clientes.router, cnpj.router, simulacoes.router, calculadoras.router, equipe.router, compartilhamento.router, fiscal.router):
         api.include_router(r)
 
     @api.get("/saude", tags=["infra"])

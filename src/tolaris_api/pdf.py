@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import re
+import unicodedata
 from datetime import datetime
 from html import escape
 from typing import Any
@@ -158,7 +159,7 @@ def _entradas_legiveis(sim: Simulacao) -> list[tuple[str, str]]:
     return linhas
 
 
-def _contexto(escritorio: Escritorio, cliente: Cliente, sim: Simulacao, usuario: Usuario) -> dict[str, Any]:
+def _contexto(escritorio: Escritorio, cliente: Cliente, sim: Simulacao, usuario: Usuario | None) -> dict[str, Any]:
     cor = escritorio.cor_primaria or "#1F3A5F"
     logo = None
     if escritorio.logo and escritorio.logo_mime:
@@ -175,13 +176,13 @@ def _contexto(escritorio: Escritorio, cliente: Cliente, sim: Simulacao, usuario:
         cor_texto=cor_texto_sobre(cor),
         logo=logo,
         atividade=ROTULOS_ATIVIDADE.get(cliente.atividade or "", None),
-        responsavel=escritorio.contador_responsavel or usuario.nome,
+        responsavel=escritorio.contador_responsavel or (usuario.nome if usuario else escritorio.nome),
         data=data.strftime("%d/%m/%Y"),
         gerado_em=datetime.now(ZoneInfo("America/Sao_Paulo")).strftime("%d/%m/%Y %H:%M"),
     )
 
 
-def montar_html(escritorio: Escritorio, cliente: Cliente, sim: Simulacao, usuario: Usuario) -> str:
+def montar_html(escritorio: Escritorio, cliente: Cliente, sim: Simulacao, usuario: Usuario | None) -> str:
     ctx = _contexto(escritorio, cliente, sim, usuario)
     res = sim.resultado
     if sim.tipo in RELATORIOS:
@@ -203,7 +204,27 @@ def montar_html(escritorio: Escritorio, cliente: Cliente, sim: Simulacao, usuari
     )
 
 
-def gerar_proposta(escritorio: Escritorio, cliente: Cliente, sim: Simulacao, usuario: Usuario) -> bytes:
+TITULOS = {
+    "expressa": "Diagnóstico tributário",
+    "completa": "Diagnóstico tributário",
+    "reforma": "Impacto da Reforma Tributária",
+    "simples_reforma": "Simples Nacional na Reforma",
+    "autonomo": "Vale abrir CNPJ?",
+    "pro_labore": "Pró-labore × distribuição de lucros",
+}
+
+
+def titulo_documento(sim: Simulacao) -> str:
+    return TITULOS.get(sim.tipo, "Relatório")
+
+
+def nome_arquivo(sim: Simulacao) -> str:
+    sem_acento = unicodedata.normalize("NFKD", titulo_documento(sim).lower()).encode("ascii", "ignore").decode()
+    base = re.sub(r"[^a-z0-9]+", "-", sem_acento).strip("-")
+    return f"{base or 'relatorio'}-{sim.id}.pdf"
+
+
+def gerar_proposta(escritorio: Escritorio, cliente: Cliente, sim: Simulacao, usuario: Usuario | None = None) -> bytes:
     from weasyprint import HTML  # import tardio: carrega Pango só quando gera PDF
 
     return HTML(string=montar_html(escritorio, cliente, sim, usuario), url_fetcher=_fetcher_somente_data()).write_pdf()

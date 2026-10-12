@@ -10,10 +10,12 @@ import { Botao, MensagemErro, Selecao } from "./ui";
 /** Planejamento completo: valores anuais com compras, despesas e alíquotas locais. */
 export function FormCompleta({
   atividadeInicial,
+  inicial,
   onCalcular,
   carregando,
 }: {
   atividadeInicial: Atividade | null;
+  inicial?: Partial<CompletaEntrada>;
   onCalcular: (e: CompletaEntrada) => void;
   carregando: boolean;
 }) {
@@ -27,6 +29,7 @@ export function FormCompleta({
     outras_despesas_anual: 0,
     aliquota_iss: 0.05,
     aliquota_icms: 0.18,
+    ...inicial,
   });
   const [erro, setErro] = useState("");
   const mercadoria = f.atividade === "comercio" || f.atividade === "industria";

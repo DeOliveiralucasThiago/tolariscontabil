@@ -47,6 +47,7 @@ def criar_token(usuario: Usuario) -> str:
     payload = {
         "sub": str(usuario.id),
         "esc": usuario.escritorio_id,
+        "sv": usuario.sessao_versao,
         "iat": agora,
         "exp": agora + timedelta(hours=cfg.sessao_horas),
     }
@@ -87,6 +88,17 @@ def usuario_atual(request: Request, db: Session = Depends(get_db)) -> Usuario:
         usuario = db.get(Usuario, int(payload["sub"]))
     except (jwt.PyJWTError, KeyError, ValueError):
         raise _NAO_AUTENTICADO from None
-    if usuario is None or not usuario.ativo or usuario.escritorio_id != payload.get("esc"):
+    if (
+        usuario is None
+        or not usuario.ativo
+        or usuario.escritorio_id != payload.get("esc")
+        or usuario.sessao_versao != payload.get("sv", 0)
+    ):
         raise _NAO_AUTENTICADO
+    return usuario
+
+
+def somente_admin(usuario: Usuario = Depends(usuario_atual)) -> Usuario:
+    if usuario.papel != "admin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Apenas administradores do escritório podem fazer isso")
     return usuario

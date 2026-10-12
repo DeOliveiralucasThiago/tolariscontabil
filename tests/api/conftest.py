@@ -26,6 +26,14 @@ def consulta_falsa(cnpj: str) -> DadosCnpj:
     )
 
 
+@pytest.fixture(autouse=True)
+def caixa_limpa():
+    from tolaris_api.emails import CAIXA_SAIDA
+
+    CAIXA_SAIDA.clear()
+    yield CAIXA_SAIDA
+
+
 @pytest.fixture()
 def client():
     # TOLARIS_TEST_DATABASE_URL permite rodar a mesma suíte contra PostgreSQL.

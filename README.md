@@ -3,8 +3,9 @@
 Plataforma SaaS para contadores: prospecção em minutos, planejamento tributário,
 simulação da Reforma Tributária e relatórios para clientes.
 
-Este repositório está na **Fase 2**: aplicação web multi-escritório sobre o motor de
-cálculo, com simulador da Reforma Tributária e módulo de pessoa física.
+Este repositório está na **Fase 3**: aplicação web multi-escritório sobre o motor de
+cálculo, com Reforma Tributária, pessoa física, equipe, envio de relatórios por e-mail,
+portal do cliente e importação de NF-e/SPED.
 
 ## Estrutura
 
@@ -41,6 +42,21 @@ cálculo, com simulador da Reforma Tributária e módulo de pessoa física.
   contábeis), pró-labore × dividendos (Lei 15.270/2025) e salário líquido.
 - Tudo pode ser **salvo no cliente** e vira **relatório em PDF** com a marca do escritório.
 
+## Fase 3 e preparação para produção
+
+- **Conta e segurança:** esqueci/redefinir senha por e-mail (link de uso único, 1 hora), troca de
+  senha, sessões derrubadas ao trocar a senha ou desativar o usuário, limite de tentativas de login
+  (5 por e-mail e 30 por IP a cada 15 minutos).
+- **Equipe:** convites por e-mail (válidos por 7 dias), papéis administrador/membro, desativação;
+  o escritório nunca fica sem administrador.
+- **Envio por e-mail:** o relatório em PDF vai para o cliente em nome do escritório (respostas vão
+  para o e-mail do escritório), com histórico de envios.
+- **Portal do cliente:** link exclusivo por cliente com a marca do escritório, mostrando só os
+  relatórios marcados como publicados; gerar um novo link desativa o anterior.
+- **Movimento fiscal:** importação de XML de NF-e/NFC-e (soltos ou em ZIP) e do SPED Fiscal
+  (EFD ICMS/IPI), sem duplicar notas; vendas, compras e tributos por mês; um clique leva os
+  últimos 12 meses para o planejamento.
+
 ## Rodando localmente
 
 ```bash
@@ -72,6 +88,11 @@ docker compose up -d --build
 | `TOLARIS_COOKIE_SECURE` | `false` | `true` atrás de HTTPS |
 | `TOLARIS_BRASILAPI_URL` | BrasilAPI pública | Consulta de CNPJ |
 | `TOLARIS_SESSAO_HORAS` | `12` | Duração da sessão |
+| `TOLARIS_URL_PUBLICA` | `http://localhost:3000` | Endereço do site nos links enviados por e-mail |
+| `TOLARIS_EMAIL_BACKEND` | `console` | `console` (não envia), `arquivo` (grava em `TOLARIS_EMAIL_PASTA`), `smtp` ou `resend` |
+| `TOLARIS_EMAIL_REMETENTE` | `Tolaris Contábil <nao-responda@localhost>` | Remetente; o nome exibido vira "Escritório X via Tolaris" |
+| `TOLARIS_SMTP_*` / `TOLARIS_RESEND_API_KEY` | — | Credenciais do provedor de e-mail |
+| `TOLARIS_IMPORTACAO_MAX_MB` | `25` | Limite por envio de arquivos fiscais |
 
 ### Segurança adotada
 
@@ -79,6 +100,9 @@ docker compose up -d --build
 - Sessão em cookie `httpOnly` + `SameSite=Lax`; o JavaScript do site nunca vê o token.
 - Toda consulta filtra pelo escritório do usuário (testado: um escritório não acessa dados de outro).
 - Logo validada pelo conteúdo (PNG/JPG, até 512 KB).
+- Tokens de redefinição, convite e portal: 256 bits aleatórios; no banco fica só o hash SHA-256.
+- Importação fiscal: XML lido com `defusedxml` (sem XXE nem "billion laughs"), ZIP com limites de
+  quantidade e tamanho, CNPJ do cliente conferido em cada documento.
 - O gerador de PDF só aceita recursos embutidos (`data:`); nunca busca URLs (evita SSRF),
   e textos do cliente são escapados no HTML e no CSS do rodapé.
 
@@ -149,8 +173,9 @@ Premissas, fontes e pontos em aberto: [`docs/premissas.md`](docs/premissas.md).
 
 - **Fase 0 (concluída):** motor de cálculo testado; validação com contador em andamento.
 - **Fase 1 (concluída):** login, cadastro de clientes, prospecção com CNPJ, proposta em PDF com a marca do escritório.
-- **Fase 2 (atual):** simulador da reforma, Simples na reforma e módulo de pessoa física, com relatórios em PDF.
-- **Fase 3:** painéis, portal do cliente, envio automático por e-mail, importação de XML/SPED.
+- **Fase 2 (concluída):** simulador da reforma, Simples na reforma e módulo de pessoa física, com relatórios em PDF.
+- **Fase 3 (atual):** equipe, recuperação de senha, envio por e-mail, portal do cliente, importação de XML/SPED.
+- **Próximos:** cobrança da assinatura, NFS-e, alertas automáticos (fator R, sublimite), envio recorrente.
 - **Fase 4:** integrações (Serpro Integra Contador, ERPs), WhatsApp, assistente de IA.
 
 > As estimativas não substituem a análise do contador responsável.

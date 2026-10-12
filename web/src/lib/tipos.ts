@@ -151,6 +151,7 @@ export interface Simulacao {
   // O formato do resultado depende do tipo (Comparativo, ResultadoReforma, ...)
   resultado: Comparativo & { melhor: string; economia_vs_pior: number };
   versao_motor: string;
+  publicada: boolean;
   criado_em: string;
 }
 
@@ -274,4 +275,66 @@ export interface ResultadoProLabore {
 export interface ResultadoSalario extends BlocoCalculo {
   salario_bruto: number;
   liquido: number;
+}
+
+// --- Equipe, envio, portal e movimento fiscal --------------------------------------------
+export interface Membro {
+  id: number;
+  nome: string;
+  email: string;
+  papel: "admin" | "membro";
+  ativo: boolean;
+  criado_em: string;
+}
+
+export interface Convite {
+  id: number;
+  email: string;
+  nome: string | null;
+  papel: string | null;
+  expira_em: string;
+  criado_em: string;
+}
+
+export interface Envio {
+  id: number;
+  para: string;
+  assunto: string;
+  status: "enviado" | "falhou";
+  erro: string | null;
+  criado_em: string;
+}
+
+export interface PortalEstado {
+  ativo: boolean;
+  criado_em: string | null;
+  ultimo_acesso_em: string | null;
+  publicadas: number;
+}
+
+export interface MesMovimento {
+  competencia: string;
+  saidas: number;
+  entradas: number;
+  icms: number;
+  ipi: number;
+  pis: number;
+  cofins: number;
+  documentos: number;
+}
+
+export interface Movimento {
+  meses: MesMovimento[];
+  receita_12m: number;
+  compras_12m: number;
+  meses_12m: number;
+  documentos: number;
+}
+
+export interface ResultadoImportacao {
+  importados: number;
+  duplicados: number;
+  ignorados: { arquivo: string; motivo: string }[];
+  total_ignorados: number;
+  competencias: string[];
 }

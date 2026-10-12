@@ -195,6 +195,7 @@ class SimulacaoSaida(BaseModel):
     entrada: dict[str, Any]
     resultado: dict[str, Any]
     versao_motor: str
+    publicada: bool = False
     criado_em: datetime
 
 
@@ -262,3 +263,148 @@ class SalarioEntrada(BaseModel):
     salario_bruto: Dinheiro = Field(gt=0)
     dependentes: int = Field(default=0, ge=0, le=20)
     pensao_alimenticia: Dinheiro = Field(default=Decimal(0), ge=0)
+
+
+# --- Senha e equipe -------------------------------------------------------------------
+class EsqueciSenhaEntrada(BaseModel):
+    email: EmailStr
+
+
+class RedefinirSenhaEntrada(BaseModel):
+    token: str = Field(min_length=20, max_length=200)
+    senha: str = Field(min_length=8, max_length=200)
+
+
+class AlterarSenhaEntrada(BaseModel):
+    senha_atual: str = Field(min_length=1, max_length=200)
+    nova_senha: str = Field(min_length=8, max_length=200)
+
+
+class ConviteEntrada(BaseModel):
+    email: EmailStr
+    nome: str | None = Field(default=None, max_length=200)
+    papel: Literal["admin", "membro"] = "membro"
+
+
+class ConviteSaida(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    email: str
+    nome: str | None
+    papel: str | None
+    expira_em: datetime
+    criado_em: datetime
+
+
+class MembroSaida(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    nome: str
+    email: str
+    papel: str
+    ativo: bool
+    criado_em: datetime
+
+
+class EquipeSaida(BaseModel):
+    membros: list[MembroSaida]
+    convites: list[ConviteSaida]
+
+
+class MembroAtualizar(BaseModel):
+    papel: Literal["admin", "membro"] | None = None
+    ativo: bool | None = None
+
+
+class ConvitePublico(BaseModel):
+    escritorio: str
+    email: str
+    nome: str | None
+    papel: str | None
+
+
+class AceitarConviteEntrada(BaseModel):
+    token: str = Field(min_length=20, max_length=200)
+    nome: str = Field(min_length=2, max_length=200)
+    senha: str = Field(min_length=8, max_length=200)
+
+
+# --- Fase 3: envio e portal -------------------------------------------------------------
+class EnviarEntrada(BaseModel):
+    para: list[EmailStr] = Field(min_length=1, max_length=5)
+    assunto: str | None = Field(default=None, max_length=200)
+    mensagem: str | None = Field(default=None, max_length=3000)
+
+
+class EnvioSaida(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    para: str
+    assunto: str
+    status: str
+    erro: str | None
+    criado_em: datetime
+
+
+class PublicarEntrada(BaseModel):
+    publicada: bool
+
+
+class PortalEstado(BaseModel):
+    ativo: bool
+    criado_em: datetime | None = None
+    ultimo_acesso_em: datetime | None = None
+    publicadas: int = 0
+
+
+class PortalGerarEntrada(BaseModel):
+    enviar_para: list[EmailStr] = Field(default_factory=list, max_length=5)
+    mensagem: str | None = Field(default=None, max_length=3000)
+
+
+class PortalLink(BaseModel):
+    link: str
+    enviado_para: list[str]
+    envio_erro: str | None = None
+
+
+class PortalSimulacao(BaseModel):
+    id: int
+    tipo: str
+    titulo: str
+    resultado: dict[str, Any]
+    criado_em: datetime
+
+
+class PortalPublico(BaseModel):
+    escritorio: dict[str, Any]
+    cliente: str
+    simulacoes: list[PortalSimulacao]
+
+
+# --- Fase 3: importação fiscal -----------------------------------------------------------
+class ImportacaoSaida(BaseModel):
+    importados: int
+    duplicados: int
+    ignorados: list[dict[str, str]]
+    total_ignorados: int
+    competencias: list[str]
+
+
+class MesMovimento(BaseModel):
+    competencia: str
+    saidas: float
+    entradas: float
+    icms: float
+    ipi: float
+    pis: float
+    cofins: float
+    documentos: int
+
+
+class MovimentoSaida(BaseModel):
+    meses: list[MesMovimento]
+    receita_12m: float
+    compras_12m: float
+    meses_12m: int
+    documentos: int

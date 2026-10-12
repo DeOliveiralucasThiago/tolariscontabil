@@ -37,6 +37,9 @@ export default function Login() {
       <Campo rotulo="E-mail" name="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
       <Campo rotulo="Senha" name="senha" type="password" autoComplete="current-password" required value={senha} onChange={(e) => setSenha(e.target.value)} />
       <Botao type="submit" carregando={enviando}>Entrar</Botao>
+      <Link href="/esqueci-senha" className="text-center text-sm text-tinta-2 hover:text-tinta">
+        Esqueci minha senha
+      </Link>
       <p className="text-center text-sm text-tinta-2">
         Novo por aqui?{" "}
         <Link href="/cadastro" className="font-medium text-marca hover:underline">

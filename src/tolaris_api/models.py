@@ -5,7 +5,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import JSON, ForeignKey, LargeBinary, String, Text, UniqueConstraint
+from datetime import date
+
+from sqlalchemy import JSON, BigInteger, ForeignKey, LargeBinary, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
@@ -43,6 +45,8 @@ class Usuario(Base):
     senha_hash: Mapped[str] = mapped_column(String(300))
     papel: Mapped[str] = mapped_column(String(20), default="admin")
     ativo: Mapped[bool] = mapped_column(default=True)
+    sessao_versao: Mapped[int] = mapped_column(default=0, server_default="0")
+    """Muda ao trocar a senha ou desativar: invalida as sessões abertas."""
     criado_em: Mapped[datetime] = mapped_column(default=agora)
 
     escritorio: Mapped[Escritorio] = relationship(back_populates="usuarios")
@@ -88,6 +92,98 @@ class Simulacao(Base):
     entrada: Mapped[dict[str, Any]] = mapped_column(JSON)
     resultado: Mapped[dict[str, Any]] = mapped_column(JSON)
     versao_motor: Mapped[str] = mapped_column(String(20))
+    publicada: Mapped[bool] = mapped_column(default=False, server_default="0")
+    """Visível no portal do cliente."""
     criado_em: Mapped[datetime] = mapped_column(default=agora, index=True)
 
     cliente: Mapped[Cliente] = relationship(back_populates="simulacoes")
+    envios: Mapped[list[Envio]] = relationship(
+        back_populates="simulacao", cascade="all, delete-orphan", order_by="Envio.criado_em.desc()"
+    )
+
+
+class TokenAcesso(Base):
+    """Token de uso único (redefinição de senha, convite). Só o hash SHA-256 fica no banco."""
+
+    __tablename__ = "tokens_acesso"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tipo: Mapped[str] = mapped_column(String(20))
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    escritorio_id: Mapped[int] = mapped_column(ForeignKey("escritorios.id", ondelete="CASCADE"), index=True)
+    usuario_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id", ondelete="CASCADE"))
+    email: Mapped[str] = mapped_column(String(200))
+    nome: Mapped[str | None] = mapped_column(String(200))
+    papel: Mapped[str | None] = mapped_column(String(20))
+    criado_por_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id", ondelete="SET NULL"))
+    expira_em: Mapped[datetime] = mapped_column()
+    usado_em: Mapped[datetime | None] = mapped_column()
+    criado_em: Mapped[datetime] = mapped_column(default=agora)
+
+
+class TentativaLogin(Base):
+    __tablename__ = "tentativas_login"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(200), index=True)
+    ip: Mapped[str] = mapped_column(String(64), index=True)
+    sucesso: Mapped[bool] = mapped_column()
+    criado_em: Mapped[datetime] = mapped_column(default=agora, index=True)
+
+
+class Envio(Base):
+    """Registro de cada envio de relatório por e-mail."""
+
+    __tablename__ = "envios"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    escritorio_id: Mapped[int] = mapped_column(ForeignKey("escritorios.id", ondelete="CASCADE"), index=True)
+    simulacao_id: Mapped[int] = mapped_column(ForeignKey("simulacoes.id", ondelete="CASCADE"), index=True)
+    para: Mapped[str] = mapped_column(String(600))
+    assunto: Mapped[str] = mapped_column(String(300))
+    status: Mapped[str] = mapped_column(String(20))
+    erro: Mapped[str | None] = mapped_column(Text)
+    enviado_por_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id", ondelete="SET NULL"))
+    criado_em: Mapped[datetime] = mapped_column(default=agora)
+
+    simulacao: Mapped[Simulacao] = relationship(back_populates="envios")
+
+
+class PortalCliente(Base):
+    """Link de acesso do cliente aos relatórios publicados. Só o hash do token fica no banco."""
+
+    __tablename__ = "portais_cliente"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    escritorio_id: Mapped[int] = mapped_column(ForeignKey("escritorios.id", ondelete="CASCADE"), index=True)
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("clientes.id", ondelete="CASCADE"), unique=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    ativo: Mapped[bool] = mapped_column(default=True)
+    criado_por_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id", ondelete="SET NULL"))
+    criado_em: Mapped[datetime] = mapped_column(default=agora)
+    ultimo_acesso_em: Mapped[datetime | None] = mapped_column()
+
+
+class DocumentoFiscal(Base):
+    """Documento importado (NF-e XML ou registro C100 do SPED). Valores em centavos."""
+
+    __tablename__ = "documentos_fiscais"
+    __table_args__ = (UniqueConstraint("cliente_id", "chave", name="uq_documento_por_cliente"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    escritorio_id: Mapped[int] = mapped_column(ForeignKey("escritorios.id", ondelete="CASCADE"), index=True)
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("clientes.id", ondelete="CASCADE"), index=True)
+    origem: Mapped[str] = mapped_column(String(10))
+    chave: Mapped[str] = mapped_column(String(80))
+    tipo: Mapped[str] = mapped_column(String(10))
+    """saida ou entrada, do ponto de vista do cliente."""
+    modelo: Mapped[str | None] = mapped_column(String(4))
+    data: Mapped[date] = mapped_column()
+    competencia: Mapped[str] = mapped_column(String(7), index=True)
+    participante_cnpj: Mapped[str | None] = mapped_column(String(14))
+    valor_centavos: Mapped[int] = mapped_column(BigInteger)
+    icms_centavos: Mapped[int] = mapped_column(BigInteger, default=0)
+    ipi_centavos: Mapped[int] = mapped_column(BigInteger, default=0)
+    pis_centavos: Mapped[int] = mapped_column(BigInteger, default=0)
+    cofins_centavos: Mapped[int] = mapped_column(BigInteger, default=0)
+    criado_em: Mapped[datetime] = mapped_column(default=agora)

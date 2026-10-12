@@ -4,10 +4,13 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { EnviarRelatorio } from "@/components/EnviarRelatorio";
 import { FormCliente } from "@/components/FormCliente";
 import { FormCompleta } from "@/components/FormCompleta";
+import { MovimentoFiscal } from "@/components/MovimentoFiscal";
+import { PortalCliente } from "@/components/PortalCliente";
 import { ResultadoSimulacao } from "@/components/ResultadoSimulacao";
-import { Botao, BotaoLink, Cartao, Etiqueta, MensagemErro, Titulo } from "@/components/ui";
+import { Abas, Botao, BotaoLink, Cartao, Etiqueta, MensagemErro, Titulo } from "@/components/ui";
 import { api, ErroApi, urlProposta } from "@/lib/api";
 import { brl, dataHora, mascaraCnpj } from "@/lib/formato";
 import {
@@ -20,7 +23,7 @@ import {
   type Simulacao,
 } from "@/lib/tipos";
 
-type Aba = "simulacoes" | "planejamento" | "dados";
+type Aba = "simulacoes" | "planejamento" | "movimento" | "dados";
 
 export default function DetalheCliente() {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +34,9 @@ export default function DetalheCliente() {
   const [aba, setAba] = useState<Aba>("simulacoes");
   const [erro, setErro] = useState("");
   const [calculando, setCalculando] = useState(false);
+  const [enviandoId, setEnviandoId] = useState<number | null>(null);
+  const [versaoPortal, setVersaoPortal] = useState(0);
+  const [planejamentoInicial, setPlanejamentoInicial] = useState<{ receita_bruta_anual: number; compras_anual: number } | null>(null);
 
   const carregar = useCallback(async () => {
     try {
@@ -68,6 +74,19 @@ export default function DetalheCliente() {
     if (aberta?.id === sim.id) setAberta(null);
   }
 
+  async function alternarPublicacao(sim: Simulacao) {
+    const publicada = !sim.publicada;
+    const marcar = (valor: boolean) => setSimulacoes((lista) => lista.map((x) => (x.id === sim.id ? { ...x, publicada: valor } : x)));
+    marcar(publicada); // resposta imediata na tela; desfaz se a API falhar
+    try {
+      await api(`/simulacoes/${sim.id}/publicacao`, { method: "PATCH", json: { publicada } });
+      setVersaoPortal((v) => v + 1);
+    } catch (e) {
+      marcar(!publicada);
+      setErro(e instanceof ErroApi ? e.message : "Não foi possível alterar a publicação");
+    }
+  }
+
   async function excluirCliente() {
     if (!cliente || !confirm(`Excluir ${cliente.razao_social} e todas as simulações? Esta ação não pode ser desfeita.`)) return;
     await api(`/clientes/${cliente.id}`, { method: "DELETE" });
@@ -81,6 +100,7 @@ export default function DetalheCliente() {
   const abas: { id: Aba; rotulo: string }[] = [
     { id: "simulacoes", rotulo: `Simulações (${simulacoes.length})` },
     { id: "planejamento", rotulo: "Novo planejamento" },
+    { id: "movimento", rotulo: "Movimento fiscal" },
     { id: "dados", rotulo: "Dados cadastrais" },
   ];
 
@@ -109,19 +129,7 @@ export default function DetalheCliente() {
         {cliente.razao_social}
       </Titulo>
 
-      <div className="mb-4 flex gap-1 border-b border-borda" role="tablist">
-        {abas.map((a) => (
-          <button
-            key={a.id}
-            role="tab"
-            aria-selected={aba === a.id}
-            onClick={() => setAba(a.id)}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium ${aba === a.id ? "border-marca text-tinta" : "border-transparent text-tinta-2 hover:text-tinta"}`}
-          >
-            {a.rotulo}
-          </button>
-        ))}
-      </div>
+      <Abas abas={abas} ativa={aba} onChange={setAba} />
       <MensagemErro>{erro}</MensagemErro>
 
       {aba === "simulacoes" && (
@@ -139,7 +147,8 @@ export default function DetalheCliente() {
             <Cartao>
               <ul className="divide-y divide-borda">
                 {simulacoes.map((s) => (
-                  <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <li key={s.id} className="py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                     <button onClick={() => setAberta(aberta?.id === s.id ? null : s)} className="text-left">
                       <div className="text-sm font-medium hover:text-marca">{s.titulo}</div>
                       <div className="num text-xs text-tinta-2">
@@ -147,22 +156,40 @@ export default function DetalheCliente() {
                         {s.resultado.economia_vs_pior > 0 && <> · economia de {brl(s.resultado.economia_vs_pior)}/ano</>}
                       </div>
                     </button>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="mr-1 flex items-center gap-1.5 text-xs text-tinta-2" title="Visível no portal do cliente">
+                        <input
+                          type="checkbox"
+                          checked={s.publicada}
+                          onChange={() => alternarPublicacao(s)}
+                          aria-label={`Publicar no portal: ${s.titulo}`}
+                          className="accent-[var(--marca)]"
+                        />
+                        No portal
+                      </label>
                       <Botao variante="fantasma" onClick={() => setAberta(aberta?.id === s.id ? null : s)}>
                         {aberta?.id === s.id ? "Fechar" : "Ver"}
                       </Botao>
                       <a href={urlProposta(s.id)} target="_blank" className="inline-flex h-10 items-center rounded-lg border border-borda px-3 text-sm font-medium hover:bg-fundo">
                         PDF
                       </a>
+                      <Botao variante="secundario" onClick={() => setEnviandoId(enviandoId === s.id ? null : s.id)}>
+                        Enviar
+                      </Botao>
                       <Botao variante="fantasma" onClick={() => excluirSimulacao(s)} aria-label="Excluir simulação">
                         Excluir
                       </Botao>
                     </div>
+                  </div>
+                  {enviandoId === s.id && (
+                    <EnviarRelatorio simulacaoId={s.id} emailCliente={cliente.email} onFechar={() => setEnviandoId(null)} />
+                  )}
                   </li>
                 ))}
               </ul>
             </Cartao>
           )}
+          <PortalCliente clienteId={cliente.id} emailCliente={cliente.email} versao={versaoPortal} />
           {aberta && (
             <ResultadoSimulacao
               sim={aberta}
@@ -178,8 +205,30 @@ export default function DetalheCliente() {
 
       {aba === "planejamento" && (
         <Cartao titulo="Planejamento tributário completo (valores anuais)">
-          <FormCompleta atividadeInicial={cliente.atividade} onCalcular={calcular} carregando={calculando} />
+          {planejamentoInicial && (
+            <p className="mb-4 rounded-lg bg-fundo px-3 py-2 text-xs text-tinta-2">
+              Receita e compras preenchidas com o movimento fiscal importado. Complete folha, pró-labore e despesas.
+            </p>
+          )}
+          <FormCompleta
+            key={planejamentoInicial ? `${planejamentoInicial.receita_bruta_anual}-${planejamentoInicial.compras_anual}` : "vazio"}
+            atividadeInicial={cliente.atividade}
+            inicial={planejamentoInicial ?? undefined}
+            onCalcular={calcular}
+            carregando={calculando}
+          />
         </Cartao>
+      )}
+
+      {aba === "movimento" && (
+        <MovimentoFiscal
+          clienteId={cliente.id}
+          temCnpj={Boolean(cliente.cnpj)}
+          onUsarNoPlanejamento={(receita, compras) => {
+            setPlanejamentoInicial({ receita_bruta_anual: Math.round(receita * 100) / 100, compras_anual: Math.round(compras * 100) / 100 });
+            setAba("planejamento");
+          }}
+        />
       )}
 
       {aba === "dados" && (

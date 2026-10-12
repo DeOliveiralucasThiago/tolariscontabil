@@ -25,7 +25,7 @@ def consultar(
 ) -> dict:
     digitos = so_digitos(cnpj)
     if not cnpj_valido(digitos):
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "CNPJ inválido")
+        raise HTTPException(422, "CNPJ inválido")
     try:
         return consulta(digitos).como_dict()
     except CnpjNaoEncontrado:

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..models import Cliente, Escritorio, Simulacao, Usuario
-from ..pdf import gerar_proposta
+from ..pdf import gerar_proposta, nome_arquivo
 from ..schemas import (
     CompletaEntrada,
     ExpressaEntrada,
@@ -131,7 +131,7 @@ def proposta_pdf(simulacao_id: int, usuario: Usuario = Depends(usuario_atual), d
     sim = _obter_simulacao(db, usuario, simulacao_id)
     escritorio = db.get(Escritorio, usuario.escritorio_id)
     pdf = gerar_proposta(escritorio, sim.cliente, sim, usuario)
-    nome = f"proposta-{sim.id}.pdf"
+    nome = nome_arquivo(sim)
     return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": f'inline; filename="{nome}"'})
 
 
