@@ -19,6 +19,7 @@ from pathlib import Path
 
 from pypdf import PdfReader
 
+sys.stdout.reconfigure(encoding="utf-8")  # console do Windows em cp1252
 PASTA = Path(sys.argv[1])
 BASE = "http://127.0.0.1:3000"
 jar = http.cookiejar.CookieJar()

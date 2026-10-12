@@ -107,6 +107,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--sem-navegador", action="store_true", help="não abre o navegador (testes)")
     args = parser.parse_args()
+    sys.stdout.reconfigure(errors="replace")  # nunca derrubar por um caractere fora da página de código
 
     for pasta in (DADOS, DADOS / "registros", DADOS / "emails"):
         pasta.mkdir(parents=True, exist_ok=True)
