@@ -162,7 +162,10 @@ def main() -> None:
         if not aguardar(f"http://127.0.0.1:{PORTA_API}/api/saude", api):
             falhar("O servidor de cálculo não iniciou.", reg_api)
 
-        node = shutil.which("node", path=str(APP / "node")) or shutil.which("node")
+        if not (APP / "web" / ".next" / "BUILD_ID").exists():
+            falhar("A pasta app\\web\\.next está faltando. Baixe e descompacte o Tolaris portátil de novo.")
+        # No Windows usa só o Node da pasta; fora dele (testes) aceita o do sistema
+        node = shutil.which("node", path=str(APP / "node")) or (None if os.name == "nt" else shutil.which("node"))
         if not node:
             falhar("Node.js não encontrado em app/node.")
         web_env = {**env, "HOSTNAME": "0.0.0.0", "PORT": str(porta), "NODE_ENV": "production", "NEXT_TELEMETRY_DISABLED": "1"}
