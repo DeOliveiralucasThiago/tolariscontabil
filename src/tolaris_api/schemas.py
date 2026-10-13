@@ -386,6 +386,8 @@ class PortalPublico(BaseModel):
 class ImportacaoSaida(BaseModel):
     importados: int
     duplicados: int
+    atualizados: int = 0
+    """Notas já importadas antes que receberam seus itens agora."""
     ignorados: list[dict[str, str]]
     total_ignorados: int
     competencias: list[str]
@@ -408,3 +410,16 @@ class MovimentoSaida(BaseModel):
     compras_12m: float
     meses_12m: int
     documentos: int
+
+
+class RecuperacaoPedido(BaseModel):
+    anexo: Literal["I", "II"] | None = None
+    """Anexo do Simples; por padrão, o da atividade do cliente (comércio = I, indústria = II)."""
+
+
+class RecuperacaoEntrada(BaseModel):
+    """O que fica registrado na simulação salva."""
+
+    anexo: Literal["I", "II"]
+    periodo_inicio: str | None
+    periodo_fim: str | None

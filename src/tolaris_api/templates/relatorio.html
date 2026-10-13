@@ -22,9 +22,9 @@
   {% for t in r.tabelas %}
   <h2>{{ t.titulo }}</h2>
   <table>
-    <thead><tr>{% for c in t.colunas %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+    <thead><tr>{% for c in t.colunas %}<th{% if loop.index0 in t.esquerda|default([]) %} style="text-align:left"{% endif %}>{{ c }}</th>{% endfor %}</tr></thead>
     <tbody>
-      {% for l in t.linhas %}<tr class="{{ 'total' if l.total }}">{% for v in l.valores %}<td>{{ v }}</td>{% endfor %}</tr>{% endfor %}
+      {% for l in t.linhas %}<tr class="{{ 'total' if l.total }}">{% for v in l.valores %}<td{% if loop.index0 in t.esquerda|default([]) %} style="text-align:left"{% endif %}>{{ v }}</td>{% endfor %}</tr>{% endfor %}
     </tbody>
   </table>
   {% endfor %}

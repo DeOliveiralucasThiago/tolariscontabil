@@ -83,6 +83,8 @@ def executar_completa(e: CompletaEntrada) -> dict[str, Any]:
 def titulo_simulacao(tipo: str, resultado: dict[str, Any]) -> str:
     if tipo in TIPOS_FASE2:
         return f"{TIPOS_FASE2[tipo][2]} — {resultado['melhor']}"
+    if tipo == "recuperacao":
+        return f"Recuperação de tributos — {resultado['melhor']}"
     nome = "Simulação expressa" if tipo == "expressa" else "Planejamento tributário"
     return f"{nome} {resultado['ano']} — melhor: {resultado['melhor']}"
 

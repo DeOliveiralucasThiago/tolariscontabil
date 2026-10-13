@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import datetime
 
-from sqlalchemy import DateTime, create_engine
+from sqlalchemy import DateTime, create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -22,7 +22,15 @@ def criar_engine(url: str) -> Engine:
         kwargs: dict = {"connect_args": {"check_same_thread": False}}
         if url in ("sqlite://", "sqlite:///:memory:"):
             kwargs["poolclass"] = StaticPool
-        return create_engine(url, **kwargs)
+        engine = create_engine(url, **kwargs)
+
+        @event.listens_for(engine, "connect")
+        def _chaves_estrangeiras(conexao, _):  # noqa: ANN001
+            # O SQLite ignora FOREIGN KEY por padrão: sem isto, excluir um cliente deixaria seus
+            # documentos órfãos (e um cliente novo, ao reaproveitar o id, herdaria as notas).
+            conexao.execute("PRAGMA foreign_keys=ON")
+
+        return engine
     return create_engine(url, pool_pre_ping=True)
 
 

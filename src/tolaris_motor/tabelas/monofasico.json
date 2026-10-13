@@ -1,0 +1,107 @@
+{
+  "fonte": "LISTA INICIAL, NÃO OFICIAL. Montada a partir da Res. CGSN 140/2018, art. 25 (segregação de receitas), da LC 123/2006, art. 18, §4º-A, e das Leis 10.147/2000, 10.485/2002, 9.718/1998 e 10.833/2003 (arts. 58-A e seguintes, redação da Lei 13.097/2015). Cada NCM deve ser conferido na tabela de incidência monofásica da Receita Federal antes de retificar qualquer PGDAS-D.",
+  "vigencias": [
+    {
+      "inicio": "2009-01-01",
+      "descricao": "Sinais lidos nas notas e grupos de NCM com tributação monofásica de PIS/Cofins",
+      "cfop_venda_monofasico": ["5102", "5104", "5106", "5403", "5405", "5656", "5667", "6102", "6104", "6106", "6403", "6404", "6656", "6667"],
+      "cfop_venda_st": ["5102", "5104", "5106", "5401", "5403", "5405", "5656", "5667", "6102", "6104", "6106", "6401", "6403", "6404", "6656", "6667"],
+      "cst_pis_monofasico": ["04"],
+      "st": {
+        "csosn": ["201", "202", "203", "500"],
+        "cst": ["10", "30", "60", "70"],
+        "cfop": ["5401", "5403", "5405", "6401", "6403", "6404"]
+      },
+      "grupos": [
+        {
+          "id": "medicamentos",
+          "nome": "Medicamentos",
+          "base_legal": "Lei 10.147/2000, art. 1º, I",
+          "nivel": "lista",
+          "prefixos": ["3003", "3004"],
+          "observacao": "A lei exclui alguns subitens; conferir o NCM completo na tabela oficial."
+        },
+        {
+          "id": "perfumaria",
+          "nome": "Perfumaria, cosméticos e higiene pessoal",
+          "base_legal": "Lei 10.147/2000, art. 1º, II",
+          "nivel": "lista",
+          "prefixos": ["3303", "3304", "3305", "3306", "3307"],
+          "observacao": "Conferir o subitem do NCM na tabela oficial."
+        },
+        {
+          "id": "higiene_outros",
+          "nome": "Sabonetes, escovas de dente e similares",
+          "base_legal": "Lei 10.147/2000, art. 1º, II",
+          "nivel": "verificar",
+          "prefixos": ["34011190", "34012010", "96032100"],
+          "observacao": "Lista parcial: confirmar o enquadramento do produto."
+        },
+        {
+          "id": "bebidas_frias",
+          "nome": "Águas, refrigerantes, energéticos e cervejas",
+          "base_legal": "Lei 10.833/2003, arts. 58-A e seguintes (Lei 13.097/2015)",
+          "nivel": "lista",
+          "prefixos": ["22011", "2202", "2203"],
+          "observacao": "Sucos e algumas bebidas do capítulo 22.02 ficam de fora; conferir o subitem."
+        },
+        {
+          "id": "bebidas_preparos",
+          "nome": "Preparações para elaboração de bebidas",
+          "base_legal": "Lei 10.833/2003, art. 58-A e seguintes",
+          "nivel": "verificar",
+          "prefixos": ["21069010"],
+          "observacao": "Somente parte do NCM 2106.90.10 está na lista; confirmar o produto."
+        },
+        {
+          "id": "pneus",
+          "nome": "Pneus novos e câmaras de ar",
+          "base_legal": "Lei 10.485/2002, art. 5º",
+          "nivel": "lista",
+          "prefixos": ["4011", "4013"],
+          "observacao": "Vale para pneus novos; recauchutados não entram."
+        },
+        {
+          "id": "gasolina",
+          "nome": "Gasolina",
+          "base_legal": "Lei 9.718/1998, arts. 4º e 5º",
+          "nivel": "lista",
+          "prefixos": ["271012"],
+          "observacao": ""
+        },
+        {
+          "id": "diesel",
+          "nome": "Óleo diesel",
+          "base_legal": "Lei 9.718/1998, arts. 4º e 5º",
+          "nivel": "lista",
+          "prefixos": ["2710192"],
+          "observacao": ""
+        },
+        {
+          "id": "glp",
+          "nome": "Gás liquefeito de petróleo (GLP)",
+          "base_legal": "Lei 9.718/1998, arts. 4º e 5º",
+          "nivel": "lista",
+          "prefixos": ["271112", "271113", "271119"],
+          "observacao": ""
+        },
+        {
+          "id": "outros_derivados",
+          "nome": "Outros derivados de petróleo (lubrificantes e similares)",
+          "base_legal": "Lei 9.718/1998 e legislação específica",
+          "nivel": "verificar",
+          "prefixos": ["271019"],
+          "observacao": "Nem todo derivado do 2710.19 é monofásico; confirmar o produto."
+        },
+        {
+          "id": "autopecas",
+          "nome": "Autopeças (lista parcial)",
+          "base_legal": "Lei 10.485/2002, arts. 1º e 3º e Anexos I e II",
+          "nivel": "verificar",
+          "prefixos": ["8708", "401693", "6813", "700711", "700721", "700910", "830120", "840991", "841330", "842123", "842131", "848310", "848410", "850710", "8511", "8512", "854430", "9029"],
+          "observacao": "Só os itens dos Anexos I e II da Lei 10.485/2002 são monofásicos; conferir o NCM completo."
+        }
+      ]
+    }
+  ]
+}

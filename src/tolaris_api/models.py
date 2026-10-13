@@ -7,7 +7,7 @@ from typing import Any
 
 from datetime import date
 
-from sqlalchemy import JSON, BigInteger, ForeignKey, LargeBinary, String, Text, UniqueConstraint
+from sqlalchemy import JSON, BigInteger, ForeignKey, Index, LargeBinary, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
@@ -187,3 +187,33 @@ class DocumentoFiscal(Base):
     pis_centavos: Mapped[int] = mapped_column(BigInteger, default=0)
     cofins_centavos: Mapped[int] = mapped_column(BigInteger, default=0)
     criado_em: Mapped[datetime] = mapped_column(default=agora)
+
+    itens: Mapped[list[ItemFiscal]] = relationship(cascade="all, delete-orphan", passive_deletes=True)
+
+
+class ItemFiscal(Base):
+    """Itens de uma nota de saída, somados por produto e tributação dentro do documento. Valores em centavos.
+
+    Guarda os dados crus (NCM, CFOP, CST/CSOSN, CEST); a classificação em monofásico/ST é feita na
+    hora da análise, para acompanhar as atualizações da tabela de produtos.
+    """
+
+    __tablename__ = "itens_fiscais"
+    __table_args__ = (Index("ix_itens_fiscais_cliente_competencia", "cliente_id", "competencia"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    escritorio_id: Mapped[int] = mapped_column(ForeignKey("escritorios.id", ondelete="CASCADE"), index=True)
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("clientes.id", ondelete="CASCADE"))
+    documento_id: Mapped[int] = mapped_column(ForeignKey("documentos_fiscais.id", ondelete="CASCADE"), index=True)
+    tipo: Mapped[str] = mapped_column(String(10))
+    competencia: Mapped[str] = mapped_column(String(7))
+    ncm: Mapped[str | None] = mapped_column(String(8))
+    cfop: Mapped[str | None] = mapped_column(String(4))
+    cst_icms: Mapped[str | None] = mapped_column(String(3))
+    """CST (2 dígitos) ou CSOSN (3 dígitos)."""
+    cst_pis: Mapped[str | None] = mapped_column(String(2))
+    cest: Mapped[str | None] = mapped_column(String(7))
+    descricao: Mapped[str | None] = mapped_column(String(120))
+    valor_centavos: Mapped[int] = mapped_column(BigInteger)
+    """Valor do produto menos desconto."""
+    quantidade_itens: Mapped[int] = mapped_column(default=1)

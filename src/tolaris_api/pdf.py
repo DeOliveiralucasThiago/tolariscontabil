@@ -211,6 +211,7 @@ TITULOS = {
     "simples_reforma": "Simples Nacional na Reforma",
     "autonomo": "Vale abrir CNPJ?",
     "pro_labore": "Pró-labore × distribuição de lucros",
+    "recuperacao": "Recuperação de tributos no Simples Nacional",
 }
 
 
@@ -463,7 +464,75 @@ def _rel_pro_labore(sim: Simulacao, cor: str) -> dict[str, Any]:
     }
 
 
+_MESES_CURTOS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
+
+
+def _mes_curto(competencia: str) -> str:
+    return f"{_MESES_CURTOS[int(competencia[5:7]) - 1]}/{competencia[2:4]}"
+
+
+def _rel_recuperacao(sim: Simulacao, cor: str) -> dict[str, Any]:
+    res = sim.resultado
+    tot, per = res["totais"], res["periodo"]
+    com_valor = [m for m in res["meses"] if m["calculado"] and (m["provavel"] or m["a_verificar"])]
+    ultimos = res["meses"][-12:]
+    certeza = {"provavel": "Provável", "verificar": "Conferir"}
+    anexo = {"I": "Anexo I (comércio)", "II": "Anexo II (indústria)"}.get(res["anexo"], res["anexo"])
+    anual = res["economia_anual"]
+    detalhe = (f"Economia estimada de {brl(anual)} por ano daqui para frente, se a receita desses produtos for "
+               "segregada no PGDAS-D." if tot["provavel"] > 0 else "Nenhum produto monofásico ou com ICMS-ST foi identificado nas notas.")
+    if tot["a_verificar"] > 0:
+        detalhe += f" Mais {brl(tot['a_verificar'])} dependem de conferência do produto."
+    return {
+        "titulo": "Recuperação de tributos no Simples Nacional",
+        "subtitulo": "Produtos com PIS/Cofins monofásico ou ICMS por substituição tributária",
+        "destaque": {"rotulo": "Possível pagamento a mais no período analisado", "valor": brl(tot["provavel"]), "detalhe": detalhe},
+        "cartoes": [
+            {"rotulo": "PIS/Cofins (monofásico)", "valor": brl(tot["pis_cofins"])},
+            {"rotulo": "ICMS (substituição tributária)", "valor": brl(tot["icms"])},
+            {"rotulo": "A conferir", "valor": brl(tot["a_verificar"])},
+        ],
+        "grafico_titulo": "Pago a mais por mês (R$)",
+        "legenda": [("PIS/Cofins", SERIE_1), ("ICMS", SERIE_2)],
+        "grafico": grafico_colunas_empilhadas(
+            [{"rotulo": _mes_curto(m["competencia"]), "valores": [m["pis_cofins"], m["icms"]],
+              "topo": f"{m['provavel']:,.0f}".replace(",", ".")} for m in ultimos],
+            [SERIE_1, SERIE_2],
+        ) if any(m["provavel"] for m in ultimos) else None,
+        "grafico_nota": "Últimos 12 meses importados. No topo de cada coluna, o total do mês em reais.",
+        "tabelas": [
+            {
+                "titulo": "Meses com produtos identificados",
+                "colunas": ["Mês", "Vendas do mês", "Base monofásica", "Base com ST", "Alíquota efetiva", "PIS/Cofins", "ICMS"],
+                "linhas": [{"valores": [_mes_curto(m["competencia"]), brl(m["receita"]), brl(m["base_monofasico"]),
+                                        brl(m["base_st"]), pct(m["aliquota_efetiva"], 2), brl(m["pis_cofins"]), brl(m["icms"])]}
+                           for m in com_valor[-24:]],
+            },
+            {
+                "titulo": "Produtos identificados",
+                "colunas": ["NCM", "Produto", "Enquadramento", "Vendido (R$)", "Situação"],
+                "esquerda": [1, 2, 4],
+                "linhas": [{"valores": [p["ncm"] or "—", (p["descricao"] or "—")[:48],
+                                        " · ".join(x for x in (p["monofasico"], p["st"]) if x),
+                                        brl(p["valor"]), certeza[p["certeza"]]]} for p in res["produtos"][:15]],
+            },
+        ],
+        "entradas": [
+            ("Anexo do Simples Nacional", anexo),
+            ("Período analisado", f"{_mes_curto(per['inicio'])} a {_mes_curto(per['fim'])} ({per['meses']} meses)"
+             if per["inicio"] else "—"),
+            ("Vendas de produtos monofásicos", brl(tot["base_monofasico"])),
+            ("Vendas de produtos com ST", brl(tot["base_st"])),
+        ],
+        "alertas": res["alertas"],
+        "memorias": [{"titulo": "Como o valor foi estimado", "passos": res["memoria"]}],
+        "aviso_extra": "Os valores são indícios obtidos das notas fiscais e precisam ser conferidos com o PGDAS-D "
+                       "de cada mês antes de qualquer retificação ou pedido de restituição.",
+    }
+
+
 RELATORIOS = {
+    "recuperacao": _rel_recuperacao,
     "reforma": _rel_reforma,
     "simples_reforma": _rel_simples_reforma,
     "autonomo": _rel_autonomo,
