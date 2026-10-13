@@ -135,6 +135,15 @@ status, pdf = pedir("GET", f"/api/simulacoes/{sim['id']}/proposta.pdf")
 texto = "\n".join(p.extract_text() or "" for p in PdfReader(io.BytesIO(pdf)).pages)
 ok(status == 200 and "Recuperação de tributos no Simples Nacional" in texto and "R$ 432,43" in texto, "PDF da recuperação com texto legível")
 
+status, corpo = pedir("GET", "/api/avisos")
+lista = json.loads(corpo)["avisos"]
+ok(status == 200 and any(a["codigo"] == "recuperacao" and a["valor"] == 432.43 for a in lista),
+   "central de avisos aponta a oportunidade de recuperação")
+status, corpo = pedir("GET", "/api/mudancas")
+ok(status == 200 and any(m["id"] == "irpf-lei-15270" for m in json.loads(corpo)), "mudanças na legislação carregadas")
+status, corpo = pedir("POST", f"/api/simulacoes/{sim['id']}/recalcular")
+ok(status == 201 and json.loads(corpo)["resultado"]["recalculo"]["de"] == sim["id"], "recálculo cria nova versão do relatório")
+
 status, _ = pedir("POST", "/api/auth/esqueci-senha", {"email": "ana@teste.com.br"})
 time.sleep(1)
 emails = [json.loads(p.read_text(encoding="utf-8")) for p in (PASTA / "dados" / "emails").glob("*.json")]

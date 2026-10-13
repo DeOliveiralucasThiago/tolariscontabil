@@ -5,7 +5,7 @@ simulação da Reforma Tributária e relatórios para clientes.
 
 Este repositório está na **Fase 3**: aplicação web multi-escritório sobre o motor de
 cálculo, com Reforma Tributária, pessoa física, equipe, envio de relatórios por e-mail,
-portal do cliente, importação de NF-e/SPED e recuperação de tributos (monofásico e ST).
+portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofásico e ST) e central de avisos.
 
 ## Estrutura
 
@@ -60,6 +60,10 @@ portal do cliente, importação de NF-e/SPED e recuperação de tributos (monof�
   identifica produtos com PIS/Cofins monofásico e ICMS-ST, reconstrói a alíquota efetiva de cada mês e estima o
   quanto o cliente do Simples pode ter pago a mais por não segregar a receita no PGDAS-D. Sai com gráfico, memória
   de cálculo e PDF, e entra no histórico e no portal do cliente. É um indício a conferir; a tabela de NCM é inicial.
+- **Central de avisos:** acompanha a carteira toda: fator R abaixo (ou perto) de 28% com o ganho líquido de elevar o
+  pró-labore, proximidade dos limites do MEI, do Simples e do Presumido, possível imposto pago a mais em produtos
+  monofásicos e simulações que deixaram de valer por mudança de regra (com "Recalcular", que guarda a versão
+  anterior e mostra o antes e o depois). Traz também a lista das mudanças na legislação já incorporadas ao motor.
 
 ## Rodando localmente
 
@@ -167,7 +171,7 @@ print(reforma.tabela_resumo(anos))
 
 ## Validação com contador
 
-`validacao/casos_validacao.xlsx` traz 67 casos (empresas, PF, sócios, reforma, Simples na reforma, autônomo × CNPJ e recuperação de tributos) com os
+`validacao/casos_validacao.xlsx` traz 69 casos (empresas, PF, sócios, reforma, Simples na reforma, autônomo × CNPJ, recuperação de tributos e avisos de fator R) com os
 valores do motor, a memória de cálculo e os alertas. O contador preenche a coluna
 amarela "Valor correto" e a planilha mostra a diferença. Para regenerar:
 
@@ -182,8 +186,8 @@ Premissas, fontes e pontos em aberto: [`docs/premissas.md`](docs/premissas.md).
 - **Fase 0 (concluída):** motor de cálculo testado; validação com contador em andamento.
 - **Fase 1 (concluída):** login, cadastro de clientes, prospecção com CNPJ, proposta em PDF com a marca do escritório.
 - **Fase 2 (concluída):** simulador da reforma, Simples na reforma e módulo de pessoa física, com relatórios em PDF.
-- **Fase 3 (atual):** equipe, recuperação de senha, envio por e-mail, portal do cliente, importação de XML/SPED, recuperação de tributos (monofásico e ST).
-- **Próximos:** cobrança da assinatura, NFS-e, alertas automáticos (fator R, sublimite), envio recorrente.
+- **Fase 3 (atual):** equipe, recuperação de senha, envio por e-mail, portal do cliente, importação de XML/SPED, recuperação de tributos (monofásico e ST), central de avisos e recálculo por mudança de regra.
+- **Próximos:** cobrança da assinatura, NFS-e, resumo semanal dos avisos por e-mail, envio recorrente.
 - **Fase 4:** integrações (Serpro Integra Contador, ERPs), WhatsApp, assistente de IA.
 
 > As estimativas não substituem a análise do contador responsável.

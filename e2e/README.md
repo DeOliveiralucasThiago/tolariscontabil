@@ -43,3 +43,10 @@ também usa e-mail novo a cada execução e não precisa de e-mail nem da Brasil
 ```bash
 node fluxo_recuperacao.mjs saida
 ```
+
+O fluxo da central de avisos (fator R, MEI, painel, filtros, mudanças na legislação e recálculo) cria a carteira pela
+API. O passo "simulação desatualizada" altera um resultado salvo no SQLite; informe o arquivo em `E2E_DB`:
+
+```bash
+E2E_DB=./e2e.db node fluxo_avisos.mjs saida
+```

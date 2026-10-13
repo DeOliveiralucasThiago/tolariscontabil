@@ -95,6 +95,25 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 27. **Prazo:** pedidos de restituição ou compensação prescrevem em 5 anos (CTN, art. 168); o cálculo cobre só o
     período importado. Com a Reforma, o PIS/Cofins deixa de existir em 2027 (substituído pela CBS).
 
+## Premissas dos avisos e do recálculo (central de avisos)
+
+28. **Quando são calculados:** na hora em que a página abre, a partir do último planejamento (expressa ou completa)
+    e das notas importadas de cada cliente. Clientes inativos ficam de fora.
+29. **Fator R:** só para clientes cadastrados no Simples com atividade "serviços sujeitos ao fator R".
+    Fator R = (salários + pró-labore + FGTS 8%) / receita do último planejamento. Abaixo de 28%, compara o DAS no
+    Anexo V com o do Anexo III e desconta o INSS do sócio (11% até o teto) sobre o pró-labore que falta,
+    supondo um sócio e sem considerar IRPF; só vira "oportunidade" se o ganho líquido for positivo. Até 3 pontos
+    percentuais acima do mínimo, gera aviso de atenção (risco de cair no Anexo V).
+30. **Limites de receita:** a receita de 12 meses vem das notas importadas (média x 12 se há menos de 12 meses) ou,
+    sem notas, do último planejamento. Atenção a partir de 80% do limite, crítico a partir de 95% ou acima.
+    MEI: R$ 81 mil, com tolerância de 20% (R$ 97,2 mil); Simples: sublimite de R$ 3,6 milhões e limite de
+    R$ 4,8 milhões (tolerância de 20%, R$ 5,76 milhões); Presumido: R$ 5 milhões (LC 224/2025) e R$ 78 milhões.
+31. **Simulação desatualizada:** o sistema refaz, com as regras atuais, a simulação mais recente de cada tipo por
+    cliente e compara os números (textos explicativos e campos novos são ignorados). Se mudou, avisa e oferece
+    "Recalcular", que cria uma nova versão e mantém a anterior no histórico.
+32. **Mudanças na legislação:** o texto da lista fica em `tabelas/mudancas.json` e é atualizado junto com as
+    tabelas de cálculo; ele resume o que já está no motor e não substitui a leitura da lei.
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias?).
@@ -105,11 +124,13 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Percentuais de partilha do DAS (tabela em `simples_nacional.json`, campo `partilha`).
 - [ ] Modelo da decisão do Simples na Reforma (preços ajustados para o mesmo custo líquido do cliente).
 - [ ] Carnê-leão: livro-caixa × desconto simplificado (o motor usa o maior dos dois).
-- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (67 casos, incluindo SR*, AU* e REC*).
+- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (69 casos, incluindo SR*, AU*, REC* e AV*).
 - [ ] Importação: quais CFOPs excluir da receita (remessas, devoluções, transferências).
 - [ ] **Tabela de NCM monofásicos** (`src/tolaris_motor/tabelas/monofasico.json`): conferir cada prefixo e as
       exceções por subitem na tabela oficial da Receita; hoje é uma lista inicial montada sem acesso à fonte oficial.
 - [ ] Sinais de ST na nota (CSOSN/CST/CFOP): confirmar quais permitem segregar o ICMS, inclusive para o substituto.
+- [ ] Avisos de fator R (casos AV1 e AV2): margem de 3 pontos, INSS do acréscimo de pró-labore (um sócio) e
+      tolerância de 20% do MEI e do Simples; limiares de 80% e 95% para atenção e crítico.
 - [ ] Casos REC1 a REC3 da planilha (alíquota efetiva x % da repartição) e o tratamento do RBT12 estimado.
 
 ## Fora do escopo da Fase 0 (próximos passos do motor)
@@ -117,4 +138,5 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - Repartição do DAS por tributo e ICMS/ISS fora do DAS acima do sublimite.
 - IRPF anual (declaração) e cálculo completo do IRPFM com redutor.
 - Imposto Seletivo, ZFM, regimes específicos (combustíveis, financeiro, imobiliário).
+- Aviso por e-mail ou WhatsApp (resumo semanal da carteira) e avisos por projeção de crescimento da receita.
 - DIFAL e benefícios fiscais estaduais (a segregação de ST do Simples está na recuperação de tributos).

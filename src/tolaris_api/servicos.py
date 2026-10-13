@@ -236,3 +236,65 @@ TIPOS_FASE2: dict[str, tuple[type, Any, str]] = {
     "autonomo": (AutonomoEntrada, executar_autonomo, "Autônomo × CNPJ"),
     "pro_labore": (ProLaboreEntrada, executar_pro_labore, "Pró-labore × dividendos"),
 }
+
+
+# --- Recálculo de simulações salvas -------------------------------------------------------
+def _executor_do_tipo(tipo: str) -> tuple[type, Any] | None:
+    base = {"expressa": (ExpressaEntrada, executar_expressa), "completa": (CompletaEntrada, executar_completa)}
+    if tipo in base:
+        return base[tipo]
+    if tipo in TIPOS_FASE2:
+        modelo, executor, _ = TIPOS_FASE2[tipo]
+        return modelo, executor
+    return None
+
+
+def pode_recalcular(tipo: str) -> bool:
+    return _executor_do_tipo(tipo) is not None
+
+
+def recalcular_resultado(tipo: str, entrada: dict[str, Any]) -> dict[str, Any]:
+    """Executa de novo, com as regras atuais, uma simulação salva (só os tipos que dependem apenas da entrada)."""
+    modelo, executor = _executor_do_tipo(tipo)  # type: ignore[misc]
+    return executor(modelo(**entrada))
+
+
+_IGNORAR = {"alertas", "memoria", "recalculo", "formula", "base_legal", "descricao", "detalhe", "equilibrio_texto", "recomendacao"}
+
+
+def _achatar(valor: Any, caminho: str = "") -> dict[str, Any]:
+    """Números (e o campo ``melhor``) de um resultado, por caminho, sem os textos explicativos."""
+    if isinstance(valor, dict):
+        saida: dict[str, Any] = {}
+        for k, v in valor.items():
+            if k in _IGNORAR:
+                continue
+            saida.update(_achatar(v, f"{caminho}.{k}" if caminho else k))
+        return saida
+    if isinstance(valor, list):
+        saida = {}
+        for i, v in enumerate(valor):
+            saida.update(_achatar(v, f"{caminho}[{i}]"))
+        return saida
+    if isinstance(valor, bool) or valor is None:
+        return {}
+    if isinstance(valor, (int, float)):
+        return {caminho: float(valor)}
+    if isinstance(valor, str) and caminho.split(".")[-1] == "melhor":
+        return {caminho: valor}
+    return {}
+
+
+def diferencas(antigo: dict[str, Any], novo: dict[str, Any]) -> list[str]:
+    """Caminhos cujo valor mudou (mais de 1 centavo). Campos que existem só de um lado são ignorados:
+    mudar o formato do resultado não deve parecer mudança de regra."""
+    a, b = _achatar(antigo), _achatar(novo)
+    mudou = []
+    for caminho in a.keys() & b.keys():
+        x, y = a[caminho], b[caminho]
+        if isinstance(x, float) and isinstance(y, float):
+            if abs(x - y) > 0.011:
+                mudou.append(caminho)
+        elif x != y:
+            mudou.append(caminho)
+    return sorted(mudou)

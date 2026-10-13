@@ -22,7 +22,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 from tolaris_motor import Atividade, PerfilEmpresa, Resultado, brl, pct
 from tolaris_motor import pessoa_fisica as pf
-from tolaris_motor import autonomo, presumido, real, recuperacao, reforma, reforma_simples, simples
+from tolaris_motor import autonomo, avisos, presumido, real, recuperacao, reforma, reforma_simples, simples
 
 FONTE = "Arial"
 AZUL_ESCURO = "1F3A5F"
@@ -157,6 +157,24 @@ def casos() -> list[Caso]:
     for cod, (desc, anexo, meses) in rec.items():
         r = recuperacao.estimar(meses, anexo)
         lista.append(Caso(cod, "Recuperação: PIS/Cofins monofásico e ICMS-ST (jan/2026)", desc, r.resultado))
+
+    # Avisos de fator R: DAS no Anexo V x Anexo III e INSS do sócio sobre o pró-labore que falta (valores anuais)
+    for cod, pro_labore in (("AV1", 60_000), ("AV2", 72_000)):
+        p = PerfilEmpresa(Atividade.SERVICO_FATOR_R, 600_000, folha_clt_anual=96_000, pro_labore_anual=pro_labore)
+        a = avisos.avaliar_fator_r(p)
+        das_iii = p.receita_bruta_anual * simples.aliquota_efetiva("III", p.receita_bruta_anual, JAN_2026)
+        das_v = p.receita_bruta_anual * simples.aliquota_efetiva("V", p.receita_bruta_anual, JAN_2026)
+        r = Resultado("Aviso de fator R")
+        r.tributos["DAS no Anexo V (fator R abaixo de 28%)"] = das_v
+        r.tributos["DAS no Anexo III (fator R de 28%)"] = das_iii
+        if a.codigo == "fator_r_abaixo":
+            r.tributos["INSS do sócio sobre o pró-labore adicional"] = das_v - das_iii - a.valor
+            r.tributos["Ganho líquido anual"] = a.valor
+        else:
+            r.tributos["Impacto anual se cair para o Anexo V"] = a.valor
+        r.alerta(a.titulo + ". " + a.detalhe)
+        desc = f"Serviços com fator R; receita R$ 600.000; folha CLT R$ 96.000; pró-labore R$ {pro_labore:,}".replace(",", ".")
+        lista.append(Caso(cod, "Avisos: fator R (2026)", desc, r))
     return lista
 
 
@@ -222,8 +240,8 @@ def gerar(saida: Path) -> Path:
     for n, caso in enumerate(todos):
         fill = CINZA if n % 2 else None
         itens = list(caso.resultado.tributos.items())
-        # No Simples na Reforma as linhas são alternativas (no DAS × por fora): somá-las não faz sentido
-        if not caso.modulo.startswith("Simples na Reforma"):
+        # No Simples na Reforma e nos avisos as linhas são alternativas ou resultados: somá-las não faz sentido
+        if not caso.modulo.startswith(("Simples na Reforma", "Avisos")):
             itens.append(("TOTAL", None))
         inicio = linha
         for nome, valor in itens:

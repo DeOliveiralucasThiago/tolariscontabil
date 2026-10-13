@@ -388,3 +388,47 @@ export interface ResultadoRecuperacao {
   melhor: string;
   economia_vs_pior: number;
 }
+
+// --- Avisos da carteira e mudanças na legislação ----------------------------------------------
+export type Gravidade = "critico" | "atencao" | "oportunidade" | "info";
+
+export interface AvisoCarteira {
+  id: string;
+  codigo: string;
+  gravidade: Gravidade;
+  titulo: string;
+  detalhe: string;
+  valor: number | null;
+  base_legal: string;
+  cliente_id: number;
+  cliente: string;
+  acao: { tipo: "cliente" | "recalcular"; rotulo: string; aba?: string; simulacao_id?: number };
+}
+
+export interface RespostaAvisos {
+  avisos: AvisoCarteira[];
+  resumo: Record<Gravidade, number> & { total: number; valor_oportunidades: number };
+  clientes_analisados: number;
+}
+
+export interface MudancaLegal {
+  id: string;
+  data: string;
+  titulo: string;
+  resumo: string;
+  base_legal: string;
+  areas: string[];
+  efeito: string;
+  observacao?: string;
+  vigente: boolean;
+  dias: number;
+}
+
+/** Presente no resultado de uma simulação recalculada com as regras atuais. */
+export interface InfoRecalculo {
+  de: number;
+  em: string;
+  antes: { melhor: string | null; economia_vs_pior: number | null };
+  /** O que mudou, em palavras (totais por regime e recomendação), quando a API consegue descrever. */
+  resumo?: string | null;
+}

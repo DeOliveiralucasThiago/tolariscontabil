@@ -1,0 +1,70 @@
+{
+  "fonte": "Resumo, em linguagem de escritório, das mudanças legais já incorporadas às tabelas do motor. Cada item aponta a base legal; o texto da lei prevalece.",
+  "mudancas": [
+    {
+      "id": "irpf-lei-15270",
+      "data": "2026-01-01",
+      "titulo": "Menos IRPF até R$ 7.350 por mês e retenção sobre dividendos",
+      "resumo": "Quem tem rendimentos tributáveis de até R$ 5.000 por mês deixa de pagar IRPF, e a redução diminui até zerar em R$ 7.350. Dividendos pagos por uma mesma empresa a uma mesma pessoa acima de R$ 50 mil no mês têm 10% de retenção na fonte, e rendas anuais acima de R$ 600 mil entram no imposto mínimo (IRPFM, até 10% em R$ 1,2 milhão).",
+      "base_legal": "Lei 15.270/2025; Lei 15.191/2025",
+      "areas": ["pessoa_fisica", "simples", "presumido", "real"],
+      "efeito": "Muda o melhor equilíbrio entre pró-labore e dividendos e o líquido do sócio."
+    },
+    {
+      "id": "lucro-presumido-lc224",
+      "data": "2026-01-01",
+      "titulo": "Lucro Presumido: presunção com acréscimo de 10% acima de R$ 5 milhões",
+      "resumo": "Sobre a parte da receita anual que passa de R$ 5 milhões, os percentuais de presunção de IRPJ e de CSLL ganham 10% de acréscimo. IRPJ desde janeiro de 2026; CSLL desde abril de 2026.",
+      "base_legal": "LC 224/2025",
+      "areas": ["presumido"],
+      "efeito": "Reduz a vantagem do Presumido para clientes grandes; vale revisar o comparativo com Simples e Lucro Real.",
+      "observacao": "A regra é questionada no STF (ADIs 7920 e 7936); o motor aplica a lei enquanto não houver decisão em contrário."
+    },
+    {
+      "id": "reforma-ano-teste",
+      "data": "2026-01-01",
+      "titulo": "Reforma Tributária: ano de teste da CBS (0,9%) e do IBS (0,1%)",
+      "resumo": "As notas passam a destacar CBS e IBS de teste. O valor é compensado com PIS/Cofins e dispensado de recolhimento para quem cumprir as obrigações acessórias, então não há aumento de carga em 2026.",
+      "base_legal": "EC 132/2023 (ADCT, arts. 125 a 133); LC 214/2025",
+      "areas": ["reforma", "simples", "presumido", "real"],
+      "efeito": "Exige emissão correta das notas com os novos campos; os cálculos de 2026 não cobram CBS/IBS."
+    },
+    {
+      "id": "inss-2026",
+      "data": "2026-01-01",
+      "titulo": "Salário mínimo de R$ 1.621 e teto do INSS de R$ 8.475,55",
+      "resumo": "Novos valores para o INSS do empregado e do sócio, para o MEI e para os pisos de contribuição.",
+      "base_legal": "Portaria Interministerial MPS/MF nº 13/2026",
+      "areas": ["previdencia", "pessoa_fisica", "simples"],
+      "efeito": "Atualiza o custo de pró-labore, folha e DAS-MEI."
+    },
+    {
+      "id": "reforma-2027",
+      "data": "2027-01-01",
+      "titulo": "Reforma Tributária: CBS substitui PIS/Cofins e o IPI é zerado",
+      "resumo": "A CBS passa a ser cobrada à alíquota de referência (menos 0,1 ponto percentual nos dois primeiros anos), junto com 0,1% de IBS. PIS e Cofins deixam de existir e o IPI vai a zero, com exceção de produtos que concorrem com a Zona Franca de Manaus. ICMS e ISS seguem como hoje.",
+      "base_legal": "EC 132/2023; LC 214/2025",
+      "areas": ["reforma", "simples", "presumido", "real"],
+      "efeito": "Clientes do Simples precisam decidir entre IBS/CBS no DAS ou por fora; a recuperação de PIS/Cofins monofásico perde o sentido daí em diante.",
+      "observacao": "As alíquotas de referência (CBS 8,8% e IBS 17,7%) são estimativas até a fixação oficial pelo Senado. O motor ainda não trata a Zona Franca de Manaus."
+    },
+    {
+      "id": "reforma-transicao-icms-iss",
+      "data": "2029-01-01",
+      "titulo": "Reforma Tributária: ICMS e ISS caem 10% ao ano, e o IBS cresce",
+      "resumo": "ICMS e ISS são cobrados em 90% (2029), 80% (2030), 70% (2031) e 60% (2032) do valor atual, enquanto o IBS entra na mesma proporção.",
+      "base_legal": "EC 132/2023 (ADCT, arts. 125 a 133); LC 214/2025",
+      "areas": ["reforma", "presumido", "real"],
+      "efeito": "A carga muda ano a ano; o simulador da Reforma mostra o efeito por cliente."
+    },
+    {
+      "id": "reforma-2033",
+      "data": "2033-01-01",
+      "titulo": "Reforma Tributária concluída: ICMS e ISS extintos",
+      "resumo": "A partir de 2033 ficam só CBS e IBS sobre o consumo.",
+      "base_legal": "EC 132/2023 (ADCT, arts. 125 a 133)",
+      "areas": ["reforma"],
+      "efeito": "Fim da transição."
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
 import { EnviarRelatorio } from "@/components/EnviarRelatorio";
 import { FormCliente } from "@/components/FormCliente";
@@ -24,14 +24,25 @@ import {
 } from "@/lib/tipos";
 
 type Aba = "simulacoes" | "planejamento" | "movimento" | "dados";
+const ABAS: Aba[] = ["simulacoes", "planejamento", "movimento", "dados"];
 
 export default function DetalheCliente() {
+  return (
+    <Suspense>
+      <DetalheClienteConteudo />
+    </Suspense>
+  );
+}
+
+function DetalheClienteConteudo() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const abaPedida = useSearchParams().get("aba");
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [simulacoes, setSimulacoes] = useState<Simulacao[]>([]);
   const [aberta, setAberta] = useState<Simulacao | null>(null);
-  const [aba, setAba] = useState<Aba>("simulacoes");
+  const [aba, setAba] = useState<Aba>(ABAS.find((a) => a === abaPedida) ?? "simulacoes");
+  const [recalculandoId, setRecalculandoId] = useState<number | null>(null);
   const [erro, setErro] = useState("");
   const [calculando, setCalculando] = useState(false);
   const [enviandoId, setEnviandoId] = useState<number | null>(null);
@@ -72,6 +83,20 @@ export default function DetalheCliente() {
     await api(`/simulacoes/${sim.id}`, { method: "DELETE" });
     setSimulacoes((s) => s.filter((x) => x.id !== sim.id));
     if (aberta?.id === sim.id) setAberta(null);
+  }
+
+  async function recalcular(sim: Simulacao) {
+    setErro("");
+    setRecalculandoId(sim.id);
+    try {
+      const nova = await api<Simulacao>(`/simulacoes/${sim.id}/recalcular`, { method: "POST" });
+      setSimulacoes((s) => [nova, ...s]);
+      setAberta(nova);
+    } catch (e) {
+      setErro(e instanceof ErroApi ? e.message : "Não foi possível recalcular");
+    } finally {
+      setRecalculandoId(null);
+    }
   }
 
   async function alternarPublicacao(sim: Simulacao) {
@@ -175,6 +200,9 @@ export default function DetalheCliente() {
                       </a>
                       <Botao variante="secundario" onClick={() => setEnviandoId(enviandoId === s.id ? null : s.id)}>
                         Enviar
+                      </Botao>
+                      <Botao variante="fantasma" onClick={() => recalcular(s)} carregando={recalculandoId === s.id} title="Refazer com as regras atuais">
+                        Recalcular
                       </Botao>
                       <Botao variante="fantasma" onClick={() => excluirSimulacao(s)} aria-label="Excluir simulação">
                         Excluir

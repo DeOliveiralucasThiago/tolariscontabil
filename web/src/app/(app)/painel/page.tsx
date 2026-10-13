@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { AvisosNoPainel } from "@/components/AvisosNoPainel";
 import { useSessao } from "@/components/Sessao";
 import { BotaoLink, Cartao, MensagemErro, Titulo } from "@/components/ui";
 import { api, ErroApi, urlProposta } from "@/lib/api";
@@ -51,6 +52,8 @@ export default function PaginaPainel() {
               detalhe="Potencial anual somado, uma simulação (a mais recente) por cliente"
             />
           </div>
+
+          <AvisosNoPainel />
 
           <Cartao titulo="Últimas simulações">
             {painel.ultimas_simulacoes.length === 0 ? (
