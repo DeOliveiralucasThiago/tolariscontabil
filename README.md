@@ -5,7 +5,7 @@ simulação da Reforma Tributária e relatórios para clientes.
 
 Este repositório está na **Fase 3**: aplicação web multi-escritório sobre o motor de
 cálculo, com Reforma Tributária, pessoa física, equipe, envio de relatórios por e-mail,
-portal do cliente e importação de NF-e/SPED.
+portal do cliente, importação de NF-e/SPED e recuperação de tributos (monofásico e ST).
 
 ## Estrutura
 
@@ -56,6 +56,10 @@ portal do cliente e importação de NF-e/SPED.
 - **Movimento fiscal:** importação de XML de NF-e/NFC-e (soltos ou em ZIP) e do SPED Fiscal
   (EFD ICMS/IPI), sem duplicar notas; vendas, compras e tributos por mês; um clique leva os
   últimos 12 meses para o planejamento.
+- **Recuperação de tributos:** a importação guarda os itens das vendas (NCM, CFOP, CST/CSOSN, CEST). O sistema
+  identifica produtos com PIS/Cofins monofásico e ICMS-ST, reconstrói a alíquota efetiva de cada mês e estima o
+  quanto o cliente do Simples pode ter pago a mais por não segregar a receita no PGDAS-D. Sai com gráfico, memória
+  de cálculo e PDF, e entra no histórico e no portal do cliente. É um indício a conferir; a tabela de NCM é inicial.
 
 ## Rodando localmente
 
@@ -163,7 +167,7 @@ print(reforma.tabela_resumo(anos))
 
 ## Validação com contador
 
-`validacao/casos_validacao.xlsx` traz 64 casos (empresas, PF, sócios, reforma, Simples na reforma e autônomo × CNPJ) com os
+`validacao/casos_validacao.xlsx` traz 67 casos (empresas, PF, sócios, reforma, Simples na reforma, autônomo × CNPJ e recuperação de tributos) com os
 valores do motor, a memória de cálculo e os alertas. O contador preenche a coluna
 amarela "Valor correto" e a planilha mostra a diferença. Para regenerar:
 
@@ -178,7 +182,7 @@ Premissas, fontes e pontos em aberto: [`docs/premissas.md`](docs/premissas.md).
 - **Fase 0 (concluída):** motor de cálculo testado; validação com contador em andamento.
 - **Fase 1 (concluída):** login, cadastro de clientes, prospecção com CNPJ, proposta em PDF com a marca do escritório.
 - **Fase 2 (concluída):** simulador da reforma, Simples na reforma e módulo de pessoa física, com relatórios em PDF.
-- **Fase 3 (atual):** equipe, recuperação de senha, envio por e-mail, portal do cliente, importação de XML/SPED.
+- **Fase 3 (atual):** equipe, recuperação de senha, envio por e-mail, portal do cliente, importação de XML/SPED, recuperação de tributos (monofásico e ST).
 - **Próximos:** cobrança da assinatura, NFS-e, alertas automáticos (fator R, sublimite), envio recorrente.
 - **Fase 4:** integrações (Serpro Integra Contador, ERPs), WhatsApp, assistente de IA.
 

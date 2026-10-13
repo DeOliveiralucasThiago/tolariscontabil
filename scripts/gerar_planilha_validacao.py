@@ -12,6 +12,7 @@ from __future__ import annotations
 import sys
 from dataclasses import dataclass
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -21,7 +22,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 from tolaris_motor import Atividade, PerfilEmpresa, Resultado, brl, pct
 from tolaris_motor import pessoa_fisica as pf
-from tolaris_motor import autonomo, presumido, real, reforma, reforma_simples, simples
+from tolaris_motor import autonomo, presumido, real, recuperacao, reforma, reforma_simples, simples
 
 FONTE = "Arial"
 AZUL_ESCURO = "1F3A5F"
@@ -138,6 +139,24 @@ def casos() -> list[Caso]:
             if o.aplicavel:
                 sigla = {"Autônomo (pessoa física)": "PF", "MEI": "MEI", "Simples Nacional": "SN", "Lucro Presumido": "LP"}[o.nome]
                 lista.append(Caso(f"{cod}-{sigla}", f"Autônomo × CNPJ — {o.nome} (mensal)", desc, o.resultado))
+
+    # Recuperação de tributos: 12 meses de histórico com a mesma receita e itens monofásicos/ST só no mês 13
+    def meses_recuperacao(receita: int, **ultimo) -> list[recuperacao.MesBase]:
+        return [recuperacao.MesBase(f"{2025 + i // 12}-{i % 12 + 1:02d}", Decimal(receita),
+                                    **({k: Decimal(v) for k, v in ultimo.items()} if i == 12 else {}))
+                for i in range(13)]
+
+    rec = {
+        "REC1": ("Comércio (Anexo I), RBT12 R$ 1.200.000; vendas de R$ 10.000 em monofásicos e R$ 20.000 com ST",
+                 "I", meses_recuperacao(100_000, mono_ncm=10_000, st_nota=20_000)),
+        "REC2": ("Comércio (Anexo I), RBT12 R$ 4.800.000 (6ª faixa: ICMS fora do DAS); R$ 10.000 em cada",
+                 "I", meses_recuperacao(400_000, mono_nota=10_000, st_nota=10_000)),
+        "REC3": ("Indústria (Anexo II), RBT12 R$ 600.000; R$ 8.000 em monofásicos e R$ 12.000 com ST",
+                 "II", meses_recuperacao(50_000, mono_nota=8_000, st_nota=12_000)),
+    }
+    for cod, (desc, anexo, meses) in rec.items():
+        r = recuperacao.estimar(meses, anexo)
+        lista.append(Caso(cod, "Recuperação: PIS/Cofins monofásico e ICMS-ST (jan/2026)", desc, r.resultado))
     return lista
 
 

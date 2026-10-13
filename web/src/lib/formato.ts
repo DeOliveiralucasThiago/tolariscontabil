@@ -49,3 +49,7 @@ export const data = (iso: string | null | undefined) =>
 
 export const dataHora = (iso: string | null | undefined) =>
   iso ? comoUtc(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "—";
+
+const MESES_CURTOS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+/** "2026-03" -> "mar/26" */
+export const competenciaCurta = (c: string) => `${MESES_CURTOS[Number(c.slice(5, 7)) - 1]}/${c.slice(2, 4)}`;

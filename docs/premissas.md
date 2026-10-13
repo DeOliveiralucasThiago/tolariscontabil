@@ -66,6 +66,35 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 16. **Anualização:** com menos de 12 meses importados, o planejamento usa a média mensal × 12.
 17. **NFS-e:** ainda não importada (formatos municipais e padrão nacional em transição).
 
+## Premissas da recuperação de tributos (monofásico e ST no Simples Nacional)
+
+18. **O que é:** quem revende produto com PIS/Cofins monofásico ou ICMS por substituição tributária (ST) deve
+    declarar a receita dele separada no PGDAS-D; o programa então deixa de cobrar, sobre ela, a parcela de
+    PIS/Cofins ou de ICMS da repartição da faixa. Sem a segregação, o cliente paga em duplicidade.
+    Base: LC 123/2006, art. 18, §4º-A, I e art. 13, §1º, XIII, a; Res. CGSN 140/2018, art. 25.
+19. **Indício, não certeza:** o sistema não sabe o que foi declarado no PGDAS-D. O valor é "pode ter sido pago a
+    mais"; o contador confere mês a mês antes de retificar ou pedir restituição.
+20. **Sinais lidos na própria nota (certeza maior):** PIS com CST 04 (monofásica, revenda a alíquota zero);
+    ICMS com CSOSN 500/201/202/203 ou CST 10/30/60/70; CFOP de ST (5401, 5403, 5405, 6401, 6403, 6404).
+21. **Sinais por NCM (certeza média):** tabela inicial em `tabelas/monofasico.json`, com o grupo, a base legal e a
+    observação de cada item. Grupos com "lista parcial" (autopeças, lubrificantes, sabonetes, preparos de
+    bebidas) não entram no valor provável: aparecem em "a conferir". ST só por CEST também fica em "a conferir",
+    porque a lista de ST varia por UF.
+22. **Apenas revenda:** só entram saídas com CFOP de revenda (5102, 5104, 5106, 5403, 5405, 5656, 5667 e os
+    interestaduais 6xxx); venda de produção própria, remessas, bonificações e devoluções ficam de fora.
+23. **Valor do item:** valor do produto menos desconto (frete e outras despesas acessórias não entram).
+24. **Cálculo:** economia do mês = base segregável x alíquota efetiva do mês x (% de PIS + % de Cofins da
+    repartição da faixa) para o monofásico, e x % de ICMS para a ST. O RBT12 de cada mês é a soma das notas de
+    venda dos 12 meses anteriores; com menos histórico importado, usa a média x 12 (marcado com `*`).
+    Na 6ª faixa (RBT12 acima de R$ 3,6 milhões) o ICMS já é recolhido fora do DAS: não há economia de ICMS.
+25. **Receita do mês:** valor total das notas de venda (vNF), como no movimento fiscal; devoluções e remessas ainda
+    entram (premissa 15) e podem deslocar um pouco a alíquota efetiva.
+26. **Escopo:** Anexos I (comércio) e II (indústria). Clientes fora do Simples recebem aviso: lá a revenda de
+    produto monofásico tem PIS/Cofins com alíquota zero, mas o cálculo é outro. Não cobre veículos, máquinas,
+    etanol nem cigarros. A lista de NCM é aplicada ao período todo, sem separar vigências.
+27. **Prazo:** pedidos de restituição ou compensação prescrevem em 5 anos (CTN, art. 168); o cálculo cobre só o
+    período importado. Com a Reforma, o PIS/Cofins deixa de existir em 2027 (substituído pela CBS).
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias?).
@@ -76,12 +105,16 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Percentuais de partilha do DAS (tabela em `simples_nacional.json`, campo `partilha`).
 - [ ] Modelo da decisão do Simples na Reforma (preços ajustados para o mesmo custo líquido do cliente).
 - [ ] Carnê-leão: livro-caixa × desconto simplificado (o motor usa o maior dos dois).
-- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (64 casos, incluindo SR* e AU*).
+- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (67 casos, incluindo SR*, AU* e REC*).
 - [ ] Importação: quais CFOPs excluir da receita (remessas, devoluções, transferências).
+- [ ] **Tabela de NCM monofásicos** (`src/tolaris_motor/tabelas/monofasico.json`): conferir cada prefixo e as
+      exceções por subitem na tabela oficial da Receita; hoje é uma lista inicial montada sem acesso à fonte oficial.
+- [ ] Sinais de ST na nota (CSOSN/CST/CFOP): confirmar quais permitem segregar o ICMS, inclusive para o substituto.
+- [ ] Casos REC1 a REC3 da planilha (alíquota efetiva x % da repartição) e o tratamento do RBT12 estimado.
 
 ## Fora do escopo da Fase 0 (próximos passos do motor)
 
 - Repartição do DAS por tributo e ICMS/ISS fora do DAS acima do sublimite.
 - IRPF anual (declaração) e cálculo completo do IRPFM com redutor.
 - Imposto Seletivo, ZFM, regimes específicos (combustíveis, financeiro, imobiliário).
-- Substituição tributária de ICMS, DIFAL e benefícios fiscais estaduais.
+- DIFAL e benefícios fiscais estaduais (a segregação de ST do Simples está na recuperação de tributos).

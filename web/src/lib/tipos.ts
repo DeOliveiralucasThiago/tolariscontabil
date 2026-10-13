@@ -131,7 +131,7 @@ export interface Comparativo {
   alertas: string[];
 }
 
-export type TipoSimulacao = "expressa" | "completa" | "reforma" | "simples_reforma" | "autonomo" | "pro_labore";
+export type TipoSimulacao = "expressa" | "completa" | "reforma" | "simples_reforma" | "autonomo" | "pro_labore" | "recuperacao";
 
 export const ROTULO_TIPO: Record<TipoSimulacao, string> = {
   expressa: "Expressa",
@@ -140,6 +140,7 @@ export const ROTULO_TIPO: Record<TipoSimulacao, string> = {
   simples_reforma: "Simples na Reforma",
   autonomo: "Autônomo × CNPJ",
   pro_labore: "Pró-labore",
+  recuperacao: "Recuperação de tributos",
 };
 
 export interface Simulacao {
@@ -334,7 +335,56 @@ export interface Movimento {
 export interface ResultadoImportacao {
   importados: number;
   duplicados: number;
+  atualizados: number;
   ignorados: { arquivo: string; motivo: string }[];
   total_ignorados: number;
   competencias: string[];
+}
+
+// --- Recuperação de tributos (monofásico e ST) --------------------------------------------
+export interface MesRecuperacao {
+  competencia: string;
+  receita: number;
+  base_monofasico: number;
+  base_st: number;
+  base_verificar: number;
+  rbt12: number;
+  rbt12_estimado: boolean;
+  faixa: number;
+  aliquota_efetiva: number;
+  pis_cofins: number;
+  icms: number;
+  provavel: number;
+  a_verificar: number;
+  calculado: boolean;
+}
+
+export interface ProdutoRecuperacao {
+  ncm: string | null;
+  descricao: string | null;
+  grupo: string | null;
+  base_legal: string | null;
+  observacao: string | null;
+  monofasico: string | null;
+  st: string | null;
+  certeza: "provavel" | "verificar";
+  valor: number;
+  itens: number;
+}
+
+export interface ResultadoRecuperacao {
+  disponivel: boolean;
+  anexo: "I" | "II";
+  anexo_origem: "escolhido" | "atividade" | "padrao";
+  periodo: { inicio: string | null; fim: string | null; meses: number };
+  documentos_sem_itens: number;
+  meses: MesRecuperacao[];
+  totais: { pis_cofins: number; icms: number; provavel: number; a_verificar: number; base_monofasico: number; base_st: number };
+  economia_anual: number;
+  produtos: ProdutoRecuperacao[];
+  tributos: { nome: string; valor: number }[];
+  memoria: PassoMemoria[];
+  alertas: string[];
+  melhor: string;
+  economia_vs_pior: number;
 }

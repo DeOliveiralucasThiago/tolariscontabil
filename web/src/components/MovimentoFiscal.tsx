@@ -4,19 +4,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { api, ErroApi } from "@/lib/api";
-import { brl, brlCurto, numero } from "@/lib/formato";
-import type { Movimento, ResultadoImportacao } from "@/lib/tipos";
+import { brl, brlCurto, competenciaCurta, numero } from "@/lib/formato";
+import type { Movimento, ResultadoImportacao, Simulacao } from "@/lib/tipos";
 
 import { Indicadores } from "./Blocos";
+import { RecuperacaoImpostos } from "./RecuperacaoImpostos";
 import { Aviso, Botao, Cartao, MensagemErro } from "./ui";
 
 const SERIE_SAIDAS = "#2a78d6";
 const SERIE_ENTRADAS = "#eb6834";
 
-const rotuloMes = (c: string) => {
-  const [a, m] = c.split("-");
-  return `${["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"][Number(m) - 1]}/${a.slice(2)}`;
-};
+const rotuloMes = competenciaCurta;
 
 function GraficoMovimento({ meses }: { meses: Movimento["meses"] }) {
   const dados = meses.slice(-12).map((m) => ({ ...m, mes: rotuloMes(m.competencia) }));
@@ -57,15 +55,18 @@ export function MovimentoFiscal({
   clienteId,
   temCnpj,
   onUsarNoPlanejamento,
+  onRecuperacaoSalva,
 }: {
   clienteId: number;
   temCnpj: boolean;
   onUsarNoPlanejamento: (receitaAnual: number, comprasAnual: number) => void;
+  onRecuperacaoSalva: (sim: Simulacao) => void;
 }) {
   const [mov, setMov] = useState<Movimento | null>(null);
   const [resultado, setResultado] = useState<ResultadoImportacao | null>(null);
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [versao, setVersao] = useState(0);
   const entrada = useRef<HTMLInputElement>(null);
 
   const carregar = useCallback(() => {
@@ -85,6 +86,7 @@ export function MovimentoFiscal({
     try {
       setResultado(await api<ResultadoImportacao>(`/clientes/${clienteId}/importacoes`, { method: "POST", body: dados }));
       carregar();
+      setVersao((v) => v + 1);
     } catch (e) {
       setErro(e instanceof ErroApi ? e.message : "Falha na importação");
     } finally {
@@ -98,6 +100,7 @@ export function MovimentoFiscal({
     await api(`/clientes/${clienteId}/documentos`, { method: "DELETE" });
     setResultado(null);
     carregar();
+    setVersao((v) => v + 1);
   }
 
   // Menos de 12 meses importados: anualiza pela média mensal
@@ -131,6 +134,7 @@ export function MovimentoFiscal({
               <div className="rounded-lg border border-borda bg-fundo p-3">
                 <div className="font-medium">
                   {resultado.importados} importados · {resultado.duplicados} já existiam · {resultado.total_ignorados} ignorados
+                  {resultado.atualizados > 0 && <> · {resultado.atualizados} completadas com itens</>}
                 </div>
                 {resultado.ignorados.length > 0 && (
                   <ul className="mt-2 max-h-40 overflow-auto text-xs text-tinta-2">
@@ -144,6 +148,10 @@ export function MovimentoFiscal({
           </div>
         )}
       </Cartao>
+
+      {temCnpj && (
+        <RecuperacaoImpostos clienteId={clienteId} versao={versao} temDocumentos={Boolean(mov && mov.documentos > 0)} onSalva={onRecuperacaoSalva} />
+      )}
 
       {mov && mov.meses.length > 0 && (
         <>

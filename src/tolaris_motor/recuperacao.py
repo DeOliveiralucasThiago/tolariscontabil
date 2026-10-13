@@ -222,12 +222,6 @@ def estimar(meses: list[MesBase], anexo: str = "I") -> Recuperacao:
         "ICMS pago a mais (produtos com ST)": total_icms,
     }
     res.passo(
-        "Meses com itens identificados",
-        "meses com venda de produto monofásico ou com ST",
-        D(len(calculados)),
-        BASE_LEGAL_MONOFASICO,
-    )
-    res.passo(
         "Venda de itens monofásicos (provável)",
         "soma dos itens com CST PIS 04 ou NCM da lista",
         sum((m.base_monofasico for m in calculados), ZERO),
@@ -248,8 +242,10 @@ def estimar(meses: list[MesBase], anexo: str = "I") -> Recuperacao:
         res.passo(f"{rotulo} - alíquota efetiva (faixa {ultimo.faixa})",
                   "(RBT12 x alíquota nominal - parcela a deduzir) / RBT12", ultimo.aliquota_efetiva,
                   "LC 123/2006, art. 18, §1º")
-        res.passo(f"{rotulo} - PIS+Cofins na repartição da faixa", "% de PIS + % de Cofins da faixa",
-                  ultimo.pct_pis_cofins, "LC 123/2006, Anexo I ou II (repartição)")
+        res.passo(f"{rotulo} - percentual de PIS+Cofins na repartição da faixa", "% de PIS + % de Cofins da faixa",
+                  ultimo.pct_pis_cofins, "LC 123/2006, Anexos I e II (repartição)")
+        res.passo(f"{rotulo} - percentual de ICMS na repartição da faixa", "% de ICMS da faixa",
+                  ultimo.pct_icms, "LC 123/2006, Anexos I e II (repartição)")
         res.passo(f"{rotulo} - PIS/Cofins pagos a mais",
                   f"{brl(ultimo.base_monofasico)} x {pct(ultimo.aliquota_efetiva, 4)} x {pct(ultimo.pct_pis_cofins, 2)}",
                   ultimo.pis_cofins, BASE_LEGAL_MONOFASICO)

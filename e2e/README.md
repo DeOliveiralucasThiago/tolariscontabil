@@ -36,3 +36,10 @@ export TOLARIS_EMAIL_BACKEND=arquivo TOLARIS_EMAIL_PASTA=/tmp/emails TOLARIS_URL
 uvicorn tolaris_api.main:app --port 8000 &
 cd e2e && EMAIL_DIR=/tmp/emails node fluxo_fase3.mjs saida
 ```
+
+O fluxo de recuperação de tributos (importa NF-e com itens, vê o imposto pago a mais, gera o relatório e o PDF)
+também usa e-mail novo a cada execução e não precisa de e-mail nem da BrasilAPI:
+
+```bash
+node fluxo_recuperacao.mjs saida
+```
