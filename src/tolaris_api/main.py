@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
 
 import tolaris_motor
 
+from .caixa_email import automatico_ligado, iniciar_rotina
 from .config import get_settings
-from .routers import auth, avisos, caixa, calculadoras, clientes, cnpj, compartilhamento, equipe, escritorio, financeiro, fiscal, honorarios, simulacoes
+from .db import SessionLocal
+from .routers import auth, avisos, caixa, caixa_email, calculadoras, clientes, cnpj, compartilhamento, equipe, escritorio, financeiro, fiscal, honorarios, simulacoes
 
 CHAVE_PADRAO = "dev-somente-local-troque-esta-chave-em-producao"
 
@@ -24,14 +27,24 @@ def criar_app() -> FastAPI:
             cfg.email_backend,
         )
 
+    @asynccontextmanager
+    async def ciclo_de_vida(_: FastAPI):
+        parar = iniciar_rotina(SessionLocal) if automatico_ligado() else None
+        try:
+            yield
+        finally:
+            if parar is not None:
+                parar.set()
+
     app = FastAPI(
+        lifespan=ciclo_de_vida,
         title="Tolaris Contábil API",
         version=tolaris_motor.__version__,
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )
     api = APIRouter(prefix="/api")
-    for r in (auth.router, avisos.router, caixa.router, escritorio.router, clientes.router, cnpj.router, simulacoes.router, calculadoras.router, equipe.router, compartilhamento.router, financeiro.router, fiscal.router, honorarios.router):
+    for r in (auth.router, avisos.router, caixa.router, caixa_email.router, escritorio.router, clientes.router, cnpj.router, simulacoes.router, calculadoras.router, equipe.router, compartilhamento.router, financeiro.router, fiscal.router, honorarios.router):
         api.include_router(r)
 
     @api.get("/saude", tags=["infra"])

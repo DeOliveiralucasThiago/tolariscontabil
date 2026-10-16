@@ -41,6 +41,15 @@ class Settings(BaseSettings):
     login_janela_minutos: int = 15
     importacao_max_mb: int = 25
 
+    imap_automatico: bool | None = None
+    """Liga a verificação periódica das caixas de e-mail. Sem valor, liga só em produção."""
+    imap_intervalo_minutos: int = 10
+    imap_timeout_segundos: int = 30
+    imap_dias_iniciais: int = 30
+    """Na primeira verificação, só olha e-mails dos últimos N dias."""
+    imap_permitir_rede_privada: bool = False
+    """Aceita servidor IMAP em rede interna/localhost e portas diferentes de 993 (bloqueado por padrão, contra SSRF)."""
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -194,6 +194,27 @@ class CaixaCliente(Base):
     """Notas novas recebidas por este link (sem contar repetidas)."""
 
 
+class CaixaEmail(Base):
+    """Caixa de e-mail (IMAP) do escritório de onde saem as notas enviadas pelos clientes. A senha fica cifrada."""
+
+    __tablename__ = "caixas_email"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    escritorio_id: Mapped[int] = mapped_column(ForeignKey("escritorios.id", ondelete="CASCADE"), unique=True)
+    host: Mapped[str] = mapped_column(String(253))
+    porta: Mapped[int] = mapped_column(default=993)
+    usuario: Mapped[str] = mapped_column(String(254))
+    senha_cifrada: Mapped[str] = mapped_column(Text)
+    pasta: Mapped[str] = mapped_column(String(200), default="INBOX")
+    ativo: Mapped[bool] = mapped_column(default=True)
+    uid_validade: Mapped[int | None] = mapped_column(BigInteger)
+    ultimo_uid: Mapped[int | None] = mapped_column(BigInteger)
+    """Última mensagem já lida: a verificação segue dali, sem mexer nos "lidos" do e-mail."""
+    ultima_verificacao_em: Mapped[datetime | None] = mapped_column()
+    ultimo_resultado: Mapped[dict[str, Any] | None] = mapped_column(JSON(none_as_null=True))
+    criado_em: Mapped[datetime] = mapped_column(default=agora)
+
+
 class FinanceiroMensal(Base):
     """Números contábeis do mês trazidos de planilha (receita, compras, folha...). Valores em centavos.
 

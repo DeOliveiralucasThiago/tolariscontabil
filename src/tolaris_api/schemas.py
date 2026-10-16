@@ -563,3 +563,27 @@ class FinanceiroPlanejamento(BaseModel):
 class FinanceiroSaida(BaseModel):
     meses: list[FinanceiroMes]
     planejamento: FinanceiroPlanejamento | None
+
+
+# --- Caixa de entrada de notas por e-mail ---------------------------------------------------------------
+class CaixaEmailEntrada(BaseModel):
+    host: str = Field(min_length=3, max_length=253)
+    porta: int = Field(default=993, ge=1, le=65535)
+    usuario: str = Field(min_length=1, max_length=254)
+    senha: str | None = Field(default=None, min_length=1, max_length=200)
+    """Obrigatória na primeira vez e sempre que servidor, porta ou usuário mudam; senão mantém a guardada."""
+    pasta: str = Field(default="INBOX", min_length=1, max_length=200)
+    ativo: bool = True
+
+
+class CaixaEmailSaida(BaseModel):
+    configurada: bool
+    host: str | None = None
+    porta: int | None = None
+    usuario: str | None = None
+    pasta: str | None = None
+    ativo: bool = False
+    ultima_verificacao_em: datetime | None = None
+    ultimo_resultado: dict[str, Any] | None = None
+    automatico: bool = False
+    intervalo_minutos: int = 0
