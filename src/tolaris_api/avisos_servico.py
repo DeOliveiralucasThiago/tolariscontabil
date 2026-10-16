@@ -23,6 +23,8 @@ from .servicos import diferencas, pode_recalcular, recalcular_resultado
 
 ORDEM = {g: i for i, g in enumerate(avisos.GRAVIDADES)}
 RESUMO_VAZIO = {g: 0 for g in avisos.GRAVIDADES}
+LIMITE_ATRASO_MESES = 2
+"""Cliente ativo com a última competência importada há mais de 2 meses ganha o aviso de notas paradas."""
 
 
 _MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
@@ -127,6 +129,13 @@ def reunir(db: Session, escritorio_id: int, hoje: date | None = None) -> dict[st
         .group_by(DocumentoFiscal.cliente_id, DocumentoFiscal.competencia)
     ):
         notas[cid][comp] = total or 0
+    ultimo_movimento: dict[int, str] = dict(
+        db.execute(
+            select(DocumentoFiscal.cliente_id, func.max(DocumentoFiscal.competencia))
+            .where(DocumentoFiscal.escritorio_id == escritorio_id)
+            .group_by(DocumentoFiscal.cliente_id)
+        ).all()
+    )
     com_itens = set(db.scalars(select(ItemFiscal.cliente_id).where(ItemFiscal.escritorio_id == escritorio_id).distinct()))
 
     lista: list[dict[str, Any]] = []
@@ -165,6 +174,20 @@ def reunir(db: Session, escritorio_id: int, hoje: date | None = None) -> dict[st
                     total, "LC 123/2006, art. 18, §4º-A",
                 )
                 lista.append(_item(aviso, c, {"tipo": "cliente", "rotulo": "Ver análise", "aba": "movimento"}))
+
+        # Clientes ativos cujas notas pararam de chegar
+        ultima = ultimo_movimento.get(c.id)
+        if c.status == "ativo" and ultima is not None:
+            atual = f"{hoje.year:04d}-{hoje.month:02d}"
+            atraso = (int(atual[:4]) * 12 + int(atual[5:])) - (int(ultima[:4]) * 12 + int(ultima[5:]))
+            if atraso > LIMITE_ATRASO_MESES:
+                aviso = avisos.Aviso(
+                    "movimento_desatualizado", "info",
+                    f"Notas paradas desde {_curta(ultima)}",
+                    f"A última competência importada é {_curta(ultima)}. Peça os XML do período ao cliente "
+                    "(o link de envio ou a caixa de e-mail trazem as notas sem digitação) para manter os avisos e a análise de recuperação em dia.",
+                )
+                lista.append(_item(aviso, c, {"tipo": "cliente", "rotulo": "Pedir notas", "aba": "movimento"}))
 
         # Simulações salvas cujo resultado mudou com as regras atuais
         for tipo, s in do_cliente.items():

@@ -177,3 +177,20 @@ def test_diferencas_ignora_textos_e_campos_novos():
     assert diferencas(antigo, {**antigo, "total": 100.5}) == ["total"]
     assert diferencas(antigo, {**antigo, "melhor": "Lucro Presumido"}) == ["melhor"]
     assert diferencas(antigo, {**antigo, "regimes": [{"titulo": "Simples", "total": 90.0}]}) == ["regimes[0].total"]
+
+
+def test_aviso_de_notas_paradas_so_para_cliente_ativo(logado: TestClient):
+    from datetime import date
+
+    cid = _cliente(logado, regime_atual="simples")
+    item = ("19059090", "5102", "102", "49", "", 1000.0, 0.0, "BISCOITO")
+    assert _enviar(logado, cid, [("n.xml", nfe_itens(1, "2025-03-10", [item]))]).json()["importados"] == 1
+    assert "movimento_desatualizado" not in _por_codigo(logado)  # prospect não é cobrado
+    logado.patch(f"/api/clientes/{cid}", json={"status": "ativo"})
+    a = _por_codigo(logado)["movimento_desatualizado"]
+    assert a["gravidade"] == "info" and a["titulo"] == "Notas paradas desde mar/25"
+    assert a["acao"] == {"tipo": "cliente", "rotulo": "Pedir notas", "aba": "movimento"}
+    # chegando nota do mês corrente, o aviso some
+    hoje = date.today()
+    assert _enviar(logado, cid, [("n2.xml", nfe_itens(2, f"{hoje.year}-{hoje.month:02d}-01", [item]))]).json()["importados"] == 1
+    assert "movimento_desatualizado" not in _por_codigo(logado)

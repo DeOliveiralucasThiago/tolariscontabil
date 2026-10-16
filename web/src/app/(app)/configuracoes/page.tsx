@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useRef, useState } from "react";
 
 import { aplicarCorMarca, useSessao } from "@/components/Sessao";
+import { CaixaDeEmail } from "@/components/CaixaDeEmail";
 import { TabelaHonorarios } from "@/components/TabelaHonorarios";
 import { Botao, Campo, Cartao, MensagemErro, Rotulo, Titulo } from "@/components/ui";
 import { api, ErroApi } from "@/lib/api";
@@ -196,6 +197,11 @@ function Configuracoes() {
       <div className="mt-6">
         <TabelaHonorarios />
       </div>
+      {admin && (
+        <div className="mt-6">
+          <CaixaDeEmail />
+        </div>
+      )}
       <div className="mt-6">
         <AlterarSenha />
       </div>

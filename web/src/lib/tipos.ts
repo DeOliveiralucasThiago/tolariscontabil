@@ -528,3 +528,28 @@ export interface Financeiro {
   meses: FinanceiroMes[];
   planejamento: FinanceiroPlanejamento | null;
 }
+
+export interface ResultadoCaixaEmail {
+  em: string;
+  ok: boolean;
+  erro: string | null;
+  mensagens: number;
+  com_anexos: number;
+  importados: number;
+  duplicados: number;
+  sem_cliente: string[];
+  por_cliente: { cliente_id: number; cliente: string; importados: number }[];
+}
+
+export interface CaixaEmailEstado {
+  configurada: boolean;
+  host: string | null;
+  porta: number | null;
+  usuario: string | null;
+  pasta: string | null;
+  ativo: boolean;
+  ultima_verificacao_em: string | null;
+  ultimo_resultado: ResultadoCaixaEmail | null;
+  automatico: boolean;
+  intervalo_minutos: number;
+}
