@@ -1,0 +1,23 @@
+  <div class="honorarios">
+    <h2>Proposta de honorários</h2>
+    <div class="grade">
+      <div class="card"><span>Honorários mensais</span><strong>{{ honorarios.valor_mensal|brl }}</strong></div>
+      {% if honorarios.adesao %}<div class="card"><span>Adesão (pagamento único)</span><strong>{{ honorarios.adesao|brl }}</strong></div>{% endif %}
+      <div class="card"><span>Total no primeiro ano</span><strong>{{ honorarios.total_primeiro_ano|brl }}</strong></div>
+    </div>
+    {% if honorarios.economia %}
+    <p class="retorno">
+      A economia estimada neste relatório é de <strong>{{ honorarios.economia|brl }} por ano</strong>{% if honorarios.razao %},
+      cerca de <strong>{{ honorarios.razao|string|replace(".", ",") }} vezes</strong> os honorários do primeiro ano{% endif %}.
+      <span class="obs">Estimativa; o resultado real depende da execução do planejamento.</span>
+    </p>
+    {% endif %}
+    {% if honorarios.linhas_servicos %}
+    <p style="margin:10px 0 3px"><strong>Serviços incluídos</strong></p>
+    <ul class="alertas">{% for linha in honorarios.linhas_servicos %}<li>{{ linha }}</li>{% endfor %}</ul>
+    {% endif %}
+    <p class="obs" style="margin-top:8px">Proposta válida até {{ honorarios.valido_ate_br }}.</p>
+    {% if honorarios.aceite %}
+    <p class="aceite"><strong>Aceite eletrônico:</strong> {{ honorarios.aceite.nome }}, em {{ honorarios.aceite.quando }}.</p>
+    {% endif %}
+  </div>

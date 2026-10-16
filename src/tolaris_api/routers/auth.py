@@ -51,6 +51,7 @@ def sessao(usuario: Usuario) -> SessaoSaida:
             telefone=esc.telefone,
             cor_primaria=esc.cor_primaria,
             tem_logo=esc.logo_mime is not None,
+            honorarios=esc.honorarios,
         ),
     )
 

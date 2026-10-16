@@ -2,17 +2,23 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from datetime import timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+from tolaris_motor import brl
 
-from ..acesso import agora, hash_token, novo_token
+from ..acesso import _aware, agora, hash_token, novo_token
 from ..config import get_settings
 from ..db import get_db
-from ..emails import Anexo, ErroEnvio, Mensagem, enviar, montar_html
+from ..emails import Anexo, ErroEnvio, Mensagem, enviar, enviar_sem_falhar, montar_html
+from ..honorarios import FUSO, expirada, para_portal
 from ..models import Cliente, Envio, Escritorio, PortalCliente, Simulacao, Usuario
 from ..pdf import gerar_proposta, nome_arquivo, titulo_documento
 from ..schemas import (
+    AceiteEntrada,
+    AceiteSaida,
     EnviarEntrada,
     EnvioSaida,
     PortalEstado,
@@ -92,6 +98,10 @@ def publicar(
     simulacao_id: int, dados: PublicarEntrada, usuario: Usuario = Depends(usuario_atual), db: Session = Depends(get_db)
 ) -> Simulacao:
     sim = _obter_simulacao(db, usuario, simulacao_id)
+    if dados.publicada and not sim.publicada:
+        sim.publicada_em = agora()
+    elif not dados.publicada:
+        sim.publicada_em = None
     sim.publicada = dados.publicada
     db.commit()
     return sim
@@ -202,7 +212,11 @@ def ver_portal(token: str, db: Session = Depends(get_db)) -> PortalPublico:
         },
         cliente=cliente.razao_social,
         simulacoes=[
-            PortalSimulacao(id=s.id, tipo=s.tipo, titulo=titulo_documento(s), resultado=s.resultado, criado_em=s.criado_em)
+            PortalSimulacao(
+                id=s.id, tipo=s.tipo, titulo=titulo_documento(s), resultado=s.resultado, criado_em=s.criado_em,
+                honorarios=para_portal(s.honorarios) if s.honorarios else None,
+                aceite_em=s.aceite_em, aceite_nome=s.aceite_nome,
+            )
             for s in sims
         ],
     )
@@ -216,13 +230,84 @@ def logo_portal(token: str, db: Session = Depends(get_db)) -> Response:
     return Response(escritorio.logo, media_type=escritorio.logo_mime, headers={"Cache-Control": "private, max-age=300"})
 
 
-@router.get("/portal/{token}/simulacoes/{simulacao_id}.pdf")
-def pdf_portal(token: str, simulacao_id: int, db: Session = Depends(get_db)) -> Response:
-    _, cliente, escritorio = _portal_publico(db, token)
+def _simulacao_publicada(db: Session, cliente: Cliente, simulacao_id: int) -> Simulacao:
     sim = db.get(Simulacao, simulacao_id)
     if sim is None or sim.cliente_id != cliente.id or not sim.publicada:
         raise _NAO_ENCONTRADO
+    return sim
+
+
+def _registrar_abertura(sim: Simulacao) -> None:
+    """Confirmação de leitura: aberturas seguidas em menos de 10 minutos (recarregar a página) contam uma só."""
+    momento = agora()
+    ultima = _aware(sim.visto_ultima_em) if sim.visto_ultima_em else None
+    if sim.visto_primeira_em is None:
+        sim.visto_primeira_em = momento
+    if ultima is None or momento - ultima >= timedelta(minutes=10):
+        sim.aberturas = (sim.aberturas or 0) + 1
+    sim.visto_ultima_em = momento
+
+
+@router.get("/portal/{token}/simulacoes/{simulacao_id}.pdf")
+def pdf_portal(token: str, simulacao_id: int, db: Session = Depends(get_db)) -> Response:
+    _, cliente, escritorio = _portal_publico(db, token)
+    sim = _simulacao_publicada(db, cliente, simulacao_id)
+    _registrar_abertura(sim)
+    db.commit()
     pdf = gerar_proposta(escritorio, cliente, sim)
     return Response(
         pdf, media_type="application/pdf", headers={"Content-Disposition": f'inline; filename="{nome_arquivo(sim)}"'}
     )
+
+
+@router.post("/portal/{token}/simulacoes/{simulacao_id}/visto", status_code=status.HTTP_204_NO_CONTENT)
+def marcar_visto(token: str, simulacao_id: int, db: Session = Depends(get_db)) -> None:
+    """O portal avisa que o cliente abriu o relatório na tela."""
+    _, cliente, _ = _portal_publico(db, token)
+    _registrar_abertura(_simulacao_publicada(db, cliente, simulacao_id))
+    db.commit()
+
+
+@router.post("/portal/{token}/simulacoes/{simulacao_id}/aceite", response_model=AceiteSaida)
+def aceitar_proposta(
+    token: str, simulacao_id: int, dados: AceiteEntrada, requisicao: Request, db: Session = Depends(get_db)
+) -> AceiteSaida:
+    """Aceite eletrônico simples da proposta de honorários: guarda nome, data/hora e IP e avisa o escritório."""
+    _, cliente, escritorio = _portal_publico(db, token)
+    sim = _simulacao_publicada(db, cliente, simulacao_id)
+    h = sim.honorarios
+    if not h:
+        raise _NAO_ENCONTRADO
+    if sim.aceite_em is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Esta proposta já foi aceita")
+    if expirada(h):
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            f"Esta proposta venceu em {h['valido_ate'][8:10]}/{h['valido_ate'][5:7]}/{h['valido_ate'][:4]}. "
+            "Peça uma nova ao seu escritório.",
+        )
+    sim.aceite_em = agora()
+    sim.aceite_nome = dados.nome
+    sim.aceite_ip = requisicao.client.host[:45] if requisicao.client else None
+    _registrar_abertura(sim)
+    db.commit()
+
+    criador = db.get(Usuario, sim.criado_por_id) if sim.criado_por_id else None
+    destino = escritorio.email or (criador.email if criador else None)
+    if destino:
+        quando = sim.aceite_em.astimezone(FUSO).strftime("%d/%m/%Y às %H:%M")
+        adesao = f" e adesão de {brl(h['adesao'])}" if h.get("adesao") else ""
+        paragrafos = [
+            f"{dados.nome} aceitou, pelo portal, a proposta de honorários de {brl(h['valor_mensal'])} por mês{adesao} "
+            f"para {cliente.razao_social}.",
+            f"Aceite registrado em {quando}. É um aceite eletrônico simples: formalize o contrato de prestação de "
+            "serviços pelo procedimento do escritório.",
+        ]
+        enviar_sem_falhar(Mensagem(
+            para=[destino],
+            assunto=f"Proposta aceita — {cliente.razao_social}",
+            texto="\n\n".join(paragrafos),
+            html=montar_html("Proposta aceita", paragrafos, cor=escritorio.cor_primaria, rodape="Tolaris Contábil"),
+            nome_remetente="Tolaris Contábil",
+        ))
+    return AceiteSaida(aceite_em=sim.aceite_em, aceite_nome=sim.aceite_nome)

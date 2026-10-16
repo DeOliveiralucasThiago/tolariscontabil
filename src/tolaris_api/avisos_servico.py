@@ -15,7 +15,9 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from tolaris_motor import PerfilEmpresa, avisos, brl, tabelas
 
-from .models import Cliente, DocumentoFiscal, ItemFiscal, Simulacao
+from .acesso import _aware, agora
+from .honorarios import FUSO
+from .models import Cliente, DocumentoFiscal, ItemFiscal, PortalCliente, Simulacao
 from .recuperacao_servico import analisar
 from .servicos import diferencas, pode_recalcular, recalcular_resultado
 
@@ -80,9 +82,14 @@ def resumo_da_mudanca(antigo: dict[str, Any], novo: dict[str, Any], mudou: list[
     return texto + f"A recomendação continua a mesma ({depois})."
 
 
-def _item(aviso: avisos.Aviso, cliente: Cliente, acao: dict[str, Any]) -> dict[str, Any]:
+DIAS_NAO_VISTO = 3
+DIAS_SEM_RESPOSTA = 7
+DIAS_MAXIMOS_DE_ACOMPANHAMENTO = 60
+
+
+def _item(aviso: avisos.Aviso, cliente: Cliente, acao: dict[str, Any], chave: int | None = None) -> dict[str, Any]:
     return {
-        "id": f"{aviso.codigo}-{cliente.id}",
+        "id": f"{aviso.codigo}-{cliente.id}" + (f"-{chave}" if chave is not None else ""),
         "codigo": aviso.codigo,
         "gravidade": aviso.gravidade,
         "titulo": aviso.titulo,
@@ -188,6 +195,8 @@ def reunir(db: Session, escritorio_id: int, hoje: date | None = None) -> dict[st
                 "acao": {"tipo": "recalcular", "rotulo": "Recalcular", "simulacao_id": s.id},
             })
 
+    lista.extend(_acompanhamentos(db, escritorio_id, por_id, agora()))
+
     lista.sort(key=lambda a: (ORDEM[a["gravidade"]], -(a["valor"] or 0), a["cliente"].lower()))
     resumo = dict(RESUMO_VAZIO)
     for a in lista:
@@ -198,6 +207,46 @@ def reunir(db: Session, escritorio_id: int, hoje: date | None = None) -> dict[st
                    "valor_oportunidades": round(sum(a["valor"] or 0 for a in lista if a["gravidade"] == "oportunidade"), 2)},
         "clientes_analisados": len(por_id),
     }
+
+
+def _acompanhamentos(db: Session, escritorio_id: int, clientes: dict[int, Cliente], momento) -> list[dict[str, Any]]:
+    """Relatórios publicados no portal: ainda não abertos, proposta aceita e proposta vista sem resposta."""
+    portais = set(db.scalars(select(PortalCliente.cliente_id).where(
+        PortalCliente.escritorio_id == escritorio_id, PortalCliente.ativo.is_(True))))
+    linhas = db.execute(
+        select(
+            Simulacao.id, Simulacao.cliente_id, Simulacao.titulo, Simulacao.publicada_em, Simulacao.criado_em,
+            Simulacao.aberturas, Simulacao.visto_primeira_em, Simulacao.honorarios, Simulacao.aceite_em, Simulacao.aceite_nome,
+        ).where(Simulacao.escritorio_id == escritorio_id, Simulacao.publicada.is_(True))
+    )
+    saida: list[dict[str, Any]] = []
+    for sid, cid, titulo, publicada_em, criado_em, aberturas, visto_em, hon, aceite_em, aceite_nome in linhas:
+        c = clientes.get(cid)
+        if c is None:
+            continue
+        acao = {"tipo": "cliente", "rotulo": "Abrir cliente", "aba": "simulacoes"}
+        titulo_curto = titulo.split(" — ")[0]
+        mensal = hon["valor_mensal"] if hon else None
+        if aceite_em is not None and c.status == "prospect":
+            quando = _aware(aceite_em).astimezone(FUSO).strftime("%d/%m/%Y às %H:%M")
+            saida.append(_item(avisos.Aviso(
+                "proposta_aceita", "oportunidade", f"{aceite_nome} aceitou a proposta de honorários: {brl(mensal)} por mês",
+                f"Aceite eletrônico registrado em {quando}. Cadastre o cliente como ativo e formalize o contrato de "
+                "prestação de serviços.", Decimal(str(mensal)) * 12), c, {**acao, "aba": "dados"}, sid))
+        elif hon and aceite_em is None and visto_em is not None:
+            dias = (momento - _aware(visto_em)).days
+            if dias >= DIAS_SEM_RESPOSTA:
+                saida.append(_item(avisos.Aviso(
+                    "proposta_sem_resposta", "atencao", f"Proposta de honorários vista há {dias} dias e sem resposta",
+                    f"O cliente abriu \"{titulo_curto}\" e não aceitou a proposta de {brl(mensal)} por mês. "
+                    "Vale um contato por telefone ou WhatsApp.", Decimal(str(mensal)) * 12), c, acao, sid))
+        if aberturas == 0 and cid in portais:
+            dias = (momento - _aware(publicada_em or criado_em)).days
+            if DIAS_NAO_VISTO <= dias <= DIAS_MAXIMOS_DE_ACOMPANHAMENTO:
+                saida.append(_item(avisos.Aviso(
+                    "relatorio_nao_visto", "info", f"O cliente ainda não abriu \"{titulo_curto}\"",
+                    f"Publicado no portal há {dias} dias. Vale lembrar o cliente por WhatsApp ou e-mail."), c, acao, sid))
+    return saida
 
 
 def mudancas(hoje: date | None = None) -> list[dict[str, Any]]:

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..db import get_db
+from ..honorarios import config_para_banco
 from ..models import Escritorio, Usuario
 from ..schemas import EscritorioAtualizar, SessaoSaida
 from ..seguranca import usuario_atual
@@ -30,6 +31,8 @@ def atualizar(
     _somente_admin(usuario)
     esc = usuario.escritorio
     for campo, valor in dados.model_dump(exclude_unset=True).items():
+        if campo == "honorarios" and dados.honorarios is not None:
+            valor = config_para_banco(dados.honorarios)
         setattr(esc, campo, valor)
     db.commit()
     return sessao(usuario)

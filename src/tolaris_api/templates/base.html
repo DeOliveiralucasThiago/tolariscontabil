@@ -50,6 +50,10 @@
   .grade .card { border: 1px solid #E3E8EC; border-radius: 6px; padding: 8px 10px; }
   .grade .card span { display: block; color: #5B6775; font-size: 8pt; text-transform: uppercase; letter-spacing: .04em; }
   .grade .card strong { font-size: 12pt; }
+  .honorarios { page-break-inside: avoid; }
+  .honorarios .retorno { margin: 8px 0 0; }
+  .honorarios .obs { color: #5B6775; font-size: 8.5pt; }
+  .honorarios .aceite { margin: 6px 0 0; padding: 6px 10px; background: #F5F7F9; border-radius: 6px; font-size: 9pt; }
   .legenda { font-size: 8pt; color: #5B6775; margin: 2px 0 4px; }
   .legenda i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin: 0 4px -1px 10px; }
 </style>
@@ -78,6 +82,8 @@
   </div>
 
 {% block corpo %}{% endblock %}
+
+{% if honorarios %}{% include "_honorarios.html" %}{% endif %}
 
   <div class="assinatura">
     {{ responsavel }}{% if escritorio.crc %} · CRC {{ escritorio.crc }}{% endif %}<br>

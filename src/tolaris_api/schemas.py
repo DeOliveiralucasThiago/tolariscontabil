@@ -18,6 +18,36 @@ Status = Literal["prospect", "ativo", "inativo"]
 Regime = Literal["mei", "simples", "presumido", "real", "outro"]
 
 
+# --- Honorários -----------------------------------------------------------------------------
+class HonorariosConfig(BaseModel):
+    """Tabela de honorários do escritório (valores mensais, exceto a adesão)."""
+
+    base: dict[Literal["mei", "simples", "presumido", "real"], Dinheiro] = Field(default_factory=dict)
+    por_funcionario: Dinheiro = Field(default=Decimal(0), ge=0, le=100000)
+    adesao: Dinheiro = Field(default=Decimal(0), ge=0, le=1000000)
+    servicos: str = Field(default="", max_length=2000)
+    validade_dias: int = Field(default=15, ge=1, le=90)
+
+    @field_validator("base")
+    @classmethod
+    def _base(cls, v: dict[str, Decimal]) -> dict[str, Decimal]:
+        for valor in v.values():
+            if valor < 0 or valor > 1000000:
+                raise ValueError("Valor de honorários fora do intervalo")
+        return v
+
+
+class HonorariosEntrada(BaseModel):
+    """Proposta de honorários de uma simulação; o que ficar em branco vem da tabela do escritório."""
+
+    funcionarios: int = Field(default=0, ge=0, le=10000)
+    valor_mensal: Dinheiro | None = Field(default=None, ge=0, le=1000000)
+    adesao: Dinheiro | None = Field(default=None, ge=0, le=1000000)
+    servicos: str | None = Field(default=None, max_length=2000)
+    validade_dias: int | None = Field(default=None, ge=1, le=90)
+
+
+
 # --- Autenticação -----------------------------------------------------------
 class CadastroEntrada(BaseModel):
     escritorio_nome: str = Field(min_length=2, max_length=200)
@@ -50,6 +80,7 @@ class EscritorioSaida(BaseModel):
     telefone: str | None
     cor_primaria: str
     tem_logo: bool = False
+    honorarios: dict[str, Any] | None = None
 
 
 class SessaoSaida(BaseModel):
@@ -65,6 +96,7 @@ class EscritorioAtualizar(BaseModel):
     email: EmailStr | None = None
     telefone: str | None = Field(default=None, max_length=40)
     cor_primaria: str | None = None
+    honorarios: HonorariosConfig | None = None
 
     @field_validator("cor_primaria")
     @classmethod
@@ -196,6 +228,13 @@ class SimulacaoSaida(BaseModel):
     resultado: dict[str, Any]
     versao_motor: str
     publicada: bool = False
+    publicada_em: datetime | None = None
+    honorarios: dict[str, Any] | None = None
+    visto_primeira_em: datetime | None = None
+    visto_ultima_em: datetime | None = None
+    aberturas: int = 0
+    aceite_em: datetime | None = None
+    aceite_nome: str | None = None
     criado_em: datetime
 
 
@@ -374,6 +413,31 @@ class PortalSimulacao(BaseModel):
     titulo: str
     resultado: dict[str, Any]
     criado_em: datetime
+    honorarios: dict[str, Any] | None = None
+    aceite_em: datetime | None = None
+    aceite_nome: str | None = None
+
+
+class AceiteEntrada(BaseModel):
+    nome: str = Field(min_length=3, max_length=200)
+    confirmo: bool
+
+    @field_validator("nome")
+    @classmethod
+    def _nome(cls, v: str) -> str:
+        return " ".join(v.split())
+
+    @field_validator("confirmo")
+    @classmethod
+    def _confirmo(cls, v: bool) -> bool:
+        if not v:
+            raise ValueError("Confirme que leu e aceita a proposta")
+        return v
+
+
+class AceiteSaida(BaseModel):
+    aceite_em: datetime
+    aceite_nome: str
 
 
 class PortalPublico(BaseModel):
@@ -423,3 +487,4 @@ class RecuperacaoEntrada(BaseModel):
     anexo: Literal["I", "II"]
     periodo_inicio: str | None
     periodo_fim: str | None
+

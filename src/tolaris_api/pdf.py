@@ -16,6 +16,7 @@ from markupsafe import Markup
 from tolaris_motor import brl, pct
 
 from .cnpj import formatar_cnpj
+from .honorarios import para_pdf
 from .models import Cliente, Escritorio, Simulacao, Usuario
 from .servicos import ROTULOS_ATIVIDADE
 
@@ -176,6 +177,8 @@ def _contexto(escritorio: Escritorio, cliente: Cliente, sim: Simulacao, usuario:
         cor_texto=cor_texto_sobre(cor),
         logo=logo,
         atividade=ROTULOS_ATIVIDADE.get(cliente.atividade or "", None),
+        honorarios=para_pdf(sim.honorarios, sim.resultado.get("economia_vs_pior"), sim.aceite_em, sim.aceite_nome)
+        if sim.honorarios else None,
         responsavel=escritorio.contador_responsavel or (usuario.nome if usuario else escritorio.nome),
         data=data.strftime("%d/%m/%Y"),
         gerado_em=datetime.now(ZoneInfo("America/Sao_Paulo")).strftime("%d/%m/%Y %H:%M"),

@@ -30,6 +30,8 @@ class Escritorio(Base):
     cor_primaria: Mapped[str] = mapped_column(String(7), default="#1F3A5F")
     logo: Mapped[bytes | None] = mapped_column(LargeBinary, deferred=True)
     logo_mime: Mapped[str | None] = mapped_column(String(40))
+    honorarios: Mapped[dict[str, Any] | None] = mapped_column(JSON(none_as_null=True))
+    """Tabela de honorários do escritório (base por regime, adicional por funcionário, adesão, serviços e validade)."""
     criado_em: Mapped[datetime] = mapped_column(default=agora)
 
     usuarios: Mapped[list[Usuario]] = relationship(back_populates="escritorio")
@@ -94,6 +96,16 @@ class Simulacao(Base):
     versao_motor: Mapped[str] = mapped_column(String(20))
     publicada: Mapped[bool] = mapped_column(default=False, server_default="0")
     """Visível no portal do cliente."""
+    publicada_em: Mapped[datetime | None] = mapped_column()
+    honorarios: Mapped[dict[str, Any] | None] = mapped_column(JSON(none_as_null=True))
+    """Proposta de honorários anexada a esta simulação."""
+    visto_primeira_em: Mapped[datetime | None] = mapped_column()
+    visto_ultima_em: Mapped[datetime | None] = mapped_column()
+    aberturas: Mapped[int] = mapped_column(default=0, server_default="0")
+    """Vezes em que o cliente abriu o relatório no portal (aberturas seguidas em menos de 10 minutos contam uma)."""
+    aceite_em: Mapped[datetime | None] = mapped_column()
+    aceite_nome: Mapped[str | None] = mapped_column(String(200))
+    aceite_ip: Mapped[str | None] = mapped_column(String(45))
     criado_em: Mapped[datetime] = mapped_column(default=agora, index=True)
 
     cliente: Mapped[Cliente] = relationship(back_populates="simulacoes")
