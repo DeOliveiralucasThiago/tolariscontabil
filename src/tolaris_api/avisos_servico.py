@@ -7,15 +7,18 @@ com ST (recuperação) e simulações salvas cujo resultado mudou com as regras 
 from __future__ import annotations
 
 from collections import defaultdict
+from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
-from tolaris_motor import PerfilEmpresa, avisos, brl, tabelas
+from tolaris_motor import PerfilEmpresa, avisos, brl, pct, tabelas
 
 from .acesso import _aware, agora
+from .acompanhamento_servico import analisar as analisar_acompanhamento
+from .acompanhamento_servico import carregar_series, curta, perfil_da_simulacao
 from .honorarios import FUSO
 from .models import Cliente, DocumentoFiscal, ItemFiscal, PortalCliente, Simulacao
 from .recuperacao_servico import analisar
@@ -23,6 +26,8 @@ from .servicos import diferencas, pode_recalcular, recalcular_resultado
 
 ORDEM = {g: i for i, g in enumerate(avisos.GRAVIDADES)}
 RESUMO_VAZIO = {g: 0 for g in avisos.GRAVIDADES}
+MIN_MESES_AVISO_DESVIO = 6
+DESVIO_RELEVANTE = Decimal("0.20")
 LIMITE_ATRASO_MESES = 2
 """Cliente ativo com a última competência importada há mais de 2 meses ganha o aviso de notas paradas."""
 
@@ -39,7 +44,7 @@ def _mes_anterior(comp: str, meses: int) -> str:
     return f"{indice // 12:04d}-{indice % 12 + 1:02d}"
 
 
-def rbt12_das_notas(centavos_por_mes: dict[str, int]) -> tuple[Decimal, str]:
+def rbt12_das_notas(centavos_por_mes: dict[str, int], origem: str = "notas importadas") -> tuple[Decimal, str]:
     """Receita dos últimos 12 meses importados e a descrição da fonte (anualiza se há menos de 12 meses)."""
     ultimo, primeiro = max(centavos_por_mes), min(centavos_por_mes)
     janela = [_mes_anterior(ultimo, n) for n in range(11, -1, -1)]
@@ -47,28 +52,8 @@ def rbt12_das_notas(centavos_por_mes: dict[str, int]) -> tuple[Decimal, str]:
     soma = Decimal(sum(centavos_por_mes.get(c, 0) for c in cobertos)) / 100
     intervalo = f"{_curta(cobertos[0])} a {_curta(ultimo)}"
     if len(cobertos) == 12:
-        return soma, f"notas importadas de {intervalo}"
-    return soma / len(cobertos) * 12, f"média das notas importadas de {intervalo}, x 12"
-
-
-def perfil_da_simulacao(sim: Simulacao) -> PerfilEmpresa | None:
-    """Perfil anual da empresa a partir de uma simulação expressa ou completa."""
-    e = sim.entrada
-    try:
-        if sim.tipo == "completa":
-            campos = {k: e[k] for k in PerfilEmpresa.__dataclass_fields__ if k in e}
-            return PerfilEmpresa(**campos)
-        if sim.tipo == "expressa":
-            return PerfilEmpresa(
-                atividade=e["atividade"],
-                receita_bruta_anual=Decimal(str(e["faturamento_mensal"])) * 12,
-                folha_clt_anual=Decimal(str(e["folha_mensal"])) * 12,
-                pro_labore_anual=Decimal(str(e.get("pro_labore_mensal", 0))) * 12,
-                ano=e.get("ano", 2026),
-            )
-    except (KeyError, ValueError, TypeError):
-        return None
-    return None
+        return soma, f"{origem} de {intervalo}"
+    return soma / len(cobertos) * 12, f"média de {origem} de {intervalo}, x 12"
 
 
 def resumo_da_mudanca(antigo: dict[str, Any], novo: dict[str, Any], mudou: list[str]) -> str:
@@ -87,6 +72,10 @@ def resumo_da_mudanca(antigo: dict[str, Any], novo: dict[str, Any], mudou: list[
 DIAS_NAO_VISTO = 3
 DIAS_SEM_RESPOSTA = 7
 DIAS_MAXIMOS_DE_ACOMPANHAMENTO = 60
+
+
+def _confianca(proj: dict[str, Any] | None) -> str:
+    return "" if not proj or proj["confianca"] == "alta" else f" (confiança {proj['confianca']})"
 
 
 def _item(aviso: avisos.Aviso, cliente: Cliente, acao: dict[str, Any], chave: int | None = None) -> dict[str, Any]:
@@ -122,13 +111,8 @@ def reunir(db: Session, escritorio_id: int, hoje: date | None = None) -> dict[st
     for s in ultimas:
         sims[s.cliente_id][s.tipo] = s
 
-    notas: dict[int, dict[str, int]] = defaultdict(dict)
-    for cid, comp, total in db.execute(
-        select(DocumentoFiscal.cliente_id, DocumentoFiscal.competencia, func.sum(DocumentoFiscal.valor_centavos))
-        .where(DocumentoFiscal.escritorio_id == escritorio_id, DocumentoFiscal.tipo == "saida")
-        .group_by(DocumentoFiscal.cliente_id, DocumentoFiscal.competencia)
-    ):
-        notas[cid][comp] = total or 0
+    com_planilha: set[int] = set()
+    series_por_cliente = carregar_series(db, escritorio_id, com_planilha=com_planilha)
     ultimo_movimento: dict[int, str] = dict(
         db.execute(
             select(DocumentoFiscal.cliente_id, func.max(DocumentoFiscal.competencia))
@@ -152,13 +136,49 @@ def reunir(db: Session, escritorio_id: int, hoje: date | None = None) -> dict[st
 
         # Limites de receita
         rbt12, fonte = None, ""
-        if notas.get(c.id):
-            rbt12, fonte = rbt12_das_notas(notas[c.id])
+        receita_real = series_por_cliente.get(c.id, {}).get("receita") or {}
+        if receita_real:
+            origem = "dados contábeis e notas importadas" if c.id in com_planilha else "notas importadas"
+            rbt12, fonte = rbt12_das_notas({k: int(v * 100) for k, v in receita_real.items()}, origem)
         elif perfil is not None:
             rbt12, fonte = perfil.receita_bruta_anual, f"planejamento de {base.criado_em.strftime('%d/%m/%Y')}"
-        if rbt12 is not None:
-            for a in avisos.avaliar_limites(rbt12, c.regime_atual, hoje, fonte):
-                lista.append(_item(a, c, {"tipo": "cliente", "rotulo": "Abrir cliente", "aba": "movimento" if notas.get(c.id) else "simulacoes"}))
+        ac = analisar_acompanhamento(c, base, series_por_cliente.get(c.id), hoje)
+        proj = ac.get("projecao")
+        cruzamentos = {x["codigo"]: x for x in (proj["cruzamentos"] if proj else [])}
+        limites_atuais = avisos.avaliar_limites(rbt12, c.regime_atual, hoje, fonte) if rbt12 is not None else []
+        for a in limites_atuais:
+            x = cruzamentos.pop(a.codigo, None)
+            if x is not None and a.gravidade != "critico":
+                a = replace(a, detalhe=a.detalhe + f" No ritmo atual, passa do {x['rotulo']} em {curta(x['competencia'])}{_confianca(proj)}.")
+            lista.append(_item(a, c, {"tipo": "cliente", "rotulo": "Abrir cliente", "aba": "movimento" if receita_real else "simulacoes"}))
+        for x in cruzamentos.values():  # limite ainda longe hoje, mas que o ritmo atual alcança
+            if proj["confianca"] == "baixa":
+                continue
+            gravidade = "atencao" if x["em_meses"] <= 6 else "info"
+            aviso = avisos.Aviso(
+                "projecao_" + x["codigo"], gravidade,
+                f"No ritmo atual, passa do {x['rotulo']} em {curta(x['competencia'])}",
+                f"RBT12 de {brl(proj['rbt12_atual'])} hoje, projetado em {brl(proj['rbt12_em_12_meses'])} daqui a 12 meses; "
+                f"o limite é {brl(x['limite'])}. Projeção por tendência dos últimos {proj['meses_base']} meses{_confianca(proj)}: "
+                "planeje a mudança de regime antes de ultrapassar.",
+                None, avisos.BASE_LEGAL_LIMITES,
+            )
+            lista.append(_item(aviso, c, {"tipo": "cliente", "rotulo": "Ver acompanhamento", "aba": "acompanhamento"}))
+
+        # Realizado fora do planejado
+        re = ac.get("reavaliacao")
+        desvio = ac.get("desvio_receita")
+        if ac.get("plano") and ac["meses"] >= MIN_MESES_AVISO_DESVIO and (
+            (re and re["mudou"]) or (desvio is not None and abs(desvio) >= float(DESVIO_RELEVANTE))
+        ):
+            if re and re["mudou"]:
+                titulo = f"Com os números reais, a melhor opção passou de {re['melhor_planejado']} para {re['melhor_realizado']}"
+                gravidade = "atencao"
+            else:
+                titulo = f"Receita real {pct(abs(desvio), 0)} {'acima' if desvio > 0 else 'abaixo'} do planejado"
+                gravidade = "info"
+            aviso = avisos.Aviso("planejado_desviado", gravidade, titulo, " ".join(ac["resumo"][:2]), None)
+            lista.append(_item(aviso, c, {"tipo": "cliente", "rotulo": "Ver acompanhamento", "aba": "acompanhamento"}))
 
         # Possível imposto pago a mais (monofásico e ST)
         if c.id in com_itens and c.regime_atual in (None, "simples"):

@@ -12,7 +12,7 @@ import tolaris_motor
 from .caixa_email import automatico_ligado, iniciar_rotina
 from .config import get_settings
 from .db import SessionLocal
-from .routers import auth, avisos, caixa, caixa_email, calculadoras, clientes, clientes_lote, cnpj, compartilhamento, equipe, escritorio, financeiro, fiscal, honorarios, simulacoes
+from .routers import acompanhamento, auth, avisos, caixa, caixa_email, calculadoras, clientes, clientes_lote, cnpj, compartilhamento, equipe, escritorio, financeiro, fiscal, honorarios, simulacoes
 
 CHAVE_PADRAO = "dev-somente-local-troque-esta-chave-em-producao"
 
@@ -44,7 +44,7 @@ def criar_app() -> FastAPI:
         openapi_url="/api/openapi.json",
     )
     api = APIRouter(prefix="/api")
-    for r in (auth.router, avisos.router, caixa.router, caixa_email.router, escritorio.router, clientes.router, clientes_lote.router, cnpj.router, simulacoes.router, calculadoras.router, equipe.router, compartilhamento.router, financeiro.router, fiscal.router, honorarios.router):
+    for r in (acompanhamento.router, auth.router, avisos.router, caixa.router, caixa_email.router, escritorio.router, clientes.router, clientes_lote.router, cnpj.router, simulacoes.router, calculadoras.router, equipe.router, compartilhamento.router, financeiro.router, fiscal.router, honorarios.router):
         api.include_router(r)
 
     @api.get("/saude", tags=["infra"])
