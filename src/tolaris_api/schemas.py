@@ -488,3 +488,29 @@ class RecuperacaoEntrada(BaseModel):
     periodo_inicio: str | None
     periodo_fim: str | None
 
+
+
+# --- Caixa de envio de notas do cliente ----------------------------------------------------
+class CaixaEstado(BaseModel):
+    ativo: bool
+    criado_em: datetime | None = None
+    ultimo_envio_em: datetime | None = None
+    total_envios: int = 0
+    total_notas: int = 0
+
+
+class CaixaGerarEntrada(BaseModel):
+    enviar_para: list[EmailStr] = Field(default_factory=list, max_length=5)
+    mensagem: str | None = Field(default=None, max_length=3000)
+
+
+class CaixaLink(BaseModel):
+    link: str
+    enviado_para: list[str] = Field(default_factory=list)
+    envio_erro: str | None = None
+
+
+class CaixaPublica(BaseModel):
+    escritorio: dict[str, Any]
+    cliente: str
+    limite_mb: int

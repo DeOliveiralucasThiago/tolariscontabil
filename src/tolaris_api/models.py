@@ -176,6 +176,24 @@ class PortalCliente(Base):
     ultimo_acesso_em: Mapped[datetime | None] = mapped_column()
 
 
+class CaixaCliente(Base):
+    """Link para o cliente (ou seu emissor) enviar XML de notas sem login. Só o hash do token fica no banco."""
+
+    __tablename__ = "caixas_cliente"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    escritorio_id: Mapped[int] = mapped_column(ForeignKey("escritorios.id", ondelete="CASCADE"), index=True)
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("clientes.id", ondelete="CASCADE"), unique=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    ativo: Mapped[bool] = mapped_column(default=True)
+    criado_por_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id", ondelete="SET NULL"))
+    criado_em: Mapped[datetime] = mapped_column(default=agora)
+    ultimo_envio_em: Mapped[datetime | None] = mapped_column()
+    total_envios: Mapped[int] = mapped_column(default=0, server_default="0")
+    total_notas: Mapped[int] = mapped_column(default=0, server_default="0")
+    """Notas novas recebidas por este link (sem contar repetidas)."""
+
+
 class DocumentoFiscal(Base):
     """Documento importado (NF-e XML ou registro C100 do SPED). Valores em centavos."""
 

@@ -8,7 +8,9 @@ import { brl, brlCurto, competenciaCurta, numero } from "@/lib/formato";
 import type { Movimento, ResultadoImportacao, Simulacao } from "@/lib/tipos";
 
 import { Indicadores } from "./Blocos";
+import { CaixaDoCliente } from "./CaixaDoCliente";
 import { RecuperacaoImpostos } from "./RecuperacaoImpostos";
+import { useSessao } from "./Sessao";
 import { Aviso, Botao, Cartao, MensagemErro } from "./ui";
 
 const SERIE_SAIDAS = "#2a78d6";
@@ -54,11 +56,13 @@ function GraficoMovimento({ meses }: { meses: Movimento["meses"] }) {
 export function MovimentoFiscal({
   clienteId,
   temCnpj,
+  cliente,
   onUsarNoPlanejamento,
   onRecuperacaoSalva,
 }: {
   clienteId: number;
   temCnpj: boolean;
+  cliente: { email: string | null; telefone: string | null; contato_nome: string | null; razao_social: string };
   onUsarNoPlanejamento: (receitaAnual: number, comprasAnual: number) => void;
   onRecuperacaoSalva: (sim: Simulacao) => void;
 }) {
@@ -68,6 +72,7 @@ export function MovimentoFiscal({
   const [enviando, setEnviando] = useState(false);
   const [versao, setVersao] = useState(0);
   const entrada = useRef<HTMLInputElement>(null);
+  const { sessao } = useSessao();
 
   const carregar = useCallback(() => {
     api<Movimento>(`/clientes/${clienteId}/movimento`).then(setMov).catch(() => setMov(null));
@@ -148,6 +153,22 @@ export function MovimentoFiscal({
           </div>
         )}
       </Cartao>
+
+      {temCnpj && (
+        <CaixaDoCliente
+          clienteId={clienteId}
+          emailCliente={cliente.email}
+          telefoneCliente={cliente.telefone}
+          contatoCliente={cliente.contato_nome}
+          razaoSocial={cliente.razao_social}
+          escritorioNome={sessao.escritorio.nome}
+          versao={versao}
+          onNovasNotas={() => {
+            carregar();
+            setVersao((v) => v + 1);
+          }}
+        />
+      )}
 
       {temCnpj && (
         <RecuperacaoImpostos clienteId={clienteId} versao={versao} temDocumentos={Boolean(mov && mov.documentos > 0)} onSalva={onRecuperacaoSalva} />

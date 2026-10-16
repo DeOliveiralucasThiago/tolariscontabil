@@ -305,6 +305,7 @@ function DetalheClienteConteudo() {
         <MovimentoFiscal
           clienteId={cliente.id}
           temCnpj={Boolean(cliente.cnpj)}
+          cliente={cliente}
           onRecuperacaoSalva={(sim) => setSimulacoes((s) => [sim, ...s])}
           onUsarNoPlanejamento={(receita, compras) => {
             setPlanejamentoInicial({ receita_bruta_anual: Math.round(receita * 100) / 100, compras_anual: Math.round(compras * 100) / 100 });

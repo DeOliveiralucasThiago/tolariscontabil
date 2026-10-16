@@ -474,3 +474,12 @@ export interface InfoRecalculo {
   /** O que mudou, em palavras (totais por regime e recomendação), quando a API consegue descrever. */
   resumo?: string | null;
 }
+
+// --- Caixa de envio de notas ---------------------------------------------------------------------
+export interface CaixaEstado {
+  ativo: boolean;
+  criado_em: string | null;
+  ultimo_envio_em: string | null;
+  total_envios: number;
+  total_notas: number;
+}

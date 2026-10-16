@@ -9,9 +9,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
-from ..config import get_settings
 from ..db import get_db
 from ..importacao import ler_arquivos
+from ..importar import gravar_leitura, ler_uploads
 from ..models import DocumentoFiscal, ItemFiscal, Simulacao, Usuario
 from ..recuperacao_servico import analisar
 from ..schemas import (
@@ -36,72 +36,8 @@ async def importar(
     cliente = obter_cliente(db, usuario, cliente_id)
     if not cliente.cnpj:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Cadastre o CNPJ do cliente antes de importar documentos")
-    limite = get_settings().importacao_max_mb * 1024 * 1024
-    lidos, total = [], 0
-    for arq in arquivos:
-        conteudo = await arq.read(limite - total + 1)
-        total += len(conteudo)
-        if total > limite:
-            raise HTTPException(
-                status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                f"Envio acima de {get_settings().importacao_max_mb} MB; divida em partes",
-            )
-        lidos.append((arq.filename or "arquivo", conteudo))
-
-    leitura = ler_arquivos(lidos, cliente.cnpj)
-    existentes = dict(db.execute(
-        select(DocumentoFiscal.chave, DocumentoFiscal.id).where(DocumentoFiscal.cliente_id == cliente.id)
-    ).all())
-    com_itens = set(db.scalars(select(ItemFiscal.documento_id).where(ItemFiscal.cliente_id == cliente.id).distinct()))
-    novos, duplicados, atualizados, competencias = 0, 0, 0, set()
-
-    def itens_de(doc, **extra):
-        return [ItemFiscal(
-            escritorio_id=usuario.escritorio_id, cliente_id=cliente.id, **extra,
-            tipo=doc.tipo, competencia=doc.competencia, ncm=i.ncm, cfop=i.cfop, cst_icms=i.cst_icms,
-            cst_pis=i.cst_pis, cest=i.cest, descricao=i.descricao, valor_centavos=i.valor,
-            quantidade_itens=i.quantidade,
-        ) for i in doc.itens]
-
-    for doc in leitura.documentos:
-        if doc.chave in existentes:
-            duplicados += 1
-            id_existente = existentes[doc.chave]
-            if doc.itens and id_existente is not None and id_existente not in com_itens:
-                # nota importada antes de existir a leitura de itens
-                db.add_all(itens_de(doc, documento_id=id_existente))
-                com_itens.add(id_existente)
-                atualizados += 1
-            continue
-        existentes[doc.chave] = None  # evita repetir a mesma nota dentro do envio
-        db.add(DocumentoFiscal(
-            escritorio_id=usuario.escritorio_id,
-            cliente_id=cliente.id,
-            origem=doc.origem,
-            chave=doc.chave,
-            tipo=doc.tipo,
-            modelo=doc.modelo,
-            data=doc.data,
-            competencia=doc.competencia,
-            participante_cnpj=doc.participante_cnpj,
-            valor_centavos=doc.valor,
-            icms_centavos=doc.icms,
-            ipi_centavos=doc.ipi,
-            pis_centavos=doc.pis,
-            cofins_centavos=doc.cofins,
-            itens=itens_de(doc),
-        ))
-        novos += 1
-        competencias.add(doc.competencia)
-    db.commit()
-    return ImportacaoSaida(
-        importados=novos,
-        duplicados=duplicados,
-        atualizados=atualizados,
-        ignorados=[{"arquivo": a, "motivo": m} for a, m in leitura.ignorados[:50]],
-        total_ignorados=len(leitura.ignorados),
-        competencias=sorted(competencias),
-    )
+    leitura = ler_arquivos(await ler_uploads(arquivos), cliente.cnpj)
+    return gravar_leitura(db, usuario.escritorio_id, cliente, leitura)
 
 
 @router.get("/clientes/{cliente_id}/movimento", response_model=MovimentoSaida)
