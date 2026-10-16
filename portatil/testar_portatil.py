@@ -204,6 +204,38 @@ ok(status == 201 and json.loads(corpo)["criados"] == 2, f"clientes importados em
 status, corpo = pedir("GET", "/api/clientes-lote/pendentes")
 ok(status == 200 and json.loads(corpo)["pendentes"] == 1, "cliente de atividade não reconhecida fica por completar")
 
+# Segurança: backup do dia, registro de atividades, exportação LGPD e verificação em duas etapas
+ok(any((PASTA / "dados" / "backups").glob("tolaris-*.sqlite")), "backup do dia criado ao abrir o Tolaris (dados/backups)")
+status, corpo = pedir("GET", "/api/escritorio/auditoria?acao=documentos_importados")
+ok(status == 200 and json.loads(corpo)["total"] >= 1, "registro de atividades lista a importação de notas")
+status, corpo = pedir("GET", f"/api/clientes/{cid2}/exportacao")
+ok(status == 200 and json.loads(corpo)["cliente"]["razao_social"] == "Mercadinho Boa Compra Ltda", "exportação dos dados do cliente (LGPD)")
+
+
+def totp(segredo: str, passo: int) -> str:
+    import base64
+    import hashlib
+    import hmac
+    import struct
+
+    chave = base64.b32decode(segredo + "=" * (-len(segredo) % 8))
+    h = hmac.new(chave, struct.pack(">Q", passo), hashlib.sha1).digest()
+    n = (struct.unpack(">I", h[h[-1] & 15:(h[-1] & 15) + 4])[0] & 0x7FFFFFFF) % 10**6
+    return f"{n:06d}"
+
+
+status, corpo = pedir("POST", "/api/auth/2fa/configurar", {"senha": "senha-segura-123"})
+segredo = json.loads(corpo)["segredo"]
+passo = int(time.time() // 30)
+status, corpo = pedir("POST", "/api/auth/2fa/ativar", {"codigo": totp(segredo, passo)})
+ok(status == 200 and len(json.loads(corpo)["codigos_recuperacao"]) == 8, "verificação em duas etapas ativada (com 8 códigos de recuperação)")
+outro = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()), urllib.request.ProxyHandler({})).open
+req = urllib.request.Request(BASE + "/api/auth/login", data=json.dumps({"email": "ana@teste.com.br", "senha": "senha-segura-123"}).encode(),
+                             method="POST", headers={"Content-Type": "application/json"})
+with outro(req, timeout=60) as r:
+    login = json.loads(r.read())
+ok(login.get("requer_2fa") is True and "usuario" not in login, "login passa a pedir o código depois da senha")
+
 status, _ = pedir("POST", "/api/auth/esqueci-senha", {"email": "ana@teste.com.br"})
 time.sleep(1)
 emails = [json.loads(p.read_text(encoding="utf-8")) for p in (PASTA / "dados" / "emails").glob("*.json")]

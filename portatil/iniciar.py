@@ -103,6 +103,22 @@ def falhar(mensagem: str, registro: Path | None = None) -> None:
     sys.exit(1)
 
 
+def backup_do_dia(env: dict[str, str]) -> None:
+    """Cópia do banco ao abrir o Tolaris, no máximo uma por dia (guarda as 14 últimas). Nunca impede de abrir."""
+    pasta = DADOS / "backups"
+    try:
+        recentes = [a for a in pasta.glob("tolaris-*.sqlite") if time.time() - a.stat().st_mtime < 20 * 3600]
+        if recentes or not (DADOS / "tolaris.db").exists():
+            return
+        r = subprocess.run(
+            [sys.executable, "-m", "tolaris_api.backup", "criar", "--destino", str(pasta), "--manter", "14"],
+            env=env, cwd=DADOS, capture_output=True, text=True, timeout=300,
+        )
+        print(" Backup do dia feito em dados\\backups." if r.returncode == 0 else " Aviso: o backup do dia não foi feito.")
+    except Exception:  # noqa: BLE001
+        print(" Aviso: o backup do dia não foi feito.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--sem-navegador", action="store_true", help="não abre o navegador (testes)")
@@ -126,6 +142,7 @@ def main() -> None:
         "TOLARIS_DATABASE_URL": "sqlite:///" + (DADOS / "tolaris.db").as_posix(),
         "TOLARIS_SECRET_KEY": chave_secreta(),
         "TOLARIS_COOKIE_SECURE": "false",
+        "TOLARIS_PROXY_SALTOS": "1",  # a API só atende o site local, que repassa o IP real do aparelho
         "TOLARIS_URL_PUBLICA": f"http://{ip}:{porta}",
         # Sem servidor de e-mail configurado, as mensagens ficam salvas em dados/emails
         "TOLARIS_EMAIL_BACKEND": "arquivo",
@@ -151,6 +168,8 @@ def main() -> None:
     )
     if migracao.returncode != 0:
         falhar("Não foi possível preparar o banco de dados.", reg_api)
+
+    backup_do_dia(env)
 
     processos: list[subprocess.Popen] = []
     try:

@@ -9,7 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from tolaris_motor import brl
 
-from ..acesso import _aware, agora, hash_token, novo_token
+from ..acesso import _aware, agora, hash_token, ip_cliente, novo_token
 from ..auditoria import auditar
 from ..config import get_settings
 from ..db import get_db
@@ -293,7 +293,7 @@ def aceitar_proposta(
         )
     sim.aceite_em = agora()
     sim.aceite_nome = dados.nome
-    sim.aceite_ip = requisicao.client.host[:45] if requisicao.client else None
+    sim.aceite_ip = ip_cliente(requisicao)[:45]
     _registrar_abertura(sim)
     auditar(db, escritorio.id, "proposta_aceita", entidade="simulacao", entidade_id=sim.id,
             detalhe={"cliente_id": cliente.id})

@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     login_max_falhas_email: int = 5
     login_max_falhas_ip: int = 30
     login_janela_minutos: int = 15
+    proxy_saltos: int = 0
+    """Quantos proxies confiáveis ficam na frente da API (o site Next conta como 1). 0 = ignora X-Forwarded-For."""
     importacao_max_mb: int = 25
     auditoria_retencao_meses: int = 24
     """Registros de atividade mais antigos que isso são apagados quando o administrador abre o registro."""

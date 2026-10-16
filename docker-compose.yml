@@ -27,6 +27,8 @@ services:
       TOLARIS_AMBIENTE: producao
       TOLARIS_COOKIE_SECURE: ${TOLARIS_COOKIE_SECURE:-false}
       TOLARIS_URL_PUBLICA: ${TOLARIS_URL_PUBLICA:-http://localhost:3000}
+      # O site repassa /api para a API: 1 proxy confiável. Some 1 para cada proxy a mais na frente do site (nginx, Caddy...).
+      TOLARIS_PROXY_SALTOS: ${TOLARIS_PROXY_SALTOS:-1}
       TOLARIS_EMAIL_BACKEND: ${TOLARIS_EMAIL_BACKEND:-console}
       TOLARIS_EMAIL_REMETENTE: ${TOLARIS_EMAIL_REMETENTE:-Tolaris Contábil <nao-responda@localhost>}
       TOLARIS_SMTP_HOST: ${TOLARIS_SMTP_HOST:-}

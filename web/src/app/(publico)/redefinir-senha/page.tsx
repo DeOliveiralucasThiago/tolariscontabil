@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
+import { SegundaEtapa } from "@/components/SegundaEtapa";
 import { Botao, Campo, MensagemErro } from "@/components/ui";
 import { api, ErroApi } from "@/lib/api";
+import type { Requer2fa } from "@/lib/tipos";
 
 function Redefinir() {
   const router = useRouter();
@@ -14,6 +16,7 @@ function Redefinir() {
   const [confirmacao, setConfirmacao] = useState("");
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [token2fa, setToken2fa] = useState<string | null>(null);
 
   async function salvar(e: React.FormEvent) {
     e.preventDefault();
@@ -21,12 +24,21 @@ function Redefinir() {
     if (senha !== confirmacao) return setErro("As senhas não conferem.");
     setEnviando(true);
     try {
-      await api("/auth/redefinir-senha", { method: "POST", json: { token, senha } });
+      const r = await api<Requer2fa | object>("/auth/redefinir-senha", { method: "POST", json: { token, senha } });
+      if ("requer_2fa" in r) {
+        setToken2fa(r.token_2fa); // a senha mudou, mas entrar ainda exige o código do aplicativo
+        setEnviando(false);
+        return;
+      }
       router.replace("/painel");
     } catch (e) {
       setErro(e instanceof ErroApi ? e.message : "Não foi possível redefinir a senha");
       setEnviando(false);
     }
+  }
+
+  if (token2fa) {
+    return <SegundaEtapa token={token2fa} onConcluido={() => router.replace("/painel")} onVoltar={() => router.replace("/login")} aviso="Senha alterada." />;
   }
 
   if (!token) {

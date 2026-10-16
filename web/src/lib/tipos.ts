@@ -39,6 +39,7 @@ export interface Usuario {
   nome: string;
   email: string;
   papel: string;
+  totp_ativo?: boolean;
 }
 
 export interface Escritorio {
@@ -328,6 +329,7 @@ export interface Membro {
   email: string;
   papel: "admin" | "membro";
   ativo: boolean;
+  totp_ativo?: boolean;
   criado_em: string;
 }
 
@@ -637,4 +639,35 @@ export interface Acompanhamento {
   resumo: string[];
   desvio_receita?: number | null;
   realizado_anualizado?: Record<string, number | null>;
+}
+
+
+export interface Requer2fa {
+  requer_2fa: true;
+  token_2fa: string;
+}
+
+export interface Configurar2fa {
+  segredo: string;
+  uri: string;
+  qr_svg: string;
+}
+
+export interface ItemAuditoria {
+  id: number;
+  quando: string;
+  usuario: string | null;
+  acao: string;
+  rotulo: string;
+  entidade: string | null;
+  entidade_id: number | null;
+  detalhe: Record<string, unknown> | null;
+  ip: string | null;
+}
+
+export interface PaginaAuditoria {
+  total: number;
+  itens: ItemAuditoria[];
+  acoes: { codigo: string; rotulo: string }[];
+  retencao_meses: number;
 }

@@ -54,7 +54,7 @@ Copy-Item -Recurse (Join-Path $Msys "ucrt64/etc/fonts") (Join-Path $app "gtk/etc
 
 Write-Host "6/6 Inicializador e instruções"
 Copy-Item (Join-Path $raiz "portatil/iniciar.py") $app
-foreach ($f in "Iniciar Tolaris.bat", "LEIA-ME.txt", "configuracao.txt") {
+foreach ($f in "Iniciar Tolaris.bat", "Backup Tolaris.bat", "LEIA-ME.txt", "configuracao.txt") {
     Copy-Item (Join-Path $raiz "portatil/$f") $Saida
 }
 Get-ChildItem -Recurse -Directory -Filter __pycache__ (Join-Path $app "api") | Remove-Item -Recurse -Force

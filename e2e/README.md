@@ -80,3 +80,11 @@ celular) cria a carteira pela API e também usa e-mail novo a cada execução:
 ```bash
 node fluxo_acompanhamento.mjs saida
 ```
+
+O fluxo de segurança (ativar a verificação em duas etapas pela tela, entrar com o código, código errado, código de
+recuperação, registro de atividades com CSV, exportar e excluir os dados de um cliente e cabeçalhos HTTP) calcula o
+código do autenticador no próprio teste e também usa e-mail novo a cada execução:
+
+```bash
+node fluxo_seguranca.mjs saida
+```

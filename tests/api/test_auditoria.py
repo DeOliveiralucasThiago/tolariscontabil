@@ -164,3 +164,26 @@ def test_acao_desconhecida_e_erro_de_programacao(logado: TestClient):
             auditar(db, 1, "acao_inventada")
     finally:
         db.close()
+
+
+def test_ip_atras_do_proxy_so_vale_com_proxy_configurado(logado: TestClient, monkeypatch):
+    cabecalhos = {"X-Forwarded-For": "6.6.6.6, 203.0.113.9"}  # o primeiro IP é escrito pelo cliente; o último, pelo proxy
+    logado.post("/api/auth/login", json={"email": "ana@escritorio.com.br", "senha": SENHA}, headers=cabecalhos)
+    assert _registros(logado, acao="login")["itens"][0]["ip"] == "testclient"  # padrão: ignora o cabeçalho
+
+    from tolaris_api.config import get_settings
+
+    monkeypatch.setenv("TOLARIS_PROXY_SALTOS", "1")
+    get_settings.cache_clear()
+    try:
+        logado.post("/api/auth/login", json={"email": "ana@escritorio.com.br", "senha": SENHA}, headers=cabecalhos)
+        assert _registros(logado, acao="login")["itens"][0]["ip"] == "203.0.113.9"  # o IP falso do cliente não conta
+        monkeypatch.setenv("TOLARIS_PROXY_SALTOS", "2")
+        get_settings.cache_clear()
+        logado.post("/api/auth/login", json={"email": "ana@escritorio.com.br", "senha": SENHA}, headers=cabecalhos)
+        assert _registros(logado, acao="login")["itens"][0]["ip"] == "6.6.6.6"  # dois proxies confiáveis
+        logado.post("/api/auth/login", json={"email": "ana@escritorio.com.br", "senha": SENHA}, headers={"X-Forwarded-For": "7.7.7.7"})
+        assert _registros(logado, acao="login")["itens"][0]["ip"] == "testclient"  # cadeia curta demais: não confia
+    finally:
+        monkeypatch.undo()
+        get_settings.cache_clear()

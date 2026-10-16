@@ -146,7 +146,13 @@ function DetalheClienteConteudo() {
   }
 
   async function excluirCliente() {
-    if (!cliente || !confirm(`Excluir ${cliente.razao_social} e todas as simulações? Esta ação não pode ser desfeita.`)) return;
+    if (
+      !cliente ||
+      !confirm(
+        `Excluir definitivamente ${cliente.razao_social}? Simulações, notas e itens, dados contábeis, links do portal e de envio e histórico de e-mails serão apagados e não há como recuperar. Baixe os dados antes, se precisar guardar uma cópia.`,
+      )
+    )
+      return;
     await api(`/clientes/${cliente.id}`, { method: "DELETE" });
     router.replace("/clientes");
   }
@@ -346,9 +352,25 @@ function DetalheClienteConteudo() {
               }}
             />
           </Cartao>
-          <div>
-            <Botao variante="perigo" onClick={excluirCliente}>Excluir cliente</Botao>
-          </div>
+          {sessao.usuario.papel === "admin" && (
+            <Cartao titulo="Privacidade e dados (LGPD)">
+              <div className="flex flex-col gap-3 text-sm">
+                <p className="text-tinta-2">
+                  Atenda o pedido do titular ou encerre o contrato: baixe uma cópia de tudo o que o sistema guarda deste cliente (cadastro, simulações,
+                  notas, dados contábeis e histórico) ou exclua tudo definitivamente. As duas ações ficam no registro de atividades.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={`/api/clientes/${cliente.id}/exportacao`}
+                    className="inline-flex h-10 items-center rounded-lg border border-borda bg-superficie px-4 text-sm font-medium hover:bg-fundo"
+                  >
+                    Baixar todos os dados (JSON)
+                  </a>
+                  <Botao variante="perigo" onClick={excluirCliente}>Excluir cliente e todos os dados</Botao>
+                </div>
+              </div>
+            </Cartao>
+          )}
         </div>
       )}
     </>

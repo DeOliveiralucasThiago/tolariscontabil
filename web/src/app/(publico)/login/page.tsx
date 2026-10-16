@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { SegundaEtapa } from "@/components/SegundaEtapa";
 import { Botao, Campo, MensagemErro } from "@/components/ui";
 import { api, ErroApi } from "@/lib/api";
+import type { Requer2fa } from "@/lib/tipos";
 
 export default function Login() {
   const router = useRouter();
@@ -13,18 +15,28 @@ export default function Login() {
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [token2fa, setToken2fa] = useState<string | null>(null);
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
     setErro("");
     setEnviando(true);
     try {
-      await api("/auth/login", { method: "POST", json: { email, senha } });
+      const r = await api<Requer2fa | object>("/auth/login", { method: "POST", json: { email, senha } });
+      if ("requer_2fa" in r) {
+        setToken2fa(r.token_2fa);
+        setEnviando(false);
+        return;
+      }
       router.replace("/painel");
     } catch (e) {
       setErro(e instanceof ErroApi ? e.message : "Não foi possível entrar");
       setEnviando(false);
     }
+  }
+
+  if (token2fa) {
+    return <SegundaEtapa token={token2fa} onConcluido={() => router.replace("/painel")} onVoltar={() => { setToken2fa(null); setSenha(""); }} />;
   }
 
   return (

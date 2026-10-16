@@ -69,6 +69,14 @@ def token_valido(db: Session, tipo: str, token: str) -> TokenAcesso:
 
 # --- Limite de tentativas ----------------------------------------------------------
 def ip_cliente(request: Request) -> str:
+    """IP de quem fez o pedido. Atrás do site (que repassa /api) ou de um proxy, o IP direto é o do proxy: com
+    ``proxy_saltos`` = N, vale o N-ésimo IP contado do fim de X-Forwarded-For (o que o proxy confiável acrescentou);
+    o que o cliente escreveu antes disso é ignorado. Com 0, o cabeçalho nunca é usado."""
+    saltos = get_settings().proxy_saltos
+    if saltos > 0:
+        cadeia = [p.strip() for p in request.headers.get("x-forwarded-for", "").split(",") if p.strip()]
+        if len(cadeia) >= saltos:
+            return cadeia[-saltos][:64]
     return (request.client.host if request.client else "desconhecido")[:64]
 
 

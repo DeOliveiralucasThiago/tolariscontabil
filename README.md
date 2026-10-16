@@ -88,6 +88,11 @@ portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofá
   de regimes com os números reais ("a recomendação ainda vale?"), mostra o fator R real e projeta o RBT12 pela tendência
   da receita: "no ritmo atual, passa do limite do Simples em out/26". A central de avisos usa a mesma projeção
   (junto aos avisos de limite) e avisa quando o realizado fugiu do planejado.
+- **Segurança e LGPD:** verificação em duas etapas por aplicativo autenticador (com 8 códigos de recuperação, redefinição
+  pelo administrador e sem atalho pelo "esqueci a senha"); registro de atividades por escritório (quem, o quê, quando e
+  de que IP, com filtros e CSV); exportação completa dos dados de um cliente (JSON) e exclusão definitiva sem sobras, só
+  para administradores; backup com verificação (SQLite e PostgreSQL) e backup diário automático no pacote portátil;
+  cabeçalhos de segurança no site e na API.
 
 ## Rodando localmente
 
@@ -132,6 +137,24 @@ versão portátil para Windows (pasta `portatil/`), montada e testada pelo GitHu
 | `TOLARIS_IMAP_AUTOMATICO` | só em produção | Liga a leitura periódica das caixas de e-mail; sem valor, liga quando `TOLARIS_AMBIENTE=producao` |
 | `TOLARIS_IMAP_INTERVALO_MINUTOS` | `10` | Intervalo da leitura automática (0 desliga) |
 | `TOLARIS_IMAP_PERMITIR_REDE_PRIVADA` | `false` | Aceita servidor IMAP em rede interna e portas diferentes de 993 (por padrão é bloqueado contra SSRF) |
+| `TOLARIS_PROXY_SALTOS` | `0` (compose e portátil: `1`) | Quantos proxies confiáveis ficam na frente da API; define de onde sai o IP do cliente (limite de login e registro de atividades) |
+| `TOLARIS_AUDITORIA_RETENCAO_MESES` | `24` | Tempo de guarda do registro de atividades |
+
+### Backup e restauração
+
+```bash
+# Cria o backup (SQLite: cópia consistente mesmo com o sistema aberto; PostgreSQL: pg_dump, precisa do postgresql-client)
+python -m tolaris_api.backup criar --destino /var/backups/tolaris --manter 14
+# Confere um arquivo; no PostgreSQL, --restaurar-em faz uma restauração de verdade num banco temporário e o apaga
+python -m tolaris_api.backup verificar /var/backups/tolaris/tolaris-AAAAMMDD-HHMMSS.dump --restaurar-em postgresql+psycopg://usuario:senha@servidor/postgres
+```
+
+Agende o `criar` (cron ou Agendador de Tarefas) e copie a pasta para outro lugar: backup guardado só no mesmo servidor não
+protege contra a perda do servidor. Teste a restauração de tempos em tempos. O backup tem dados pessoais e fiscais e **não é
+criptografado pelo Tolaris**: guarde-o em disco ou nuvem com criptografia. Para restaurar: SQLite, pare o sistema e
+substitua o arquivo do banco pela cópia; PostgreSQL, `pg_restore --clean --no-owner -d tolaris arquivo.dump`. Depois suba a
+API (as migrações rodam sozinhas). Use a mesma `TOLARIS_SECRET_KEY`: sem ela, a senha da caixa de e-mail e os códigos de
+verificação em duas etapas guardados no banco não podem ser lidos (o usuário reconfigura).
 
 ### Segurança adotada
 
@@ -142,6 +165,13 @@ versão portátil para Windows (pasta `portatil/`), montada e testada pelo GitHu
 - Tokens de redefinição, convite e portal: 256 bits aleatórios; no banco fica só o hash SHA-256.
 - Importação fiscal: XML lido com `defusedxml` (sem XXE nem "billion laughs"), ZIP com limites de
   quantidade e tamanho, CNPJ do cliente conferido em cada documento.
+- Verificação em duas etapas (TOTP) opcional por usuário, com códigos de recuperação em hash, uso único e limite de
+  tentativas; o segredo e a senha da caixa de e-mail ficam cifrados (Fernet, chave derivada de `TOLARIS_SECRET_KEY`).
+- Registro de atividades (24 meses) com IP, sem senha nem token; exportação e exclusão de dados de cliente (LGPD) só para
+  administradores.
+- Links públicos (portal e envio de notas): só o hash no banco, limite de envios por hora, sem acesso a mais nada.
+- Caixa de e-mail (IMAP): só TLS na porta 993, servidor validado contra SSRF, caixa aberta somente para leitura.
+- Cabeçalhos de segurança no site e na API; planilhas exportadas protegidas contra injeção de fórmula.
 - O gerador de PDF só aceita recursos embutidos (`data:`); nunca busca URLs (evita SSRF),
   e textos do cliente são escapados no HTML e no CSS do rodapé.
 

@@ -5,6 +5,8 @@ import { Suspense, useRef, useState } from "react";
 
 import { aplicarCorMarca, useSessao } from "@/components/Sessao";
 import { CaixaDeEmail } from "@/components/CaixaDeEmail";
+import { RegistroDeAtividades } from "@/components/RegistroDeAtividades";
+import { SegurancaDaConta } from "@/components/SegurancaDaConta";
 import { TabelaHonorarios } from "@/components/TabelaHonorarios";
 import { Botao, Campo, Cartao, MensagemErro, Rotulo, Titulo } from "@/components/ui";
 import { api, ErroApi } from "@/lib/api";
@@ -205,6 +207,14 @@ function Configuracoes() {
       <div className="mt-6">
         <AlterarSenha />
       </div>
+      <div className="mt-6">
+        <SegurancaDaConta />
+      </div>
+      {admin && (
+        <div className="mt-6">
+          <RegistroDeAtividades />
+        </div>
+      )}
     </>
   );
 }

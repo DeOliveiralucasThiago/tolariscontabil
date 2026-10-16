@@ -197,6 +197,35 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 51. **Aviso de realizado fora do planejado:** com 6 meses ou mais de dados, receita anualizada 20% ou mais acima ou
     abaixo do planejado (informativo) ou recomendação de regime diferente com os números reais (atenção).
 
+52. **Verificação em duas etapas:** TOTP da RFC 6238 (SHA-1, 6 dígitos, 30 s, aceita o intervalo anterior e o seguinte),
+    implementado só com a biblioteca padrão e testado com os vetores da própria RFC. O segredo fica cifrado (a mesma
+    chave dos segredos do sistema); cada código vale uma vez (guarda o último intervalo aceito). Senha certa sem código
+    não abre sessão: o login devolve um token de 5 minutos que só serve para a etapa do código e nunca como sessão.
+    Errar o código conta no mesmo limite de tentativas do login (5 por e-mail e 30 por IP em 15 minutos) e a senha certa
+    não zera esse limite. Ativar, desativar ou trocar os códigos de recuperação pede senha (e código, nos dois últimos);
+    ativar derruba as outras sessões. Redefinir a senha pelo e-mail não dispensa o código.
+53. **Códigos de recuperação:** 8 códigos de uso único (10 caracteres, sem letras ambíguas), mostrados uma só vez; no banco
+    ficam só os hashes. Perdeu o celular e os códigos: um administrador remove a verificação do usuário (derruba as
+    sessões dele e fica no registro). Não há política de exigir a verificação de todos os usuários do escritório.
+54. **Registro de atividades:** guarda entrada no sistema (e recusas de quem tem conta), trocas e redefinições de senha,
+    ações da verificação em duas etapas, equipe, cadastro/exclusão/exportação de cliente, importações, links do portal e
+    de envio de notas (inclusive o envio feito pelo cliente), relatórios enviados, aceite de proposta, caixa de e-mail e
+    dados do escritório. Cada registro tem usuário (nome e e-mail na hora), IP, data e um detalhe curto. Não guarda senha,
+    token, conteúdo de nota nem o nome do titular do aceite. Fica 24 meses e só administradores veem. O IP só é confiável
+    se `TOLARIS_PROXY_SALTOS` bate com o número de proxies na frente da API; a API não deve ficar acessível direto da internet.
+55. **Exportação e exclusão (LGPD):** administradores baixam um JSON com tudo do cliente (cadastro, simulações, envios de
+    relatório, notas e itens, dados contábeis, portal, link de envio e registro de atividades dele), sem tokens nem
+    chaves internas. A exclusão é definitiva e em cascata (testada tabela por tabela); no registro de atividades sobra só
+    o fato da exclusão e o nome do cliente é retirado dos registros anteriores. O sistema não decide base legal, prazo de
+    guarda nem resposta ao titular: isso é do escritório (controlador) ou do cliente. Excluir cliente passou a ser só de
+    administrador.
+56. **Backup:** o Tolaris cria e confere o arquivo (SQLite: integridade, tabelas e contagem; PostgreSQL: restauração real
+    em banco temporário se pedida), mas **não criptografa nem envia para fora do servidor**: isso fica com quem hospeda.
+    O pacote portátil faz uma cópia por dia ao abrir (14 últimas) e tem "Backup Tolaris.bat".
+57. **Cabeçalhos:** site e API com `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`; site com `X-Frame-Options:
+    DENY`, `frame-ancestors 'none'` e política de permissões; API com `Cache-Control: no-store`. Não há CSP de scripts (o
+    Next usa scripts embutidos) nem HSTS: o HSTS vai no proxy HTTPS de quem hospeda.
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias?).
@@ -224,6 +253,10 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Acompanhamento: o desvio de 20% e a projeção linear fazem sentido para a carteira? Há clientes sazonais
       (comércio de fim de ano, safra) para os quais a projeção precisa de outro método?
 - [ ] Limite do MEI: avisar pelo RBT12 ou pela receita do ano-calendário (com a regra proporcional no primeiro ano)?
+- [ ] Segurança: o escritório quer exigir a verificação em duas etapas de todos os usuários? Quanto tempo guardar o
+      registro de atividades (hoje 24 meses) e os backups?
+- [ ] LGPD: quem responde ao titular, qual o prazo de guarda das notas de clientes que saem do escritório e o que consta
+      do contrato de prestação de serviços (o texto do aceite da proposta e o aviso de privacidade ainda são genéricos).
 - [ ] Caixa de e-mail: o escritório tem uma caixa própria que aceite IMAP com senha de aplicativo?
 - [ ] Casos REC1 a REC3 da planilha (alíquota efetiva x % da repartição) e o tratamento do RBT12 estimado.
 

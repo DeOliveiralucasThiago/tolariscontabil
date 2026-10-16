@@ -98,10 +98,27 @@ export default function Equipe() {
                           </select>
                         ) : m.papel === "admin" ? "Administrador" : "Membro"}
                       </td>
-                      <td className="py-2.5"><Etiqueta tom={m.ativo ? "ativo" : "inativo"}>{m.ativo ? "Ativo" : "Desativado"}</Etiqueta></td>
+                      <td className="py-2.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <Etiqueta tom={m.ativo ? "ativo" : "inativo"}>{m.ativo ? "Ativo" : "Desativado"}</Etiqueta>
+                          {m.totp_ativo && <Etiqueta tom="prospect">2 etapas</Etiqueta>}
+                        </div>
+                      </td>
                       <td className="num py-2.5 text-tinta-2">{data(m.criado_em)}</td>
                       {admin && (
-                        <td className="py-2.5 text-right">
+                        <td className="space-x-2 py-2.5 text-right">
+                          {!eu && m.totp_ativo && (
+                            <Botao
+                              variante="secundario"
+                              className="h-8 px-3 text-xs"
+                              onClick={() => {
+                                if (confirm(`Remover a verificação em duas etapas de ${m.nome}? Use quando a pessoa perdeu o celular e os códigos de recuperação. As sessões abertas dela serão encerradas.`))
+                                  acao(() => api(`/equipe/${m.id}/redefinir-2fa`, { method: "POST" }), `Verificação em duas etapas de ${m.nome} removida.`);
+                              }}
+                            >
+                              Redefinir 2 etapas
+                            </Botao>
+                          )}
                           {!eu && (
                             <Botao
                               variante={m.ativo ? "perigo" : "secundario"}

@@ -20,6 +20,10 @@ Tudo fica na pasta "dados", ao lado deste arquivo:
   dados\tolaris.db   banco com escritório, clientes e simulações
   dados\emails       e-mails que seriam enviados (enquanto o e-mail não estiver configurado)
   dados\registros    registros técnicos, úteis se algo der errado
+  dados\backups     cópia do banco feita sozinha uma vez por dia (guarda as 14 últimas)
+Para fazer um backup na hora, dê dois cliques em "Backup Tolaris.bat". Copie dados\backups
+para um pen drive ou para a nuvem de vez em quando: se o computador quebrar, as cópias que
+estavam nele se perdem junto.
 Para levar a outro computador ou atualizar para uma versão nova, copie a pasta "dados"
 para dentro da nova pasta do Tolaris. Para começar do zero, apague a pasta "dados".
 
