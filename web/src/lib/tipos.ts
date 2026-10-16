@@ -51,6 +51,41 @@ export interface Escritorio {
   telefone: string | null;
   cor_primaria: string;
   tem_logo: boolean;
+  honorarios: HonorariosConfig | null;
+}
+
+export type RegimeHonorarios = "mei" | "simples" | "presumido" | "real";
+
+/** Tabela de honorários do escritório (valores mensais, exceto a adesão). */
+export interface HonorariosConfig {
+  base: Partial<Record<RegimeHonorarios, number>>;
+  por_funcionario: number;
+  adesao: number;
+  servicos: string;
+  validade_dias: number;
+}
+
+/** Proposta de honorários anexada a uma simulação. */
+export interface Honorarios {
+  funcionarios: number;
+  valor_mensal: number;
+  adesao: number;
+  servicos: string;
+  validade_dias: number;
+  definido_em: string;
+  valido_ate: string;
+}
+
+export interface SugestaoHonorarios {
+  configurado: boolean;
+  regime: RegimeHonorarios | null;
+  base: number;
+  por_funcionario: number;
+  funcionarios: number;
+  valor_mensal: number;
+  adesao: number;
+  servicos: string;
+  validade_dias: number;
 }
 
 export interface Sessao {
@@ -153,6 +188,13 @@ export interface Simulacao {
   resultado: Comparativo & { melhor: string; economia_vs_pior: number };
   versao_motor: string;
   publicada: boolean;
+  publicada_em?: string | null;
+  honorarios?: Honorarios | null;
+  visto_primeira_em?: string | null;
+  visto_ultima_em?: string | null;
+  aberturas?: number;
+  aceite_em?: string | null;
+  aceite_nome?: string | null;
   criado_em: string;
 }
 

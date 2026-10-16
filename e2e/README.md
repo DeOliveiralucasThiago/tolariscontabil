@@ -50,3 +50,10 @@ API. O passo "simulação desatualizada" altera um resultado salvo no SQLite; in
 ```bash
 E2E_DB=./e2e.db node fluxo_avisos.mjs saida
 ```
+
+O fluxo de honorários (tabela do escritório, proposta na simulação, WhatsApp, leitura e aceite no portal, avisos)
+também usa e-mail novo a cada execução:
+
+```bash
+node fluxo_honorarios.mjs saida
+```

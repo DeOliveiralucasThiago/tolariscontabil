@@ -4,12 +4,29 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api, ErroApi } from "@/lib/api";
 import { dataHora } from "@/lib/formato";
+import { linkWhatsapp, numeroWhatsapp } from "@/lib/whatsapp";
 import type { PortalEstado } from "@/lib/tipos";
 
-import { Botao, Cartao, MensagemErro, classeCampo } from "./ui";
+import { Botao, Cartao, MensagemErro, Rotulo, classeCampo } from "./ui";
 
 /** Link de acesso do cliente aos relatórios publicados. O link só aparece ao ser gerado. */
-export function PortalCliente({ clienteId, emailCliente, versao }: { clienteId: number; emailCliente: string | null; versao: number }) {
+export function PortalCliente({
+  clienteId,
+  emailCliente,
+  telefoneCliente,
+  contatoCliente,
+  razaoSocial,
+  escritorioNome,
+  versao,
+}: {
+  clienteId: number;
+  emailCliente: string | null;
+  telefoneCliente: string | null;
+  contatoCliente: string | null;
+  razaoSocial: string;
+  escritorioNome: string;
+  versao: number;
+}) {
   const [estado, setEstado] = useState<PortalEstado | null>(null);
   const [link, setLink] = useState("");
   const [enviarEmail, setEnviarEmail] = useState(Boolean(emailCliente));
@@ -17,6 +34,7 @@ export function PortalCliente({ clienteId, emailCliente, versao }: { clienteId: 
   const [erro, setErro] = useState("");
   const [gerando, setGerando] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [mensagemZap, setMensagemZap] = useState("");
   const campoLink = useRef<HTMLInputElement>(null);
 
   const carregar = useCallback(() => {
@@ -46,6 +64,16 @@ export function PortalCliente({ clienteId, emailCliente, versao }: { clienteId: 
       setGerando(false);
     }
   }
+
+  // Mensagem padrão do WhatsApp com o link recém-gerado (o usuário pode editar antes de enviar)
+  useEffect(() => {
+    if (!link) return;
+    const primeiro = (contatoCliente ?? "").trim().split(/\s+/)[0];
+    setMensagemZap(
+      `Olá${primeiro ? `, ${primeiro}` : ""}! Aqui é do escritório ${escritorioNome}. ` +
+        `Deixamos os relatórios de ${razaoSocial} no seu portal exclusivo: ${link}`,
+    );
+  }, [link, contatoCliente, escritorioNome, razaoSocial]);
 
   async function desativar() {
     if (!confirm("Desativar o portal? O link atual deixa de funcionar.")) return;
@@ -86,6 +114,34 @@ export function PortalCliente({ clienteId, emailCliente, versao }: { clienteId: 
               <input ref={campoLink} aria-label="Link do portal" readOnly className={`${classeCampo} num text-xs`} value={link} onFocus={(e) => e.target.select()} />
               <Botao type="button" variante="secundario" onClick={copiar}>{copiado ? "Copiado" : "Copiar"}</Botao>
             </div>
+          </div>
+        )}
+        {link && (
+          <div className="flex flex-col gap-2 rounded-lg border border-borda bg-fundo p-3">
+            <Rotulo htmlFor="mensagem-whatsapp">Mensagem para o WhatsApp</Rotulo>
+            <textarea
+              id="mensagem-whatsapp"
+              rows={3}
+              className={`${classeCampo} h-auto py-2`}
+              value={mensagemZap}
+              onChange={(e) => setMensagemZap(e.target.value)}
+            />
+            <div className="flex flex-wrap items-center gap-3">
+              <a
+                href={linkWhatsapp(telefoneCliente, mensagemZap)}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-10 items-center rounded-lg border border-borda bg-superficie px-4 text-sm font-medium hover:bg-fundo"
+              >
+                Enviar pelo WhatsApp
+              </a>
+              <span className="text-xs text-tinta-2">
+                {numeroWhatsapp(telefoneCliente)
+                  ? `Abre a conversa com ${telefoneCliente}.`
+                  : "Sem telefone válido no cadastro do cliente: o WhatsApp vai pedir para escolher o contato."}
+              </span>
+            </div>
+            <p className="text-xs text-tinta-2">O link dá acesso a todos os relatórios publicados; envie só a quem deve vê-los.</p>
           </div>
         )}
         {aviso && <p className="text-sm text-emerald-700">{aviso}</p>}

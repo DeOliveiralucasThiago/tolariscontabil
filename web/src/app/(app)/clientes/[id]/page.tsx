@@ -9,6 +9,8 @@ import { FormCliente } from "@/components/FormCliente";
 import { FormCompleta } from "@/components/FormCompleta";
 import { MovimentoFiscal } from "@/components/MovimentoFiscal";
 import { PortalCliente } from "@/components/PortalCliente";
+import { PropostaHonorarios } from "@/components/PropostaHonorarios";
+import { useSessao } from "@/components/Sessao";
 import { ResultadoSimulacao } from "@/components/ResultadoSimulacao";
 import { Abas, Botao, BotaoLink, Cartao, Etiqueta, MensagemErro, Titulo } from "@/components/ui";
 import { api, ErroApi, urlProposta } from "@/lib/api";
@@ -34,6 +36,34 @@ export default function DetalheCliente() {
   );
 }
 
+/** Linha de situação de um relatório: publicado no portal, visto pelo cliente, proposta e aceite. */
+function StatusDoRelatorio({ sim }: { sim: Simulacao }) {
+  const itens: { texto: string; tom: "ok" | "neutro" | "alerta" }[] = [];
+  if (sim.publicada) {
+    itens.push(
+      sim.visto_primeira_em
+        ? { texto: `Visto pelo cliente em ${dataHora(sim.visto_ultima_em)} · ${sim.aberturas} ${sim.aberturas === 1 ? "abertura" : "aberturas"}`, tom: "ok" }
+        : { texto: "No portal · ainda não visto pelo cliente", tom: "neutro" },
+    );
+  }
+  if (sim.honorarios) {
+    itens.push({ texto: `Honorários ${brl(sim.honorarios.valor_mensal)}/mês`, tom: "neutro" });
+    if (sim.aceite_em) itens.push({ texto: `Proposta aceita por ${sim.aceite_nome} em ${dataHora(sim.aceite_em)}`, tom: "ok" });
+  }
+  if (!itens.length) return null;
+  const cor = { ok: "text-emerald-700", neutro: "text-tinta-2", alerta: "text-amber-700" };
+  return (
+    <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs">
+      {itens.map((i) => (
+        <li key={i.texto} className={cor[i.tom]}>
+          {i.tom === "ok" ? "✓ " : "• "}
+          {i.texto}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function DetalheClienteConteudo() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -46,6 +76,8 @@ function DetalheClienteConteudo() {
   const [erro, setErro] = useState("");
   const [calculando, setCalculando] = useState(false);
   const [enviandoId, setEnviandoId] = useState<number | null>(null);
+  const [honorariosId, setHonorariosId] = useState<number | null>(null);
+  const { sessao } = useSessao();
   const [versaoPortal, setVersaoPortal] = useState(0);
   const [planejamentoInicial, setPlanejamentoInicial] = useState<{ receita_bruta_anual: number; compras_anual: number } | null>(null);
 
@@ -174,6 +206,7 @@ function DetalheClienteConteudo() {
                 {simulacoes.map((s) => (
                   <li key={s.id} className="py-3">
                   <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
                     <button onClick={() => setAberta(aberta?.id === s.id ? null : s)} className="text-left">
                       <div className="text-sm font-medium hover:text-marca">{s.titulo}</div>
                       <div className="num text-xs text-tinta-2">
@@ -181,6 +214,8 @@ function DetalheClienteConteudo() {
                         {s.resultado.economia_vs_pior > 0 && <> · economia de {brl(s.resultado.economia_vs_pior)}/ano</>}
                       </div>
                     </button>
+                    <StatusDoRelatorio sim={s} />
+                    </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <label className="mr-1 flex items-center gap-1.5 text-xs text-tinta-2" title="Visível no portal do cliente">
                         <input
@@ -201,6 +236,9 @@ function DetalheClienteConteudo() {
                       <Botao variante="secundario" onClick={() => setEnviandoId(enviandoId === s.id ? null : s.id)}>
                         Enviar
                       </Botao>
+                      <Botao variante="fantasma" onClick={() => setHonorariosId(honorariosId === s.id ? null : s.id)}>
+                        Honorários
+                      </Botao>
                       <Botao variante="fantasma" onClick={() => recalcular(s)} carregando={recalculandoId === s.id} title="Refazer com as regras atuais">
                         Recalcular
                       </Botao>
@@ -209,6 +247,13 @@ function DetalheClienteConteudo() {
                       </Botao>
                     </div>
                   </div>
+                  {honorariosId === s.id && (
+                    <PropostaHonorarios
+                      sim={s}
+                      onAtualizada={(nova) => setSimulacoes((lista) => lista.map((x) => (x.id === nova.id ? { ...x, ...nova } : x)))}
+                      onFechar={() => setHonorariosId(null)}
+                    />
+                  )}
                   {enviandoId === s.id && (
                     <EnviarRelatorio simulacaoId={s.id} emailCliente={cliente.email} onFechar={() => setEnviandoId(null)} />
                   )}
@@ -217,7 +262,15 @@ function DetalheClienteConteudo() {
               </ul>
             </Cartao>
           )}
-          <PortalCliente clienteId={cliente.id} emailCliente={cliente.email} versao={versaoPortal} />
+          <PortalCliente
+            clienteId={cliente.id}
+            emailCliente={cliente.email}
+            telefoneCliente={cliente.telefone}
+            contatoCliente={cliente.contato_nome}
+            razaoSocial={cliente.razao_social}
+            escritorioNome={sessao.escritorio.nome}
+            versao={versaoPortal}
+          />
           {aberta && (
             <ResultadoSimulacao
               sim={aberta}

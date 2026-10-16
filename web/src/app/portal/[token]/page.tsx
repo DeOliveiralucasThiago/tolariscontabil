@@ -1,8 +1,9 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import { PropostaNoPortal, type HonorariosPublico } from "@/components/PropostaNoPortal";
 import { ResultadoSimulacao } from "@/components/ResultadoSimulacao";
 import { aplicarCorMarca } from "@/components/Sessao";
 import { api, ErroApi } from "@/lib/api";
@@ -20,7 +21,16 @@ interface Portal {
     crc: string | null;
   };
   cliente: string;
-  simulacoes: { id: number; tipo: TipoSimulacao; titulo: string; resultado: Simulacao["resultado"]; criado_em: string }[];
+  simulacoes: {
+    id: number;
+    tipo: TipoSimulacao;
+    titulo: string;
+    resultado: Simulacao["resultado"];
+    criado_em: string;
+    honorarios: HonorariosPublico | null;
+    aceite_em: string | null;
+    aceite_nome: string | null;
+  }[];
 }
 
 export default function PaginaPortal() {
@@ -29,16 +39,30 @@ export default function PaginaPortal() {
   const [erro, setErro] = useState("");
   const [aberta, setAberta] = useState<number | null>(null);
   const base = `/api/portal/${encodeURIComponent(token)}`;
+  const avisados = useRef(new Set<number>());
+
+  const carregar = useCallback(
+    (primeira: boolean) =>
+      api<Portal>(`/portal/${encodeURIComponent(token)}`)
+        .then((p) => {
+          aplicarCorMarca(p.escritorio.cor_primaria);
+          setPortal(p);
+          if (primeira && p.simulacoes.length === 1) setAberta(p.simulacoes[0].id);
+        })
+        .catch((e) => setErro(e instanceof ErroApi && e.status === 404 ? "Este link não está mais ativo. Peça um novo ao seu escritório contábil." : "Não foi possível abrir o portal.")),
+    [token],
+  );
 
   useEffect(() => {
-    api<Portal>(`/portal/${encodeURIComponent(token)}`)
-      .then((p) => {
-        aplicarCorMarca(p.escritorio.cor_primaria);
-        setPortal(p);
-        if (p.simulacoes.length === 1) setAberta(p.simulacoes[0].id);
-      })
-      .catch((e) => setErro(e instanceof ErroApi && e.status === 404 ? "Este link não está mais ativo. Peça um novo ao seu escritório contábil." : "Não foi possível abrir o portal."));
-  }, [token]);
+    carregar(true);
+  }, [carregar]);
+
+  // Confirmação de leitura: avisa o escritório uma vez por relatório aberto nesta visita
+  useEffect(() => {
+    if (aberta == null || avisados.current.has(aberta)) return;
+    avisados.current.add(aberta);
+    api(`/portal/${encodeURIComponent(token)}/simulacoes/${aberta}/visto`, { method: "POST" }).catch(() => undefined);
+  }, [aberta, token]);
 
   if (!portal) {
     return (
@@ -89,6 +113,11 @@ export default function PaginaPortal() {
                     <div className="text-xs font-medium uppercase tracking-wide text-tinta-2">{ROTULO_TIPO[s.tipo] ?? s.tipo}</div>
                     <div className="mt-1 font-semibold">{s.titulo}</div>
                     <div className="num text-xs text-tinta-2">{data(s.criado_em)}</div>
+                    {s.honorarios && (
+                      <div className="mt-1 text-xs font-medium text-marca">
+                        {s.aceite_em ? "Proposta de honorários aceita" : s.honorarios.expirada ? "Proposta de honorários vencida" : "Proposta de honorários para sua análise"}
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -108,9 +137,20 @@ export default function PaginaPortal() {
         )}
 
         {atual && (
-          <div className="mt-6">
+          <div className="mt-6 flex flex-col gap-4">
+            {atual.honorarios && (
+              <PropostaNoPortal
+                token={token}
+                simulacaoId={atual.id}
+                cliente={portal.cliente}
+                honorarios={atual.honorarios}
+                aceiteEm={atual.aceite_em}
+                aceiteNome={atual.aceite_nome}
+                onAceita={() => carregar(false)}
+              />
+            )}
             <ResultadoSimulacao
-              sim={{ ...atual, cliente_id: 0, entrada: {}, versao_motor: "", publicada: true }}
+              sim={{ ...atual, honorarios: null, cliente_id: 0, entrada: {}, versao_motor: "", publicada: true }}
             />
           </div>
         )}

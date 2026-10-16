@@ -114,6 +114,31 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 32. **Mudanças na legislação:** o texto da lista fica em `tabelas/mudancas.json` e é atualizado junto com as
     tabelas de cálculo; ele resume o que já está no motor e não substitui a leitura da lei.
 
+## Premissas dos honorários, da leitura e do aceite
+
+33. **Tabela de honorários:** valores mensais por regime recomendado (MEI, Simples, Presumido, Real), adicional por
+    funcionário CLT, adesão única, serviços incluídos e validade da proposta (1 a 90 dias). Só administradores
+    alteram. A sugestão é "base do regime recomendado + funcionários x adicional"; o contador sempre pode alterar
+    o valor antes de salvar a proposta na simulação.
+34. **Retorno exibido ao cliente:** economia estimada do relatório dividida pelo total do primeiro ano
+    (12 x honorário mensal + adesão). Só aparece com economia positiva e a razão só é citada quando é de 1 vez ou
+    mais. É a estimativa do diagnóstico, não promessa de resultado, e o PDF diz isso.
+35. **Confirmação de leitura:** conta quando o cliente abre o relatório na tela do portal ou baixa o PDF por ele.
+    Aberturas em menos de 10 minutos contam uma só. Prova que o link foi usado, não quem leu. Não há pixel de
+    rastreio nos e-mails.
+36. **Aceite eletrônico simples:** nome digitado, confirmação marcada, data, hora e IP. Não é assinatura digital
+    (ICP-Brasil) e quem tem o link pode aceitar. Depois do aceite a proposta não pode ser alterada nem removida
+    (para mudar, cria-se nova proposta em outro relatório). O escritório recebe e-mail com o registro e deve
+    formalizar o contrato de prestação de serviços.
+37. **Acompanhamento nos avisos:** relatório publicado e não aberto há 3 dias ou mais (até 60 dias, só com portal
+    ativo); proposta vista e sem aceite há 7 dias ou mais; proposta aceita por cliente ainda "prospect" (o aviso some
+    quando o cliente passa a ativo).
+38. **WhatsApp:** o sistema só monta o link `wa.me` com a mensagem; quem envia é o contador, pelo próprio WhatsApp.
+    O número vem do telefone do cadastro (DDD + número, com 55 acrescentado); sem telefone válido, o WhatsApp pede
+    para escolher o contato. O link do portal só aparece na hora em que é gerado.
+39. **Dados pessoais do aceite:** nome e IP ficam guardados como comprovante do aceite (finalidade: prova da
+    contratação) e o portal avisa o cliente disso antes do aceite.
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias?).
@@ -131,6 +156,9 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Sinais de ST na nota (CSOSN/CST/CFOP): confirmar quais permitem segregar o ICMS, inclusive para o substituto.
 - [ ] Avisos de fator R (casos AV1 e AV2): margem de 3 pontos, INSS do acréscimo de pró-labore (um sócio) e
       tolerância de 20% do MEI e do Simples; limiares de 80% e 95% para atenção e crítico.
+- [ ] Honorários: o modelo (base por regime + adicional por funcionário + adesão) cobre como o escritório cobra?
+      Faltam faixas de faturamento, número de notas ou de lançamentos?
+- [ ] Aceite eletrônico simples: basta para o escritório ou ele quer assinatura com certificado (ICP-Brasil/Gov.br)?
 - [ ] Casos REC1 a REC3 da planilha (alíquota efetiva x % da repartição) e o tratamento do RBT12 estimado.
 
 ## Fora do escopo da Fase 0 (próximos passos do motor)
@@ -138,5 +166,6 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - Repartição do DAS por tributo e ICMS/ISS fora do DAS acima do sublimite.
 - IRPF anual (declaração) e cálculo completo do IRPFM com redutor.
 - Imposto Seletivo, ZFM, regimes específicos (combustíveis, financeiro, imobiliário).
+- Envio automático pela API oficial do WhatsApp Business, rastreio de abertura de e-mail e assinatura com certificado.
 - Aviso por e-mail ou WhatsApp (resumo semanal da carteira) e avisos por projeção de crescimento da receita.
 - DIFAL e benefícios fiscais estaduais (a segregação de ST do Simples está na recuperação de tributos).

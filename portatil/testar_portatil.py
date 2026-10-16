@@ -135,6 +135,27 @@ status, pdf = pedir("GET", f"/api/simulacoes/{sim['id']}/proposta.pdf")
 texto = "\n".join(p.extract_text() or "" for p in PdfReader(io.BytesIO(pdf)).pages)
 ok(status == 200 and "Recuperação de tributos no Simples Nacional" in texto and "R$ 432,43" in texto, "PDF da recuperação com texto legível")
 
+# Honorários, leitura e aceite no portal
+status, _ = pedir("PATCH", "/api/escritorio", {"honorarios": {
+    "base": {"simples": 800, "presumido": 1500}, "por_funcionario": 70, "adesao": 500,
+    "servicos": "Escrituração fiscal e contábil\nFolha de pagamento", "validade_dias": 15}})
+ok(status == 200, f"tabela de honorários salva ({status})")
+status, corpo = pedir("PUT", f"/api/simulacoes/{sid}/honorarios", {"funcionarios": 2})
+ok(status == 200 and json.loads(corpo)["honorarios"]["valor_mensal"] == 940, "proposta sugerida pela tabela: R$ 800 + 2 x R$ 70 = R$ 940")
+status, _ = pedir("PATCH", f"/api/simulacoes/{sid}/publicacao", {"publicada": True})
+status, corpo = pedir("POST", f"/api/clientes/{cid}/portal", {})
+token = json.loads(corpo)["link"].rsplit("/", 1)[1]
+status, _ = pedir("POST", f"/api/portal/{token}/simulacoes/{sid}/visto")
+ok(status == 204, f"leitura registrada pelo portal ({status})")
+status, corpo = pedir("POST", f"/api/portal/{token}/simulacoes/{sid}/aceite", {"nome": "Maria Souza", "confirmo": True})
+ok(status == 200 and json.loads(corpo)["aceite_nome"] == "Maria Souza", f"aceite eletrônico da proposta ({status})")
+status, corpo = pedir("GET", f"/api/clientes/{cid}/simulacoes")
+primeira = next(x for x in json.loads(corpo) if x["id"] == sid)
+ok(primeira["aberturas"] >= 1 and primeira["aceite_em"], "escritório vê a leitura e o aceite")
+status, pdf = pedir("GET", f"/api/simulacoes/{sid}/proposta.pdf")
+texto = "\n".join(p.extract_text() or "" for p in PdfReader(io.BytesIO(pdf)).pages)
+ok("Proposta de honorários" in texto and "R$ 940,00" in texto and "Aceite eletrônico" in texto, "PDF com a proposta e o aceite")
+
 status, corpo = pedir("GET", "/api/avisos")
 lista = json.loads(corpo)["avisos"]
 ok(status == 200 and any(a["codigo"] == "recuperacao" and a["valor"] == 432.43 for a in lista),

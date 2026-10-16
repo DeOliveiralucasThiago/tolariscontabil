@@ -5,7 +5,7 @@ simulação da Reforma Tributária e relatórios para clientes.
 
 Este repositório está na **Fase 3**: aplicação web multi-escritório sobre o motor de
 cálculo, com Reforma Tributária, pessoa física, equipe, envio de relatórios por e-mail,
-portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofásico e ST) e central de avisos.
+portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofásico e ST), central de avisos e proposta de honorários com aceite pelo portal.
 
 ## Estrutura
 
@@ -64,6 +64,13 @@ portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofá
   pró-labore, proximidade dos limites do MEI, do Simples e do Presumido, possível imposto pago a mais em produtos
   monofásicos e simulações que deixaram de valer por mudança de regra (com "Recalcular", que guarda a versão
   anterior e mostra o antes e o depois). Traz também a lista das mudanças na legislação já incorporadas ao motor.
+- **Honorários na proposta:** o escritório cadastra a tabela (base por regime, adicional por funcionário, adesão,
+  serviços e validade); cada simulação ganha uma proposta com valor sugerido e ajustável, que aparece no PDF junto com
+  a economia estimada. No portal o cliente vê a proposta e a **aceita** com nome, data, hora e IP; o escritório
+  recebe e-mail e um aviso, e a proposta aceita fica travada.
+- **Confirmação de leitura e WhatsApp:** cada relatório mostra se e quando o cliente o abriu no portal, e a central de
+  avisos lembra do que não foi aberto em 3 dias ou da proposta vista sem resposta. Ao gerar o link do portal, o botão
+  "Enviar pelo WhatsApp" abre a conversa com o telefone do cliente e uma mensagem editável.
 
 ## Rodando localmente
 
@@ -186,7 +193,7 @@ Premissas, fontes e pontos em aberto: [`docs/premissas.md`](docs/premissas.md).
 - **Fase 0 (concluída):** motor de cálculo testado; validação com contador em andamento.
 - **Fase 1 (concluída):** login, cadastro de clientes, prospecção com CNPJ, proposta em PDF com a marca do escritório.
 - **Fase 2 (concluída):** simulador da reforma, Simples na reforma e módulo de pessoa física, com relatórios em PDF.
-- **Fase 3 (atual):** equipe, recuperação de senha, envio por e-mail, portal do cliente, importação de XML/SPED, recuperação de tributos (monofásico e ST), central de avisos e recálculo por mudança de regra.
+- **Fase 3 (atual):** equipe, recuperação de senha, envio por e-mail, portal do cliente, importação de XML/SPED, recuperação de tributos (monofásico e ST), central de avisos, recálculo por mudança de regra, honorários na proposta, leitura e aceite no portal.
 - **Próximos:** cobrança da assinatura, NFS-e, resumo semanal dos avisos por e-mail, envio recorrente.
 - **Fase 4:** integrações (Serpro Integra Contador, ERPs), WhatsApp, assistente de IA.
 
