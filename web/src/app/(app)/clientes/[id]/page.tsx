@@ -79,7 +79,7 @@ function DetalheClienteConteudo() {
   const [honorariosId, setHonorariosId] = useState<number | null>(null);
   const { sessao } = useSessao();
   const [versaoPortal, setVersaoPortal] = useState(0);
-  const [planejamentoInicial, setPlanejamentoInicial] = useState<{ receita_bruta_anual: number; compras_anual: number } | null>(null);
+  const [planejamentoInicial, setPlanejamentoInicial] = useState<{ valores: Partial<CompletaEntrada>; texto: string } | null>(null);
 
   const carregar = useCallback(async () => {
     try {
@@ -288,13 +288,13 @@ function DetalheClienteConteudo() {
         <Cartao titulo="Planejamento tributário completo (valores anuais)">
           {planejamentoInicial && (
             <p className="mb-4 rounded-lg bg-fundo px-3 py-2 text-xs text-tinta-2">
-              Receita e compras preenchidas com o movimento fiscal importado. Complete folha, pró-labore e despesas.
+              {planejamentoInicial.texto}
             </p>
           )}
           <FormCompleta
-            key={planejamentoInicial ? `${planejamentoInicial.receita_bruta_anual}-${planejamentoInicial.compras_anual}` : "vazio"}
+            key={planejamentoInicial ? JSON.stringify(planejamentoInicial.valores) : "vazio"}
             atividadeInicial={cliente.atividade}
-            inicial={planejamentoInicial ?? undefined}
+            inicial={planejamentoInicial?.valores}
             onCalcular={calcular}
             carregando={calculando}
           />
@@ -308,7 +308,14 @@ function DetalheClienteConteudo() {
           cliente={cliente}
           onRecuperacaoSalva={(sim) => setSimulacoes((s) => [sim, ...s])}
           onUsarNoPlanejamento={(receita, compras) => {
-            setPlanejamentoInicial({ receita_bruta_anual: Math.round(receita * 100) / 100, compras_anual: Math.round(compras * 100) / 100 });
+            setPlanejamentoInicial({
+              valores: { receita_bruta_anual: Math.round(receita * 100) / 100, compras_anual: Math.round(compras * 100) / 100 },
+              texto: "Receita e compras preenchidas com o movimento fiscal importado. Complete folha, pró-labore e despesas.",
+            });
+            setAba("planejamento");
+          }}
+          onUsarPlanilha={(valores, texto) => {
+            setPlanejamentoInicial({ valores, texto });
             setAba("planejamento");
           }}
         />

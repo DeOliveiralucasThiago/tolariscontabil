@@ -483,3 +483,48 @@ export interface CaixaEstado {
   total_envios: number;
   total_notas: number;
 }
+
+export interface FinanceiroPrevia {
+  cabecalhos: string[];
+  amostra: string[][];
+  total_linhas: number;
+  sugestao: Record<string, number | null>;
+  rotulos: Record<string, string>;
+}
+
+export interface FinanceiroMes {
+  competencia: string;
+  receita: number | null;
+  compras: number | null;
+  folha: number | null;
+  pro_labore: number | null;
+  despesas_creditaveis: number | null;
+  outras_despesas: number | null;
+}
+
+export interface FinanceiroImportacao {
+  meses_novos: number;
+  meses_atualizados: number;
+  competencias: string[];
+  ignoradas: { linha: number; motivo: string }[];
+  total_ignoradas: number;
+  avisos: string[];
+}
+
+export interface FinanceiroPlanejamento {
+  meses: number;
+  anualizado: boolean;
+  periodo_inicio: string;
+  periodo_fim: string;
+  receita_bruta_anual: number;
+  compras_anual: number;
+  folha_clt_anual: number;
+  pro_labore_anual: number;
+  despesas_creditaveis_anual: number;
+  outras_despesas_anual: number;
+}
+
+export interface Financeiro {
+  meses: FinanceiroMes[];
+  planejamento: FinanceiroPlanejamento | null;
+}

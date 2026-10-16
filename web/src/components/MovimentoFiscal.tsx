@@ -5,10 +5,11 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 
 import { api, ErroApi } from "@/lib/api";
 import { brl, brlCurto, competenciaCurta, numero } from "@/lib/formato";
-import type { Movimento, ResultadoImportacao, Simulacao } from "@/lib/tipos";
+import type { CompletaEntrada, Movimento, ResultadoImportacao, Simulacao } from "@/lib/tipos";
 
 import { Indicadores } from "./Blocos";
 import { CaixaDoCliente } from "./CaixaDoCliente";
+import { DadosContabeis } from "./DadosContabeis";
 import { RecuperacaoImpostos } from "./RecuperacaoImpostos";
 import { useSessao } from "./Sessao";
 import { Aviso, Botao, Cartao, MensagemErro } from "./ui";
@@ -59,12 +60,14 @@ export function MovimentoFiscal({
   cliente,
   onUsarNoPlanejamento,
   onRecuperacaoSalva,
+  onUsarPlanilha,
 }: {
   clienteId: number;
   temCnpj: boolean;
   cliente: { email: string | null; telefone: string | null; contato_nome: string | null; razao_social: string };
   onUsarNoPlanejamento: (receitaAnual: number, comprasAnual: number) => void;
   onRecuperacaoSalva: (sim: Simulacao) => void;
+  onUsarPlanilha: (p: Partial<CompletaEntrada>, texto: string) => void;
 }) {
   const [mov, setMov] = useState<Movimento | null>(null);
   const [resultado, setResultado] = useState<ResultadoImportacao | null>(null);
@@ -169,6 +172,8 @@ export function MovimentoFiscal({
           }}
         />
       )}
+
+      <DadosContabeis clienteId={clienteId} onUsarNoPlanejamento={onUsarPlanilha} />
 
       {temCnpj && (
         <RecuperacaoImpostos clienteId={clienteId} versao={versao} temDocumentos={Boolean(mov && mov.documentos > 0)} onSalva={onRecuperacaoSalva} />
