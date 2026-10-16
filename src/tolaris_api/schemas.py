@@ -514,3 +514,52 @@ class CaixaPublica(BaseModel):
     escritorio: dict[str, Any]
     cliente: str
     limite_mb: int
+
+
+# --- Dados contábeis por planilha -----------------------------------------------------------
+class FinanceiroPrevia(BaseModel):
+    cabecalhos: list[str]
+    amostra: list[list[str]]
+    total_linhas: int
+    sugestao: dict[str, int | None]
+    """Índice da coluna sugerida para cada campo (competencia, receita, compras...)."""
+    rotulos: dict[str, str]
+
+
+class FinanceiroMes(BaseModel):
+    competencia: str
+    receita: float | None
+    compras: float | None
+    folha: float | None
+    pro_labore: float | None
+    despesas_creditaveis: float | None
+    outras_despesas: float | None
+
+
+class FinanceiroImportacaoSaida(BaseModel):
+    meses_novos: int
+    meses_atualizados: int
+    competencias: list[str]
+    ignoradas: list[dict[str, str | int]]
+    total_ignoradas: int
+    avisos: list[str]
+
+
+class FinanceiroPlanejamento(BaseModel):
+    """Totais para o formulário do planejamento: últimos 12 meses ou, com menos meses, a média anualizada."""
+
+    meses: int
+    anualizado: bool
+    periodo_inicio: str
+    periodo_fim: str
+    receita_bruta_anual: float
+    compras_anual: float
+    folha_clt_anual: float
+    pro_labore_anual: float
+    despesas_creditaveis_anual: float
+    outras_despesas_anual: float
+
+
+class FinanceiroSaida(BaseModel):
+    meses: list[FinanceiroMes]
+    planejamento: FinanceiroPlanejamento | None

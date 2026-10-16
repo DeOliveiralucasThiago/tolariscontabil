@@ -194,6 +194,28 @@ class CaixaCliente(Base):
     """Notas novas recebidas por este link (sem contar repetidas)."""
 
 
+class FinanceiroMensal(Base):
+    """Números contábeis do mês trazidos de planilha (receita, compras, folha...). Valores em centavos.
+
+    Campo vazio (None) significa "a planilha não informou"; ao reimportar, só os campos informados são trocados.
+    """
+
+    __tablename__ = "financeiro_mensal"
+    __table_args__ = (UniqueConstraint("cliente_id", "competencia", name="uq_financeiro_por_mes"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    escritorio_id: Mapped[int] = mapped_column(ForeignKey("escritorios.id", ondelete="CASCADE"), index=True)
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("clientes.id", ondelete="CASCADE"), index=True)
+    competencia: Mapped[str] = mapped_column(String(7))
+    receita_centavos: Mapped[int | None] = mapped_column(BigInteger)
+    compras_centavos: Mapped[int | None] = mapped_column(BigInteger)
+    folha_centavos: Mapped[int | None] = mapped_column(BigInteger)
+    pro_labore_centavos: Mapped[int | None] = mapped_column(BigInteger)
+    despesas_creditaveis_centavos: Mapped[int | None] = mapped_column(BigInteger)
+    outras_despesas_centavos: Mapped[int | None] = mapped_column(BigInteger)
+    importado_em: Mapped[datetime] = mapped_column(default=agora)
+
+
 class DocumentoFiscal(Base):
     """Documento importado (NF-e XML ou registro C100 do SPED). Valores em centavos."""
 
