@@ -9,6 +9,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from .. import planilha as pl
+from ..auditoria import auditar
 from ..db import get_db
 from ..importar import ler_uploads
 from ..models import FinanceiroMensal, Usuario
@@ -145,6 +146,8 @@ async def importar(
         for campo, valor in valores.items():
             if valor is not None:  # a planilha não informou: mantém o que já havia
                 setattr(linha, f"{campo}_centavos", valor)
+    auditar(db, usuario.escritorio_id, "financeiro_importado", usuario, entidade="cliente", entidade_id=cliente.id,
+            detalhe={"meses_novos": novos, "meses_atualizados": atualizados})
     db.commit()
     return FinanceiroImportacaoSaida(
         meses_novos=novos,
@@ -165,4 +168,5 @@ def listar(cliente_id: int, usuario: Usuario = Depends(usuario_atual), db: Sessi
 def apagar(cliente_id: int, usuario: Usuario = Depends(usuario_atual), db: Session = Depends(get_db)) -> None:
     cliente = obter_cliente(db, usuario, cliente_id)
     db.execute(delete(FinanceiroMensal).where(FinanceiroMensal.cliente_id == cliente.id))
+    auditar(db, usuario.escritorio_id, "financeiro_apagado", usuario, entidade="cliente", entidade_id=cliente.id)
     db.commit()

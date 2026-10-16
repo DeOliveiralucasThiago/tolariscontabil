@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..acesso import agora, criar_token, token_valido
+from .. import dois_fatores
+from ..auditoria import auditar
 from ..config import get_settings
 from ..db import get_db
 from ..emails import Mensagem, enviar_sem_falhar, montar_html
@@ -54,7 +56,11 @@ def listar(usuario: Usuario = Depends(usuario_atual), db: Session = Depends(get_
 
 @router.post("/equipe/convites", response_model=ConviteSaida, status_code=status.HTTP_201_CREATED)
 def convidar(
-    dados: ConviteEntrada, tarefas: BackgroundTasks, admin: Usuario = Depends(somente_admin), db: Session = Depends(get_db)
+    dados: ConviteEntrada,
+    request: Request,
+    tarefas: BackgroundTasks,
+    admin: Usuario = Depends(somente_admin),
+    db: Session = Depends(get_db),
 ) -> TokenAcesso:
     cfg = get_settings()
     email = dados.email.lower()
@@ -68,6 +74,7 @@ def convidar(
         db, "convite", admin.escritorio_id, email, timedelta(days=cfg.convite_dias),
         nome=dados.nome, papel=dados.papel, criado_por_id=admin.id,
     )
+    auditar(db, admin.escritorio_id, "convite_criado", admin, detalhe={"email": email, "papel": dados.papel}, request=request)
     db.commit()
     escritorio = admin.escritorio
     link = f"{cfg.url_publica}/convite?token={token}"
@@ -93,11 +100,12 @@ def convidar(
 
 
 @router.delete("/equipe/convites/{convite_id}", status_code=status.HTTP_204_NO_CONTENT)
-def revogar(convite_id: int, admin: Usuario = Depends(somente_admin), db: Session = Depends(get_db)) -> None:
+def revogar(convite_id: int, request: Request, admin: Usuario = Depends(somente_admin), db: Session = Depends(get_db)) -> None:
     convite = db.get(TokenAcesso, convite_id)
     if convite is None or convite.tipo != "convite" or convite.escritorio_id != admin.escritorio_id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Convite não encontrado")
     convite.usado_em = agora()
+    auditar(db, admin.escritorio_id, "convite_cancelado", admin, detalhe={"email": convite.email}, request=request)
     db.commit()
 
 
@@ -111,7 +119,7 @@ def _admins_ativos(db: Session, escritorio_id: int) -> int:
 
 @router.patch("/equipe/{usuario_id}", response_model=MembroSaida)
 def atualizar_membro(
-    usuario_id: int, dados: MembroAtualizar, admin: Usuario = Depends(somente_admin), db: Session = Depends(get_db)
+    usuario_id: int, dados: MembroAtualizar, request: Request, admin: Usuario = Depends(somente_admin), db: Session = Depends(get_db)
 ) -> Usuario:
     membro = db.get(Usuario, usuario_id)
     if membro is None or membro.escritorio_id != admin.escritorio_id:
@@ -119,13 +127,35 @@ def atualizar_membro(
     perde_admin = membro.papel == "admin" and membro.ativo and (dados.papel == "membro" or dados.ativo is False)
     if perde_admin and _admins_ativos(db, admin.escritorio_id) <= 1:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "O escritório precisa de pelo menos um administrador ativo")
-    if dados.papel is not None:
+    mudancas: dict[str, str | bool] = {}
+    if dados.papel is not None and dados.papel != membro.papel:
+        mudancas["papel"] = f"{membro.papel} → {dados.papel}"
         membro.papel = dados.papel
     if dados.ativo is not None and dados.ativo != membro.ativo:
         membro.ativo = dados.ativo
         membro.sessao_versao += 1  # desativado: cai na hora
+        mudancas["ativo"] = dados.ativo
+    if mudancas:
+        auditar(db, admin.escritorio_id, "usuario_atualizado", admin, entidade="usuario", entidade_id=membro.id,
+                detalhe={"email": membro.email, **mudancas}, request=request)
     db.commit()
     return membro
+
+
+@router.post("/equipe/{usuario_id}/redefinir-2fa", status_code=status.HTTP_204_NO_CONTENT)
+def redefinir_2fa(
+    usuario_id: int, request: Request, admin: Usuario = Depends(somente_admin), db: Session = Depends(get_db)
+) -> None:
+    """Para quem perdeu o celular e os códigos de recuperação: remove a verificação em duas etapas do usuário."""
+    membro = db.get(Usuario, usuario_id)
+    if membro is None or membro.escritorio_id != admin.escritorio_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Usuário não encontrado")
+    if not membro.totp_ativo and not membro.totp_segredo_cifrado:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Este usuário não usa verificação em duas etapas")
+    dois_fatores.limpar(membro)  # também derruba as sessões abertas dele
+    auditar(db, admin.escritorio_id, "2fa_resetado", admin, entidade="usuario", entidade_id=membro.id,
+            detalhe={"email": membro.email}, request=request)
+    db.commit()
 
 
 # --- Aceite (público, pelo link do e-mail) ---------------------------------------------------
@@ -137,7 +167,7 @@ def ver_convite(token: str, db: Session = Depends(get_db)) -> ConvitePublico:
 
 
 @router.post("/convites/aceitar", response_model=SessaoSaida, status_code=status.HTTP_201_CREATED)
-def aceitar(dados: AceitarConviteEntrada, resposta: Response, db: Session = Depends(get_db)) -> SessaoSaida:
+def aceitar(dados: AceitarConviteEntrada, request: Request, resposta: Response, db: Session = Depends(get_db)) -> SessaoSaida:
     convite = token_valido(db, "convite", dados.token)
     if email_em_uso(db, convite.email):
         raise HTTPException(status.HTTP_409_CONFLICT, "Este e-mail já tem uma conta. Entre com ela.")
@@ -150,6 +180,8 @@ def aceitar(dados: AceitarConviteEntrada, resposta: Response, db: Session = Depe
     )
     convite.usado_em = agora()
     db.add(usuario)
+    db.flush()
+    auditar(db, convite.escritorio_id, "convite_aceito", usuario, entidade="usuario", entidade_id=usuario.id, request=request)
     db.commit()
     definir_cookie(resposta, criar_jwt(usuario))
     return sessao(usuario)

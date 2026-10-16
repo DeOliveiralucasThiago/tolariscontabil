@@ -49,6 +49,13 @@ class Usuario(Base):
     ativo: Mapped[bool] = mapped_column(default=True)
     sessao_versao: Mapped[int] = mapped_column(default=0, server_default="0")
     """Muda ao trocar a senha ou desativar: invalida as sessões abertas."""
+    totp_segredo_cifrado: Mapped[str | None] = mapped_column(Text)
+    """Segredo do aplicativo autenticador (cifrado). Existe desde o início da configuração, mesmo antes de ativar."""
+    totp_ativo: Mapped[bool] = mapped_column(default=False, server_default=false())
+    totp_ultimo_passo: Mapped[int | None] = mapped_column(BigInteger)
+    """Último intervalo de 30 s aceito: um código só vale uma vez."""
+    codigos_recuperacao: Mapped[list[str] | None] = mapped_column(JSON(none_as_null=True))
+    """Hashes (SHA-256) dos códigos de recuperação ainda não usados."""
     criado_em: Mapped[datetime] = mapped_column(default=agora)
 
     escritorio: Mapped[Escritorio] = relationship(back_populates="usuarios")
@@ -292,3 +299,22 @@ class ItemFiscal(Base):
     valor_centavos: Mapped[int] = mapped_column(BigInteger)
     """Valor do produto menos desconto."""
     quantidade_itens: Mapped[int] = mapped_column(default=1)
+
+
+class RegistroAuditoria(Base):
+    """Quem fez o quê e quando, por escritório. Só campos de contexto: nada de senha, token ou dado fiscal."""
+
+    __tablename__ = "registros_auditoria"
+    __table_args__ = (Index("ix_auditoria_escritorio_data", "escritorio_id", "criado_em"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    escritorio_id: Mapped[int] = mapped_column(ForeignKey("escritorios.id", ondelete="CASCADE"))
+    usuario_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id", ondelete="SET NULL"))
+    usuario_nome: Mapped[str | None] = mapped_column(String(260))
+    """Nome e e-mail na hora do fato; sobra mesmo se o usuário for removido. Vazio para quem age sem login (link)."""
+    acao: Mapped[str] = mapped_column(String(60), index=True)
+    entidade: Mapped[str | None] = mapped_column(String(40))
+    entidade_id: Mapped[int | None] = mapped_column()
+    detalhe: Mapped[dict[str, Any] | None] = mapped_column(JSON(none_as_null=True))
+    ip: Mapped[str | None] = mapped_column(String(64))
+    criado_em: Mapped[datetime] = mapped_column(default=agora)

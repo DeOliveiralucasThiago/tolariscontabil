@@ -5,6 +5,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from ..auditoria import auditar
 from ..db import get_db
 from ..models import Cliente, Simulacao, Usuario
 from ..schemas import ClienteAtualizar, ClienteEntrada, ClienteSaida
@@ -57,6 +58,9 @@ def criar(dados: ClienteEntrada, usuario: Usuario = Depends(usuario_atual), db: 
     cliente = Cliente(escritorio_id=usuario.escritorio_id, **dados.model_dump())
     db.add(cliente)
     try:
+        db.flush()
+        auditar(db, usuario.escritorio_id, "cliente_criado", usuario, entidade="cliente", entidade_id=cliente.id,
+                detalhe={"razao_social": cliente.razao_social})
         db.commit()
     except IntegrityError:
         db.rollback()
@@ -88,5 +92,8 @@ def atualizar(
 
 @router.delete("/{cliente_id}", status_code=status.HTTP_204_NO_CONTENT)
 def excluir(cliente_id: int, usuario: Usuario = Depends(usuario_atual), db: Session = Depends(get_db)) -> None:
-    db.delete(obter_cliente(db, usuario, cliente_id))
+    cliente = obter_cliente(db, usuario, cliente_id)
+    auditar(db, usuario.escritorio_id, "cliente_excluido", usuario, entidade="cliente", entidade_id=cliente.id,
+            detalhe={"razao_social": cliente.razao_social})
+    db.delete(cliente)
     db.commit()

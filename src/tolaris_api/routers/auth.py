@@ -16,6 +16,8 @@ from ..acesso import (
     verificar_limite_login,
 )
 from ..config import get_settings
+from .. import dois_fatores
+from ..auditoria import auditar
 from ..db import get_db
 from ..emails import Mensagem, enviar_sem_falhar, montar_html
 from ..models import Escritorio, TokenAcesso, Usuario
@@ -24,12 +26,23 @@ from ..schemas import (
     CadastroEntrada,
     EscritorioSaida,
     EsqueciSenhaEntrada,
+    Login2faEntrada,
     LoginEntrada,
     RedefinirSenhaEntrada,
+    Requer2faSaida,
     SessaoSaida,
     UsuarioSaida,
 )
-from ..seguranca import apagar_cookie, criar_token as criar_jwt, definir_cookie, hash_senha, usuario_atual, verificar_senha
+from ..seguranca import (
+    apagar_cookie,
+    criar_token as criar_jwt,
+    criar_token_2fa,
+    definir_cookie,
+    hash_senha,
+    ler_token_2fa,
+    usuario_atual,
+    verificar_senha,
+)
 
 router = APIRouter(prefix="/auth", tags=["autenticação"])
 
@@ -73,16 +86,45 @@ def cadastrar(dados: CadastroEntrada, resposta: Response, db: Session = Depends(
     return sessao(usuario)
 
 
-@router.post("/login", response_model=SessaoSaida)
-def login(dados: LoginEntrada, request: Request, resposta: Response, db: Session = Depends(get_db)) -> SessaoSaida:
+@router.post("/login", response_model=SessaoSaida | Requer2faSaida)
+def login(dados: LoginEntrada, request: Request, resposta: Response, db: Session = Depends(get_db)) -> SessaoSaida | Requer2faSaida:
     email, ip = dados.email.lower(), ip_cliente(request)
     verificar_limite_login(db, email, ip)
     usuario = db.scalar(select(Usuario).where(Usuario.email == email))
     valido = verificar_senha(dados.senha, usuario.senha_hash if usuario else _HASH_FALSO)
     if not usuario or not valido or not usuario.ativo:
+        if usuario:
+            auditar(db, usuario.escritorio_id, "login_falha", usuario, request=request)
         registrar_tentativa(db, email, ip, False)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "E-mail ou senha incorretos")
+    if usuario.totp_ativo:
+        # Senha certa não zera as falhas: quem acerta a senha ainda precisa acertar o código, dentro do mesmo limite
+        return Requer2faSaida(token_2fa=criar_token_2fa(usuario))
     registrar_tentativa(db, email, ip, True)
+    auditar(db, usuario.escritorio_id, "login", usuario, request=request)
+    db.commit()
+    definir_cookie(resposta, criar_jwt(usuario))
+    return sessao(usuario)
+
+
+@router.post("/login/2fa", response_model=SessaoSaida)
+def login_2fa(dados: Login2faEntrada, request: Request, resposta: Response, db: Session = Depends(get_db)) -> SessaoSaida:
+    usuario = ler_token_2fa(db, dados.token_2fa)
+    ip = ip_cliente(request)
+    verificar_limite_login(db, usuario.email, ip)
+    metodo = dois_fatores.aceitar_segundo_fator(usuario, dados.codigo)
+    if metodo is None:
+        db.rollback()
+        usuario = ler_token_2fa(db, dados.token_2fa)
+        auditar(db, usuario.escritorio_id, "login_2fa_falha", usuario, request=request)
+        registrar_tentativa(db, usuario.email, ip, False)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Código inválido ou já usado")
+    registrar_tentativa(db, usuario.email, ip, True)  # também confirma o consumo do código
+    auditar(db, usuario.escritorio_id, "login", usuario, detalhe={"segundo_fator": metodo}, request=request)
+    if metodo == "recuperacao":
+        auditar(db, usuario.escritorio_id, "codigo_recuperacao_usado", usuario,
+                detalhe={"restantes": len(usuario.codigos_recuperacao or [])}, request=request)
+    db.commit()
     definir_cookie(resposta, criar_jwt(usuario))
     return sessao(usuario)
 
@@ -129,8 +171,10 @@ def esqueci_senha(dados: EsqueciSenhaEntrada, tarefas: BackgroundTasks, db: Sess
     return {"mensagem": "Se o e-mail estiver cadastrado, enviaremos um link para redefinir a senha."}
 
 
-@router.post("/redefinir-senha", response_model=SessaoSaida)
-def redefinir_senha(dados: RedefinirSenhaEntrada, resposta: Response, db: Session = Depends(get_db)) -> SessaoSaida:
+@router.post("/redefinir-senha", response_model=SessaoSaida | Requer2faSaida)
+def redefinir_senha(
+    dados: RedefinirSenhaEntrada, request: Request, resposta: Response, db: Session = Depends(get_db)
+) -> SessaoSaida | Requer2faSaida:
     registro = token_valido(db, "redefinir_senha", dados.token)
     usuario = db.get(Usuario, registro.usuario_id)
     if usuario is None or not usuario.ativo:
@@ -143,19 +187,27 @@ def redefinir_senha(dados: RedefinirSenhaEntrada, resposta: Response, db: Sessio
         .where(TokenAcesso.usuario_id == usuario.id, TokenAcesso.tipo == "redefinir_senha", TokenAcesso.usado_em.is_(None))
         .values(usado_em=agora())
     )
+    auditar(db, usuario.escritorio_id, "senha_redefinida", usuario, request=request)
     db.commit()
+    if usuario.totp_ativo:  # o e-mail sozinho não substitui o segundo fator
+        return Requer2faSaida(token_2fa=criar_token_2fa(usuario))
     definir_cookie(resposta, criar_jwt(usuario))
     return sessao(usuario)
 
 
 @router.post("/alterar-senha", response_model=SessaoSaida)
 def alterar_senha(
-    dados: AlterarSenhaEntrada, resposta: Response, usuario: Usuario = Depends(usuario_atual), db: Session = Depends(get_db)
+    dados: AlterarSenhaEntrada,
+    request: Request,
+    resposta: Response,
+    usuario: Usuario = Depends(usuario_atual),
+    db: Session = Depends(get_db),
 ) -> SessaoSaida:
     if not verificar_senha(dados.senha_atual, usuario.senha_hash):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Senha atual incorreta")
     usuario.senha_hash = hash_senha(dados.nova_senha)
     usuario.sessao_versao += 1
+    auditar(db, usuario.escritorio_id, "senha_alterada", usuario, request=request)
     db.commit()
     definir_cookie(resposta, criar_jwt(usuario))  # mantém esta sessão, derruba as outras
     return sessao(usuario)

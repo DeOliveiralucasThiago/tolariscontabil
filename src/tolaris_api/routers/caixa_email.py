@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import caixa_email as servico
+from ..auditoria import auditar
 from ..config import get_settings
 from ..db import get_db
 from ..models import CaixaEmail, Usuario
@@ -58,6 +59,8 @@ def salvar(dados: CaixaEmailEntrada, usuario: Usuario = Depends(somente_admin), 
     caixa.pasta, caixa.ativo = dados.pasta.strip(), dados.ativo
     if dados.senha:
         caixa.senha_cifrada = cifrar(dados.senha)
+    auditar(db, usuario.escritorio_id, "caixa_email_configurada", usuario,
+            detalhe={"host": host, "usuario": caixa.usuario, "senha_trocada": bool(dados.senha)})
     db.commit()
     return _saida(caixa)
 
@@ -76,4 +79,5 @@ def remover(usuario: Usuario = Depends(somente_admin), db: Session = Depends(get
     caixa = _caixa(db, usuario)
     if caixa is not None:
         db.delete(caixa)
+        auditar(db, usuario.escritorio_id, "caixa_email_removida", usuario)
         db.commit()

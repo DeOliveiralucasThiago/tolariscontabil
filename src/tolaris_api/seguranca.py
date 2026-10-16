@@ -54,6 +54,25 @@ def criar_token(usuario: Usuario) -> str:
     return jwt.encode(payload, cfg.secret_key, algorithm="HS256")
 
 
+def criar_token_2fa(usuario: Usuario) -> str:
+    """Prova de que a senha foi aceita, válida por 5 minutos e só para a etapa do código (nunca vira sessão)."""
+    cfg = get_settings()
+    agora = datetime.now(timezone.utc)
+    payload = {"sub": str(usuario.id), "sv": usuario.sessao_versao, "fin": "2fa", "iat": agora, "exp": agora + timedelta(minutes=5)}
+    return jwt.encode(payload, cfg.secret_key, algorithm="HS256")
+
+
+def ler_token_2fa(db: Session, token: str) -> Usuario:
+    try:
+        payload = jwt.decode(token, get_settings().secret_key, algorithms=["HS256"])
+        usuario = db.get(Usuario, int(payload["sub"]))
+    except (jwt.PyJWTError, KeyError, ValueError):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "A verificação expirou. Entre de novo com e-mail e senha.") from None
+    if payload.get("fin") != "2fa" or usuario is None or not usuario.ativo or usuario.sessao_versao != payload.get("sv", 0):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "A verificação expirou. Entre de novo com e-mail e senha.")
+    return usuario
+
+
 def definir_cookie(resposta: Response, token: str) -> None:
     cfg = get_settings()
     resposta.set_cookie(
@@ -89,7 +108,8 @@ def usuario_atual(request: Request, db: Session = Depends(get_db)) -> Usuario:
     except (jwt.PyJWTError, KeyError, ValueError):
         raise _NAO_AUTENTICADO from None
     if (
-        usuario is None
+        payload.get("fin")  # token da etapa de verificação em duas etapas não é sessão
+        or usuario is None
         or not usuario.ativo
         or usuario.escritorio_id != payload.get("esc")
         or usuario.sessao_versao != payload.get("sv", 0)

@@ -67,6 +67,7 @@ class UsuarioSaida(BaseModel):
     nome: str
     email: str
     papel: str
+    totp_ativo: bool = False
 
 
 class EscritorioSaida(BaseModel):
@@ -343,6 +344,7 @@ class MembroSaida(BaseModel):
     email: str
     papel: str
     ativo: bool
+    totp_ativo: bool = False
     criado_em: datetime
 
 
@@ -629,3 +631,57 @@ class CompletarSaida(BaseModel):
     nao_encontrados: list[dict[str, str]]
     restantes: int
     indisponivel: bool
+
+
+# --- Verificação em duas etapas -----------------------------------------------------------------------
+class Requer2faSaida(BaseModel):
+    requer_2fa: Literal[True] = True
+    token_2fa: str
+
+
+class Login2faEntrada(BaseModel):
+    token_2fa: str = Field(min_length=10, max_length=2000)
+    codigo: str = Field(min_length=6, max_length=32)
+
+
+class SenhaEntrada(BaseModel):
+    senha: str = Field(min_length=1, max_length=200)
+
+
+class Configurar2faSaida(BaseModel):
+    segredo: str
+    uri: str
+    qr_svg: str
+
+
+class CodigoEntrada(BaseModel):
+    codigo: str = Field(min_length=6, max_length=32)
+
+
+class SenhaCodigoEntrada(CodigoEntrada):
+    senha: str = Field(min_length=1, max_length=200)
+
+
+class CodigosRecuperacaoSaida(BaseModel):
+    codigos_recuperacao: list[str]
+
+
+# --- Registro de atividades ---------------------------------------------------------------------------
+class AuditoriaItem(BaseModel):
+    id: int
+    quando: datetime
+    usuario: str | None
+    acao: str
+    rotulo: str
+    entidade: str | None
+    entidade_id: int | None
+    detalhe: dict[str, Any] | None
+    ip: str | None
+
+
+class AuditoriaPagina(BaseModel):
+    total: int
+    itens: list[AuditoriaItem]
+    acoes: list[dict[str, str]]
+    """Todas as ações possíveis (código e rótulo) para o filtro."""
+    retencao_meses: int

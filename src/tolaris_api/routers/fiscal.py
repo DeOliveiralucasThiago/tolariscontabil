@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
+from ..auditoria import auditar
 from ..db import get_db
 from ..importacao import ler_arquivos
 from ..importar import gravar_leitura, ler_uploads
@@ -37,7 +38,11 @@ async def importar(
     if not cliente.cnpj:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Cadastre o CNPJ do cliente antes de importar documentos")
     leitura = ler_arquivos(await ler_uploads(arquivos), cliente.cnpj)
-    return gravar_leitura(db, usuario.escritorio_id, cliente, leitura)
+    resultado = gravar_leitura(db, usuario.escritorio_id, cliente, leitura)
+    auditar(db, usuario.escritorio_id, "documentos_importados", usuario, entidade="cliente", entidade_id=cliente.id,
+            detalhe={"importados": resultado.importados, "duplicados": resultado.duplicados})
+    db.commit()
+    return resultado
 
 
 @router.get("/clientes/{cliente_id}/movimento", response_model=MovimentoSaida)
@@ -93,6 +98,8 @@ def apagar_documentos(
         if competencia:
             consulta = consulta.where(modelo.competencia == competencia)
         db.execute(consulta)
+    auditar(db, usuario.escritorio_id, "documentos_apagados", usuario, entidade="cliente", entidade_id=cliente.id,
+            detalhe={"competencia": competencia} if competencia else {"competencia": "todas"})
     db.commit()
 
 

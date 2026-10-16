@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
+from ..auditoria import auditar
 from ..config import get_settings
 from ..db import get_db
 from ..honorarios import config_para_banco
@@ -34,6 +35,7 @@ def atualizar(
         if campo == "honorarios" and dados.honorarios is not None:
             valor = config_para_banco(dados.honorarios)
         setattr(esc, campo, valor)
+    auditar(db, esc.id, "escritorio_atualizado", usuario, detalhe={"campos": sorted(dados.model_dump(exclude_unset=True))})
     db.commit()
     return sessao(usuario)
 

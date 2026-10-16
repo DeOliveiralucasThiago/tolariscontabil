@@ -14,6 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..acesso import agora, hash_token, novo_token
+from ..auditoria import auditar
 from ..config import get_settings
 from ..db import get_db
 from ..emails import ErroEnvio, Mensagem, enviar, montar_html
@@ -61,6 +62,7 @@ def gerar_link_caixa(
         caixa = CaixaCliente(escritorio_id=usuario.escritorio_id, cliente_id=cliente.id, token_hash=h)
         db.add(caixa)
     caixa.token_hash, caixa.ativo, caixa.criado_em, caixa.criado_por_id = h, True, agora(), usuario.id
+    auditar(db, usuario.escritorio_id, "caixa_link_gerado", usuario, entidade="cliente", entidade_id=cliente.id)
     db.commit()
     link = f"{get_settings().url_publica}/enviar/{token}"
     resultado = CaixaLink(link=link)
@@ -94,6 +96,7 @@ def desativar_caixa(cliente_id: int, usuario: Usuario = Depends(usuario_atual), 
     caixa = _caixa(db, obter_cliente(db, usuario, cliente_id).id)
     if caixa:
         caixa.ativo = False
+        auditar(db, usuario.escritorio_id, "caixa_link_desativado", usuario, entidade="cliente", entidade_id=caixa.cliente_id)
         db.commit()
 
 
@@ -151,6 +154,8 @@ async def receber_arquivos(token: str, arquivos: list[UploadFile], db: Session =
     resultado = gravar_leitura(db, caixa.escritorio_id, cliente, ler_arquivos(await ler_uploads(arquivos), cliente.cnpj))
     caixa.ultimo_envio_em, caixa.total_envios = agora(), (caixa.total_envios or 0) + 1
     caixa.total_notas = (caixa.total_notas or 0) + resultado.importados
+    auditar(db, caixa.escritorio_id, "caixa_envio", entidade="cliente", entidade_id=cliente.id,
+            detalhe={"importados": resultado.importados, "duplicados": resultado.duplicados})
     db.commit()
     resultado.ignorados = resultado.ignorados[:20]
     return resultado

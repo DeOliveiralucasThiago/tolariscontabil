@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     login_max_falhas_ip: int = 30
     login_janela_minutos: int = 15
     importacao_max_mb: int = 25
+    auditoria_retencao_meses: int = 24
+    """Registros de atividade mais antigos que isso são apagados quando o administrador abre o registro."""
 
     imap_automatico: bool | None = None
     """Liga a verificação periódica das caixas de e-mail. Sem valor, liga só em produção."""

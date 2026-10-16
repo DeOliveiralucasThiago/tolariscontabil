@@ -26,6 +26,7 @@ api = [
     "defusedxml>=0.7",
     "openpyxl>=3.1",
     "cryptography>=42",
+    "segno>=1.6",
 ]
 dev = ["pytest>=8", "pypdf>=4"]
 

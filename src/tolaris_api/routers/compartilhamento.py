@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from tolaris_motor import brl
 
 from ..acesso import _aware, agora, hash_token, novo_token
+from ..auditoria import auditar
 from ..config import get_settings
 from ..db import get_db
 from ..emails import Anexo, ErroEnvio, Mensagem, enviar, enviar_sem_falhar, montar_html
@@ -81,6 +82,9 @@ def enviar_relatorio(
     except ErroEnvio as erro:
         envio.status, envio.erro = "falhou", str(erro)[:1000]
     db.add(envio)
+    db.flush()
+    auditar(db, escritorio.id, "relatorio_enviado", usuario, entidade="simulacao", entidade_id=sim.id,
+            detalhe={"cliente_id": cliente.id, "status": envio.status, "destinatarios": len(destinatarios)})
     db.commit()
     if envio.status == "falhou":
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Não foi possível enviar o e-mail agora. Tente novamente.")
@@ -141,6 +145,7 @@ def gerar_link(
         db.add(portal)
     portal.token_hash, portal.ativo, portal.criado_em = h, True, agora()
     portal.criado_por_id, portal.ultimo_acesso_em = usuario.id, None
+    auditar(db, usuario.escritorio_id, "portal_link_gerado", usuario, entidade="cliente", entidade_id=cliente.id)
     db.commit()
     link = f"{get_settings().url_publica}/portal/{token}"
     resultado = PortalLink(link=link, enviado_para=[])
@@ -290,6 +295,8 @@ def aceitar_proposta(
     sim.aceite_nome = dados.nome
     sim.aceite_ip = requisicao.client.host[:45] if requisicao.client else None
     _registrar_abertura(sim)
+    auditar(db, escritorio.id, "proposta_aceita", entidade="simulacao", entidade_id=sim.id,
+            detalhe={"cliente_id": cliente.id, "aceite_nome": dados.nome[:80]})
     db.commit()
 
     criador = db.get(Usuario, sim.criado_por_id) if sim.criado_por_id else None

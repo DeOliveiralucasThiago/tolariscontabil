@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from .. import clientes_lote as lote
 from .. import planilha as pl
 from ..cnpj import CnpjIndisponivel, CnpjNaoEncontrado, formatar_cnpj, sugerir_atividade
+from ..auditoria import auditar
 from ..db import get_db
 from ..importar import ler_uploads
 from ..models import Cliente, Usuario
@@ -135,6 +136,7 @@ async def importar(
             escritorio_id=usuario.escritorio_id, cnpj=l.cnpj, razao_social=d.pop("razao_social", None) or lote.placeholder(l.cnpj),
             status=d.pop("status", status_padrao), cadastro_pendente=pendente, **d,
         ))
+    auditar(db, usuario.escritorio_id, "clientes_importados", usuario, detalhe={"criados": len(novas), "pendentes": pendentes})
     try:
         db.commit()
     except IntegrityError:
