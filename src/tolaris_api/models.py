@@ -7,7 +7,7 @@ from typing import Any
 
 from datetime import date
 
-from sqlalchemy import JSON, BigInteger, ForeignKey, Index, LargeBinary, String, Text, UniqueConstraint
+from sqlalchemy import JSON, BigInteger, ForeignKey, Index, LargeBinary, String, Text, UniqueConstraint, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
@@ -74,6 +74,8 @@ class Cliente(Base):
     email: Mapped[str | None] = mapped_column(String(200))
     telefone: Mapped[str | None] = mapped_column(String(40))
     observacoes: Mapped[str | None] = mapped_column(Text)
+    cadastro_pendente: Mapped[bool] = mapped_column(default=False, server_default=false())
+    """Veio de importação em lote só com o CNPJ: falta completar razão social, CNAE e atividade pela Receita."""
     criado_em: Mapped[datetime] = mapped_column(default=agora)
     atualizado_em: Mapped[datetime] = mapped_column(default=agora, onupdate=agora)
 

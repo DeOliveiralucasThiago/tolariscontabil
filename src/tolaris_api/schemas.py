@@ -160,6 +160,7 @@ class ClienteAtualizar(ClienteBase):
 class ClienteSaida(ClienteBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    cadastro_pendente: bool = False
     criado_em: datetime
     atualizado_em: datetime
     total_simulacoes: int = 0
@@ -587,3 +588,44 @@ class CaixaEmailSaida(BaseModel):
     ultimo_resultado: dict[str, Any] | None = None
     automatico: bool = False
     intervalo_minutos: int = 0
+
+
+# --- Importação de clientes em lote -------------------------------------------------------------
+class ClientesPrevia(BaseModel):
+    cabecalhos: list[str]
+    amostra: list[list[str]]
+    total_linhas: int
+    sugestao: dict[str, int | None]
+    rotulos: dict[str, str]
+
+
+class ClientesLinha(BaseModel):
+    linha: int
+    cnpj: str | None
+    situacao: str
+    """novo, existente, repetido ou invalido."""
+    motivo: str | None = None
+
+
+class ClientesAnalise(BaseModel):
+    novos: int
+    existentes: int
+    repetidos: int
+    invalidos: int
+    avisos: list[str]
+    problemas: list[ClientesLinha]
+    """Até 30 linhas que não serão importadas, com o motivo."""
+    total_problemas: int
+
+
+class ClientesImportacaoSaida(ClientesAnalise):
+    criados: int
+    pendentes: int
+    """Clientes criados que ainda precisam completar o cadastro pelo CNPJ."""
+
+
+class CompletarSaida(BaseModel):
+    completados: int
+    nao_encontrados: list[dict[str, str]]
+    restantes: int
+    indisponivel: bool

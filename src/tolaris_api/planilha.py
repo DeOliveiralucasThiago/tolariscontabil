@@ -128,14 +128,18 @@ def ler_tabela(nome: str, conteudo: bytes) -> tuple[list[str], list[list[str]]]:
 
 
 # --- Mapeamento de colunas -------------------------------------------------------------------------
-def sugerir_mapeamento(cabecalhos: list[str]) -> dict[str, int | None]:
+def sugerir_mapeamento(
+    cabecalhos: list[str],
+    sinonimos: dict[str, list[str]] = SINONIMOS,
+    campos: tuple[str, ...] = ("competencia", *CAMPOS),
+) -> dict[str, int | None]:
     """Índice da coluna sugerida para cada campo (ou None), pelo nome do cabeçalho."""
     normalizados = [_normalizar(c) for c in cabecalhos]
     usadas: set[int] = set()
     sugestao: dict[str, int | None] = {}
-    for campo in ("competencia", *CAMPOS):
+    for campo in campos:
         achada = None
-        for sinonimo in SINONIMOS[campo]:  # do mais específico ao mais geral
+        for sinonimo in sinonimos[campo]:  # do mais específico ao mais geral
             alvo = _normalizar(sinonimo)
             exata = next((i for i, c in enumerate(normalizados) if c == alvo and i not in usadas), None)
             parcial = next((i for i, c in enumerate(normalizados) if alvo in c.split() or (len(alvo) > 5 and alvo in c)

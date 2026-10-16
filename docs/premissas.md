@@ -169,6 +169,17 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 45. **Aviso de notas paradas:** cliente com status "ativo" cuja última competência importada tem mais de 2 meses de
     atraso em relação ao mês atual (em outubro, a última competência é julho ou antes). Gravidade "informativa".
 
+46. **Importação de clientes em lote:** até 2.000 clientes por planilha (.csv ou .xlsx, 5 MB). O CNPJ aceita pontuação
+    e, como o Excel descarta o zero à esquerda de números, CNPJ com 8 a 13 dígitos são completados com zeros e só valem
+    se o dígito verificador fechar. Quem já tem o CNPJ cadastrado no escritório é ignorado (a planilha não atualiza
+    clientes existentes). Valores de atividade, regime e situação que o sistema não reconhece ficam em branco, com aviso.
+    Sem a coluna de situação, o cliente entra como "ativo" (a carteira existente), podendo escolher prospect ou inativo.
+47. **Completar cadastro pelo CNPJ:** cliente criado sem razão social ou sem atividade fica "por completar". A consulta
+    roda em lotes de 15 (a API pública tem limite de taxa), só preenche campos vazios e o nome provisório
+    ("CNPJ 00.000.000/0000-00"); nada que o escritório digitou é trocado. A atividade e o regime vêm da sugestão por
+    CNAE e pela opção de Simples/MEI, que precisam de conferência do contador. CNPJ não encontrado deixa de ser tentado
+    e aparece listado; falha da consulta mantém o cliente na fila.
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias?).
@@ -191,6 +202,8 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Aceite eletrônico simples: basta para o escritório ou ele quer assinatura com certificado (ICP-Brasil/Gov.br)?
 - [ ] Planilha de dados contábeis: quais colunas o sistema contábil do escritório exporta? (Faltam, por exemplo,
       receita por anexo, retenções e saldo de balancete.)
+- [ ] Importação de clientes: quais colunas a lista de clientes do sistema atual do escritório exporta? (Faltam, por
+      exemplo, código interno, data de entrada e responsável.)
 - [ ] Caixa de e-mail: o escritório tem uma caixa própria que aceite IMAP com senha de aplicativo?
 - [ ] Casos REC1 a REC3 da planilha (alíquota efetiva x % da repartição) e o tratamento do RBT12 estimado.
 

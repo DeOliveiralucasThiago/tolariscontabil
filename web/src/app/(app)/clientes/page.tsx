@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { CompletarCadastros } from "@/components/CompletarCadastros";
 import { BotaoLink, Cartao, Etiqueta, MensagemErro, Titulo, classeCampo } from "@/components/ui";
 import { api, ErroApi } from "@/lib/api";
 import { data, mascaraCnpj } from "@/lib/formato";
@@ -13,6 +14,7 @@ export default function Clientes() {
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState<StatusCliente | "">("");
   const [erro, setErro] = useState("");
+  const [versao, setVersao] = useState(0);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -24,14 +26,20 @@ export default function Clientes() {
         .catch((e) => setErro(e instanceof ErroApi ? e.message : "Falha ao carregar"));
     }, 250);
     return () => clearTimeout(t);
-  }, [busca, status]);
+  }, [busca, status, versao]);
 
   return (
     <>
-      <Titulo sub="Clientes e prospects do escritório." acoes={<BotaoLink href="/clientes/novo">Novo cliente</BotaoLink>}>
+      <Titulo sub="Clientes e prospects do escritório." acoes={
+        <div className="flex gap-2">
+          <BotaoLink href="/clientes/importar" variante="secundario">Importar planilha</BotaoLink>
+          <BotaoLink href="/clientes/novo">Novo cliente</BotaoLink>
+        </div>
+      }>
         Clientes
       </Titulo>
       <Cartao>
+        <CompletarCadastros onProgresso={() => setVersao((v) => v + 1)} />
         <div className="mb-4 flex flex-wrap gap-3">
           <input
             aria-label="Buscar por nome ou CNPJ"
@@ -79,6 +87,7 @@ export default function Clientes() {
                     <td className="py-2.5">
                       <Link href={`/clientes/${c.id}`} className="font-medium hover:text-marca">{c.razao_social}</Link>
                       {c.nome_fantasia && <div className="text-xs text-tinta-2">{c.nome_fantasia}</div>}
+                      {c.cadastro_pendente && <div className="text-xs text-amber-800">Cadastro por completar</div>}
                     </td>
                     <td className="num py-2.5 text-tinta-2">{c.cnpj ? mascaraCnpj(c.cnpj) : "—"}</td>
                     <td className="py-2.5">{c.atividade ? ROTULO_ATIVIDADE[c.atividade] : "—"}</td>

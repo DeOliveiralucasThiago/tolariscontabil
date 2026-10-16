@@ -109,13 +109,14 @@ export interface Cliente {
   email: string | null;
   telefone: string | null;
   observacoes: string | null;
+  cadastro_pendente: boolean;
   criado_em: string;
   atualizado_em: string;
   total_simulacoes: number;
   ultima_simulacao_em: string | null;
 }
 
-export type ClienteForm = Partial<Omit<Cliente, "id" | "criado_em" | "atualizado_em" | "total_simulacoes" | "ultima_simulacao_em">> & {
+export type ClienteForm = Partial<Omit<Cliente, "id" | "criado_em" | "atualizado_em" | "total_simulacoes" | "ultima_simulacao_em" | "cadastro_pendente">> & {
   razao_social: string;
 };
 
@@ -552,4 +553,35 @@ export interface CaixaEmailEstado {
   ultimo_resultado: ResultadoCaixaEmail | null;
   automatico: boolean;
   intervalo_minutos: number;
+}
+
+
+export interface ClientesPrevia {
+  cabecalhos: string[];
+  amostra: string[][];
+  total_linhas: number;
+  sugestao: Record<string, number | null>;
+  rotulos: Record<string, string>;
+}
+
+export interface ClientesAnalise {
+  novos: number;
+  existentes: number;
+  repetidos: number;
+  invalidos: number;
+  avisos: string[];
+  problemas: { linha: number; cnpj: string | null; situacao: string; motivo: string | null }[];
+  total_problemas: number;
+}
+
+export interface ClientesImportacao extends ClientesAnalise {
+  criados: number;
+  pendentes: number;
+}
+
+export interface CompletarResultado {
+  completados: number;
+  nao_encontrados: { cnpj: string; motivo: string }[];
+  restantes: number;
+  indisponivel: boolean;
 }

@@ -66,3 +66,10 @@ verificação da caixa de e-mail tenta conectar de verdade e só confere que a f
 ```bash
 node fluxo_notas.mjs saida
 ```
+
+O fluxo de importação de clientes em lote (planilha com CNPJ, conferência, importação e complemento pela consulta de
+CNPJ) precisa da BrasilAPI falsa (`python e2e/mock_brasilapi.py`, API com `TOLARIS_BRASILAPI_URL` apontando para ela):
+
+```bash
+node fluxo_clientes_lote.mjs saida
+```

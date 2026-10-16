@@ -193,6 +193,13 @@ ok(status == 200 and "segredo-da-caixa" not in corpo.decode() and json.loads(cor
 status, _ = pedir("PUT", "/api/escritorio/caixa-email", {"host": "127.0.0.1", "usuario": "a@b.com", "senha": "x"})
 ok(status == 400, "servidor IMAP em rede interna recusado")
 
+# Importação de clientes em lote (sem a consulta de CNPJ: a rede pode estar bloqueada no CI)
+csv_clientes = "CNPJ;Razão social;Atividade\n45.997.418/0001-53;Oficina Boa Roda Ltda;Serviços — Anexo III\n4252011000110;Empresa do Zero Ltda;Atividade que não existe\n".encode("utf-8")
+status, corpo = enviar_arquivos("/api/clientes-lote/importar", [("clientes.csv", csv_clientes)], {"mapeamento": json.dumps({"cnpj": 0, "razao_social": 1, "atividade": 2})})
+ok(status == 201 and json.loads(corpo)["criados"] == 2, f"clientes importados em lote ({status})")
+status, corpo = pedir("GET", "/api/clientes-lote/pendentes")
+ok(status == 200 and json.loads(corpo)["pendentes"] == 1, "cliente de atividade não reconhecida fica por completar")
+
 status, _ = pedir("POST", "/api/auth/esqueci-senha", {"email": "ana@teste.com.br"})
 time.sleep(1)
 emails = [json.loads(p.read_text(encoding="utf-8")) for p in (PASTA / "dados" / "emails").glob("*.json")]

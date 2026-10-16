@@ -78,6 +78,11 @@ portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofá
   e-mail (IMAP)** nas Configurações: os anexos que chegam nela são lidos, o cliente é identificado pelo CNPJ dentro do
   arquivo e a nota entra no movimento dele. A caixa só é lida (nada é apagado nem marcado como lido). Clientes ativos
   com notas paradas há mais de 2 meses ganham um aviso. **Não** há ainda download direto da SEFAZ (ver `docs/premissas.md`).
+- **Importação de clientes em lote:** em Clientes > Importar planilha, um .csv ou .xlsx com uma linha por cliente
+  (só o CNPJ é obrigatório; razão social, atividade, regime, e-mail, telefone e contato são opcionais). O sistema
+  sugere as colunas, confere (novos, já cadastrados, repetidos, CNPJ inválido) antes de gravar e cria os clientes; os que
+  vieram só com CNPJ são completados em lotes pela consulta de CNPJ (razão social, CNAE, atividade e regime), sem
+  sobrescrever nada que o escritório digitou.
 
 ## Rodando localmente
 

@@ -48,7 +48,7 @@ def listar(
         consulta = consulta.where(
             or_(Cliente.razao_social.ilike(termo), Cliente.nome_fantasia.ilike(termo), Cliente.cnpj.ilike(termo))
         )
-    clientes = db.scalars(consulta.order_by(Cliente.atualizado_em.desc()).limit(500)).all()
+    clientes = db.scalars(consulta.order_by(Cliente.atualizado_em.desc()).limit(2000)).all()
     return [cliente_saida(db, c) for c in clientes]
 
 
