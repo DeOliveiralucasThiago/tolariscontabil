@@ -585,3 +585,56 @@ export interface CompletarResultado {
   restantes: number;
   indisponivel: boolean;
 }
+
+export interface LinhaComparacao {
+  campo: string;
+  rotulo: string;
+  planejado: number | null;
+  realizado: number | null;
+  diferenca: number | null;
+  diferenca_pct: number | null;
+}
+
+export interface Reavaliacao {
+  melhor_planejado: string;
+  melhor_realizado: string;
+  mudou: boolean;
+  economia_planejada: number | null;
+  economia_realizada: number | null;
+  totais_planejados: Record<string, number>;
+  totais_realizados: Record<string, number>;
+}
+
+export interface PontoRbt12 {
+  competencia: string;
+  rbt12: number;
+  projetado: boolean;
+  ancora?: boolean;
+}
+
+export interface ProjecaoLimites {
+  meses_base: number;
+  confianca: "alta" | "media" | "baixa";
+  rbt12_atual: number;
+  rbt12_em_12_meses: number;
+  tendencia_mensal: number;
+  media_mensal: number;
+  cruzamentos: { codigo: string; rotulo: string; limite: number; competencia: string; em_meses: number }[];
+  limites: { codigo: string; rotulo: string; valor: number }[];
+  serie: PontoRbt12[];
+}
+
+export interface Acompanhamento {
+  disponivel: boolean;
+  motivo?: string;
+  meses?: number;
+  periodo?: { inicio: string; fim: string };
+  plano: { simulacao_id: number; titulo: string; tipo: string; criado_em: string } | null;
+  comparacao: LinhaComparacao[];
+  reavaliacao: Reavaliacao | null;
+  fator_r: { titulo: string; detalhe: string; gravidade: string } | null;
+  projecao: ProjecaoLimites | null;
+  resumo: string[];
+  desvio_receita?: number | null;
+  realizado_anualizado?: Record<string, number | null>;
+}

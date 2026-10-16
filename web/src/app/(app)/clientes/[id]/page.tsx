@@ -7,6 +7,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { EnviarRelatorio } from "@/components/EnviarRelatorio";
 import { FormCliente } from "@/components/FormCliente";
 import { FormCompleta } from "@/components/FormCompleta";
+import { Acompanhamento } from "@/components/Acompanhamento";
 import { MovimentoFiscal } from "@/components/MovimentoFiscal";
 import { PortalCliente } from "@/components/PortalCliente";
 import { PropostaHonorarios } from "@/components/PropostaHonorarios";
@@ -25,8 +26,8 @@ import {
   type Simulacao,
 } from "@/lib/tipos";
 
-type Aba = "simulacoes" | "planejamento" | "movimento" | "dados";
-const ABAS: Aba[] = ["simulacoes", "planejamento", "movimento", "dados"];
+type Aba = "simulacoes" | "planejamento" | "movimento" | "acompanhamento" | "dados";
+const ABAS: Aba[] = ["simulacoes", "planejamento", "movimento", "acompanhamento", "dados"];
 
 export default function DetalheCliente() {
   return (
@@ -158,6 +159,7 @@ function DetalheClienteConteudo() {
     { id: "simulacoes", rotulo: `Simulações (${simulacoes.length})` },
     { id: "planejamento", rotulo: "Novo planejamento" },
     { id: "movimento", rotulo: "Movimento fiscal" },
+    { id: "acompanhamento", rotulo: "Acompanhamento" },
     { id: "dados", rotulo: "Dados cadastrais" },
   ];
 
@@ -315,6 +317,17 @@ function DetalheClienteConteudo() {
             setAba("planejamento");
           }}
           onUsarPlanilha={(valores, texto) => {
+            setPlanejamentoInicial({ valores, texto });
+            setAba("planejamento");
+          }}
+        />
+      )}
+
+      {aba === "acompanhamento" && (
+        <Acompanhamento
+          clienteId={cliente.id}
+          versao={simulacoes.length}
+          onUsarNoPlanejamento={(valores, texto) => {
             setPlanejamentoInicial({ valores, texto });
             setAba("planejamento");
           }}

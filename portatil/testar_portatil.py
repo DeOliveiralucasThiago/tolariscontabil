@@ -186,6 +186,10 @@ status, corpo = pedir("GET", f"/api/clientes/{cid2}/financeiro")
 plan = json.loads(corpo)["planejamento"]
 ok(plan["receita_bruta_anual"] == 120000 and plan["folha_clt_anual"] == 18000 and not plan["anualizado"],
    "planejamento sugerido pela planilha: receita R$ 120.000 e folha R$ 18.000")
+status, corpo = pedir("GET", f"/api/clientes/{cid2}/acompanhamento")
+ac = json.loads(corpo)
+ok(status == 200 and ac["disponivel"] and ac["projecao"]["meses_base"] >= 6 and ac["projecao"]["serie"][-1]["projetado"],
+   "acompanhamento projeta o RBT12 do cliente a partir da receita realizada")
 status, corpo = pedir("PUT", "/api/escritorio/caixa-email", {
     "host": "93.184.216.34", "usuario": "notas@escritorio.com.br", "senha": "segredo-da-caixa"})
 ok(status == 200 and "segredo-da-caixa" not in corpo.decode() and json.loads(corpo)["configurada"],

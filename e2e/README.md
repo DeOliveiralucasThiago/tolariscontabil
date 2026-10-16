@@ -73,3 +73,10 @@ CNPJ) precisa da BrasilAPI falsa (`python e2e/mock_brasilapi.py`, API com `TOLAR
 ```bash
 node fluxo_clientes_lote.mjs saida
 ```
+
+O fluxo do acompanhamento (planejado × realizado, recomendação com os números reais, projeção dos limites, avisos e
+celular) cria a carteira pela API e também usa e-mail novo a cada execução:
+
+```bash
+node fluxo_acompanhamento.mjs saida
+```

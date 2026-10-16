@@ -180,6 +180,23 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     CNAE e pela opção de Simples/MEI, que precisam de conferência do contador. CNPJ não encontrado deixa de ser tentado
     e aparece listado; falha da consulta mantém o cliente na fila.
 
+48. **Realizado:** receita e compras de cada mês vêm da planilha contábil quando ela traz o mês e, senão, das notas
+    (vendas e compras). Folha, pró-labore e despesas só vêm da planilha. O comparativo usa os últimos 12 meses com
+    receita informada e anualiza pela média (mínimo de 3 meses para comparar e 6 para refazer o comparativo de
+    regimes). Campo que a planilha não traz aparece como "—" e, na reavaliação, fica como estava no planejamento.
+    Com a folha real, o fator R do planejamento é descartado e recalculado.
+49. **Projeção da receita:** reta de mínimos quadrados sobre os últimos 12 meses (mínimo de 6 meses informados; meses
+    sem dado dentro da janela são desconhecidos, não zero, e fecham o RBT12 pela média). Não considera sazonalidade,
+    contratos novos nem perdas. Confiança "alta" com 12 meses e r² de 0,5 ou mais, "média" com 9 meses ou r² de 0,3 ou
+    mais, e "baixa" nos demais casos; projeção de confiança baixa não gera aviso próprio, só é mostrada na aba.
+50. **Limites projetados:** MEI R$ 81 mil, sublimite (R$ 3,6 mi) e limite (R$ 4,8 mi) do Simples e limite do Presumido
+    (R$ 78 mi), conforme o regime atual do cliente. Só aparece o cruzamento de limite ainda não ultrapassado. O aviso
+    é "atenção" até 6 meses e "informativo" de 7 a 12; se o aviso de limite atual já existe, ganha a data prevista
+    no texto. O limite do MEI usa o RBT12, como os avisos atuais; o limite legal é por ano-calendário (proporcional no
+    primeiro ano), o que precisa de conferência.
+51. **Aviso de realizado fora do planejado:** com 6 meses ou mais de dados, receita anualizada 20% ou mais acima ou
+    abaixo do planejado (informativo) ou recomendação de regime diferente com os números reais (atenção).
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias?).
@@ -204,6 +221,9 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
       receita por anexo, retenções e saldo de balancete.)
 - [ ] Importação de clientes: quais colunas a lista de clientes do sistema atual do escritório exporta? (Faltam, por
       exemplo, código interno, data de entrada e responsável.)
+- [ ] Acompanhamento: o desvio de 20% e a projeção linear fazem sentido para a carteira? Há clientes sazonais
+      (comércio de fim de ano, safra) para os quais a projeção precisa de outro método?
+- [ ] Limite do MEI: avisar pelo RBT12 ou pela receita do ano-calendário (com a regra proporcional no primeiro ano)?
 - [ ] Caixa de e-mail: o escritório tem uma caixa própria que aceite IMAP com senha de aplicativo?
 - [ ] Casos REC1 a REC3 da planilha (alíquota efetiva x % da repartição) e o tratamento do RBT12 estimado.
 

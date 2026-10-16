@@ -192,12 +192,11 @@ def _serie_grafico(receita: dict[str, Decimal], proj: pj.Projecao) -> list[dict[
         if all(j in receita for j in janela):
             pontos.append({"competencia": comp, "rbt12": _r(sum((receita[j] for j in janela), Decimal(0))), "projetado": False})
     pontos.append({"competencia": proj.ultimo_mes, "rbt12": _r(proj.rbt12_atual), "projetado": False, "ancora": True})
-    vistos = set()
-    unicos = []
-    for p in pontos:  # a âncora repete o último ponto real quando a janela é completa
-        if p["competencia"] in vistos:
+    unicos: list[dict[str, Any]] = []
+    for p in pontos:  # a âncora repete o último ponto real quando a janela é completa: um só ponto, marcado como âncora
+        if unicos and unicos[-1]["competencia"] == p["competencia"]:
+            unicos[-1]["ancora"] = True
             continue
-        vistos.add(p["competencia"])
         unicos.append(p)
     return unicos + [{"competencia": x.competencia, "rbt12": _r(x.rbt12), "projetado": True} for x in proj.pontos]
 

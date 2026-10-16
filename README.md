@@ -83,6 +83,11 @@ portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofá
   sugere as colunas, confere (novos, já cadastrados, repetidos, CNPJ inválido) antes de gravar e cria os clientes; os que
   vieram só com CNPJ são completados em lotes pela consulta de CNPJ (razão social, CNAE, atividade e regime), sem
   sobrescrever nada que o escritório digitou.
+- **Planejado × realizado e projeção de limites:** a aba Acompanhamento do cliente compara o último planejamento com a
+  receita, compras, folha e despesas dos últimos 12 meses (notas importadas e planilha contábil), refaz o comparativo
+  de regimes com os números reais ("a recomendação ainda vale?"), mostra o fator R real e projeta o RBT12 pela tendência
+  da receita: "no ritmo atual, passa do limite do Simples em out/26". A central de avisos usa a mesma projeção
+  (junto aos avisos de limite) e avisa quando o realizado fugiu do planejado.
 
 ## Rodando localmente
 
