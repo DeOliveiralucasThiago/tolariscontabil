@@ -100,16 +100,21 @@ def nfe(n: int, data: str, itens: list[tuple]) -> bytes:
             f"<cStat>100</cStat></infProt></protNFe></nfeProc>").encode()
 
 
-def enviar_arquivos(caminho: str, arquivos: list[tuple[str, bytes]]) -> tuple[int, bytes]:
+def enviar_arquivos(caminho: str, arquivos: list[tuple[str, bytes]], campos: dict[str, str] | None = None,
+                    anonimo: bool = False) -> tuple[int, bytes]:
     limite = "----tolaris"
     corpo = b"".join(
+        f'--{limite}\r\nContent-Disposition: form-data; name="{nome}"\r\n\r\n{valor}\r\n'.encode()
+        for nome, valor in (campos or {}).items()
+    ) + b"".join(
         f'--{limite}\r\nContent-Disposition: form-data; name="arquivos"; filename="{nome}"\r\n'
-        "Content-Type: application/xml\r\n\r\n".encode() + conteudo + b"\r\n" for nome, conteudo in arquivos
+        "Content-Type: application/octet-stream\r\n\r\n".encode() + conteudo + b"\r\n" for nome, conteudo in arquivos
     ) + f"--{limite}--\r\n".encode()
     req = urllib.request.Request(BASE + caminho, data=corpo, method="POST",
                                  headers={"Content-Type": f"multipart/form-data; boundary={limite}"})
+    abridor = urllib.request.build_opener(urllib.request.ProxyHandler({})).open if anonimo else abrir  # sem o cookie do escritório
     try:
-        with abrir(req, timeout=120) as r:
+        with abridor(req, timeout=120) as r:
             return r.status, r.read()
     except urllib.error.HTTPError as e:
         return e.code, e.read()
@@ -164,6 +169,29 @@ status, corpo = pedir("GET", "/api/mudancas")
 ok(status == 200 and any(m["id"] == "irpf-lei-15270" for m in json.loads(corpo)), "mudanças na legislação carregadas")
 status, corpo = pedir("POST", f"/api/simulacoes/{sim['id']}/recalcular")
 ok(status == 201 and json.loads(corpo)["resultado"]["recalculo"]["de"] == sim["id"], "recálculo cria nova versão do relatório")
+
+# Notas sem atrito: link de envio sem login, planilha de dados contábeis e caixa de e-mail
+status, corpo = pedir("POST", f"/api/clientes/{cid2}/caixa", {})
+ok(status == 201, f"link de envio de notas gerado ({status})")
+token_envio = json.loads(corpo)["link"].rsplit("/", 1)[1]
+nova = nfe(99, "2025-02-20", [("19059090", "5102", "102", "", 5000.0, "BISCOITO")])
+status, corpo = enviar_arquivos(f"/api/caixa/{token_envio}/arquivos", [("nova.xml", nova), ("n0.xml", notas[0][1])], anonimo=True)
+ok(status == 201 and json.loads(corpo)["importados"] == 1 and json.loads(corpo)["duplicados"] == 1,
+   "cliente envia notas pelo link sem login (nova entra, repetida é ignorada)")
+csv = ("Mês;Faturamento;Folha;Compras\n" + "\n".join(f"2025-{m:02d};10000,00;1500,00;6000,00" for m in range(1, 13))).encode("utf-8")
+mapa = json.dumps({"competencia": 0, "receita": 1, "folha": 2, "compras": 3})
+status, corpo = enviar_arquivos(f"/api/clientes/{cid2}/financeiro/importar", [("dados.csv", csv)], {"mapeamento": mapa})
+ok(status == 201 and json.loads(corpo)["meses_novos"] == 12, f"planilha de dados contábeis importada ({status})")
+status, corpo = pedir("GET", f"/api/clientes/{cid2}/financeiro")
+plan = json.loads(corpo)["planejamento"]
+ok(plan["receita_bruta_anual"] == 120000 and plan["folha_clt_anual"] == 18000 and not plan["anualizado"],
+   "planejamento sugerido pela planilha: receita R$ 120.000 e folha R$ 18.000")
+status, corpo = pedir("PUT", "/api/escritorio/caixa-email", {
+    "host": "93.184.216.34", "usuario": "notas@escritorio.com.br", "senha": "segredo-da-caixa"})
+ok(status == 200 and "segredo-da-caixa" not in corpo.decode() and json.loads(corpo)["configurada"],
+   "caixa de e-mail salva (senha cifrada, não volta na resposta)")
+status, _ = pedir("PUT", "/api/escritorio/caixa-email", {"host": "127.0.0.1", "usuario": "a@b.com", "senha": "x"})
+ok(status == 400, "servidor IMAP em rede interna recusado")
 
 status, _ = pedir("POST", "/api/auth/esqueci-senha", {"email": "ana@teste.com.br"})
 time.sleep(1)

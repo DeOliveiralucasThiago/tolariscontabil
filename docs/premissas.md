@@ -138,6 +138,36 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     para escolher o contato. O link do portal só aparece na hora em que é gerado.
 39. **Dados pessoais do aceite:** nome e IP ficam guardados como comprovante do aceite (finalidade: prova da
     contratação) e o portal avisa o cliente disso antes do aceite.
+40. **Link de envio de notas:** o token tem 256 bits, só o hash (SHA-256) fica no banco e o link aparece uma única
+    vez; gerar outro desativa o anterior. Quem abre o link só consegue enviar arquivos (não lê nada do escritório nem
+    das notas já importadas). Limite de 30 envios por hora por link (contado em memória: vale por processo) e o mesmo
+    limite de tamanho da importação. Notas de outro CNPJ enviadas pelo link são ignoradas.
+41. **Planilha de dados contábeis:** `.csv` (separador `;`, `,` ou tab; UTF-8 ou Windows-1252) ou `.xlsx` (primeira
+    aba), até 5 MB, 5.000 linhas e 40 colunas. Valores em formato brasileiro ou americano; negativos e valores acima
+    de R$ 100 bilhões por campo são recusados (provável coluna errada). Competência em `AAAA-MM`, `MM/AAAA`, `mar/26`
+    ou data. Meses repetidos na mesma planilha são somados (com aviso). Reenviar um mês troca só os campos que a
+    planilha trouxe. No planejamento entram os últimos 12 meses; com menos de 12, a média dos meses informados
+    vezes 12, com o aviso na tela. Campo que a planilha não traz entra como zero no planejamento.
+42. **Caixa de e-mail (IMAP):** a senha é cifrada (Fernet, chave derivada de `TOLARIS_SECRET_KEY`; trocar a chave
+    exige digitar a senha de novo) e nunca volta para o navegador; mudar servidor, porta ou usuário exige digitá-la
+    outra vez, para a senha guardada não seguir para outro destino. Só conexão TLS na porta 993. O servidor é
+    validado contra SSRF (nomes que resolvem para IP interno, loopback, link-local ou reservado são recusados, e a
+    conexão usa o IP validado, conferindo o certificado pelo nome). A caixa é aberta em modo leitura: o progresso é o
+    UID da última mensagem (com UIDVALIDITY), então nada é marcado como lido. Primeira leitura: últimos 30 dias;
+    até 50 mensagens por rodada. Anexos `.xml`, `.zip` e `.txt` (SPED); o cliente é achado pelo CNPJ do emitente ou do
+    destinatário da NF-e (a nota entra nos dois se ambos forem clientes) ou pelo registro 0000 do SPED. Arquivos de
+    quem não é cliente aparecem na tela como "sem cliente". Contas Microsoft 365/Outlook costumam exigir OAuth e não
+    funcionam com senha em IMAP. A leitura automática roda em uma thread do processo da API: com vários workers, cada
+    um leria a caixa (sem duplicar notas, mas com leituras repetidas); use um só worker ou desligue a leitura
+    automática em todos menos um.
+43. **LGPD:** XML de notas têm CNPJ e, às vezes, CPF de pessoas físicas. Ficam só os campos necessários ao cálculo
+    (valores, datas, itens e CNPJ do participante). Os arquivos originais e o corpo dos e-mails não são guardados.
+44. **Download direto da SEFAZ (DistDFe) não implementado, de propósito:** exige certificado digital A1 do contribuinte
+    (ou do escritório, com o CNPJ do escritório informado em `autXML` pelo emissor) guardado no servidor. Isso só deve
+    ser feito com HTTPS, gestor de segredos e teste em homologação, o que este ambiente não permite validar.
+    Enquanto isso, o link de envio e a caixa de e-mail cobrem a chegada dos XML. Também falta importar a NFS-e.
+45. **Aviso de notas paradas:** cliente com status "ativo" cuja última competência importada tem mais de 2 meses de
+    atraso em relação ao mês atual (em outubro, a última competência é julho ou antes). Gravidade "informativa".
 
 ## Pontos para o contador validar
 
@@ -159,6 +189,9 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Honorários: o modelo (base por regime + adicional por funcionário + adesão) cobre como o escritório cobra?
       Faltam faixas de faturamento, número de notas ou de lançamentos?
 - [ ] Aceite eletrônico simples: basta para o escritório ou ele quer assinatura com certificado (ICP-Brasil/Gov.br)?
+- [ ] Planilha de dados contábeis: quais colunas o sistema contábil do escritório exporta? (Faltam, por exemplo,
+      receita por anexo, retenções e saldo de balancete.)
+- [ ] Caixa de e-mail: o escritório tem uma caixa própria que aceite IMAP com senha de aplicativo?
 - [ ] Casos REC1 a REC3 da planilha (alíquota efetiva x % da repartição) e o tratamento do RBT12 estimado.
 
 ## Fora do escopo da Fase 0 (próximos passos do motor)

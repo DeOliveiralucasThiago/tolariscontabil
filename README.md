@@ -71,6 +71,13 @@ portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofá
 - **Confirmação de leitura e WhatsApp:** cada relatório mostra se e quando o cliente o abriu no portal, e a central de
   avisos lembra do que não foi aberto em 3 dias ou da proposta vista sem resposta. Ao gerar o link do portal, o botão
   "Enviar pelo WhatsApp" abre a conversa com o telefone do cliente e uma mensagem editável.
+- **Notas sem atrito:** (1) o escritório gera, na aba Movimento fiscal, um **link de envio** por cliente: o cliente (ou o
+  emissor dele) manda XML/ZIP/SPED sem criar conta e as notas entram sozinhas, sem duplicar; (2) **dados contábeis por
+  planilha**: CSV ou XLSX exportado do sistema contábil, com mapeamento de colunas sugerido pelo cabeçalho, prévia,
+  linhas inválidas explicadas e botão "Usar no planejamento" (últimos 12 meses ou média anualizada); (3) **caixa de
+  e-mail (IMAP)** nas Configurações: os anexos que chegam nela são lidos, o cliente é identificado pelo CNPJ dentro do
+  arquivo e a nota entra no movimento dele. A caixa só é lida (nada é apagado nem marcado como lido). Clientes ativos
+  com notas paradas há mais de 2 meses ganham um aviso. **Não** há ainda download direto da SEFAZ (ver `docs/premissas.md`).
 
 ## Rodando localmente
 
@@ -112,6 +119,9 @@ versão portátil para Windows (pasta `portatil/`), montada e testada pelo GitHu
 | `TOLARIS_EMAIL_REMETENTE` | `Tolaris Contábil <nao-responda@localhost>` | Remetente; o nome exibido vira "Escritório X via Tolaris" |
 | `TOLARIS_SMTP_*` / `TOLARIS_RESEND_API_KEY` | — | Credenciais do provedor de e-mail |
 | `TOLARIS_IMPORTACAO_MAX_MB` | `25` | Limite por envio de arquivos fiscais |
+| `TOLARIS_IMAP_AUTOMATICO` | só em produção | Liga a leitura periódica das caixas de e-mail; sem valor, liga quando `TOLARIS_AMBIENTE=producao` |
+| `TOLARIS_IMAP_INTERVALO_MINUTOS` | `10` | Intervalo da leitura automática (0 desliga) |
+| `TOLARIS_IMAP_PERMITIR_REDE_PRIVADA` | `false` | Aceita servidor IMAP em rede interna e portas diferentes de 993 (por padrão é bloqueado contra SSRF) |
 
 ### Segurança adotada
 

@@ -57,3 +57,12 @@ também usa e-mail novo a cada execução:
 ```bash
 node fluxo_honorarios.mjs saida
 ```
+
+O fluxo de notas sem atrito (link de envio para o cliente sem login, planilha de dados contábeis com mapeamento de
+colunas, caixa de e-mail nas Configurações e aviso de notas paradas) também usa e-mail novo a cada execução. A
+verificação da caixa de e-mail tenta conectar de verdade e só confere que a falha aparece de forma legível; defina
+`TOLARIS_IMAP_TIMEOUT_SEGUNDOS=3` na API para não esperar. O servidor IMAP de mentira está em `tests/api/test_caixa_email.py`.
+
+```bash
+node fluxo_notas.mjs saida
+```
