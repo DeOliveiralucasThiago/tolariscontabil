@@ -55,13 +55,15 @@ def test_registra_login_cliente_e_importacao_com_usuario_e_ip(logado: TestClient
     cid = logado.post("/api/clientes", json={"razao_social": "Padaria Pão Bom", "cnpj": CNPJ_VALIDO}).json()["id"]
     logado.post(f"/api/clientes/{cid}/importacoes", files=[("arquivos", ("n.xml", nfe(1, CNPJ_VALIDO, "45997418000153")))])
     logado.delete(f"/api/clientes/{cid}/documentos")
+    antes = next(i for i in _registros(logado)["itens"] if i["acao"] == "cliente_criado")
+    assert antes["detalhe"] == {"razao_social": "Padaria Pão Bom"}
     logado.delete(f"/api/clientes/{cid}")
     pag = _registros(logado)
     acoes = [i["acao"] for i in pag["itens"]]
     assert acoes[:5] == ["cliente_excluido", "documentos_apagados", "documentos_importados", "cliente_criado", "login"]
     por = {i["acao"]: i for i in pag["itens"]}
     assert por["cliente_criado"]["usuario"] == "Ana Contadora <ana@escritorio.com.br>"
-    assert por["cliente_criado"]["detalhe"] == {"razao_social": "Padaria Pão Bom"}
+    assert por["cliente_criado"]["detalhe"] is None  # a exclusão tira o nome do cliente dos registros anteriores
     assert por["documentos_importados"]["detalhe"] == {"importados": 1, "duplicados": 0}
     assert por["cliente_excluido"]["entidade"] == "cliente" and por["cliente_excluido"]["entidade_id"] == cid
     assert por["login"]["ip"] == "testclient"

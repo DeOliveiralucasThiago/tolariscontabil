@@ -14,7 +14,7 @@ from .auditoria import ip_da_requisicao
 from .caixa_email import automatico_ligado, iniciar_rotina
 from .config import get_settings
 from .db import SessionLocal
-from .routers import acompanhamento, auth, auditoria, avisos, caixa, caixa_email, calculadoras, clientes, clientes_lote, cnpj, compartilhamento, dois_fatores, equipe, escritorio, financeiro, fiscal, honorarios, simulacoes
+from .routers import acompanhamento, auth, auditoria, avisos, caixa, caixa_email, calculadoras, clientes, clientes_lote, cnpj, compartilhamento, dois_fatores, equipe, escritorio, exportacao, financeiro, fiscal, honorarios, simulacoes
 
 CHAVE_PADRAO = "dev-somente-local-troque-esta-chave-em-producao"
 
@@ -59,7 +59,7 @@ def criar_app() -> FastAPI:
         return resposta
 
     api = APIRouter(prefix="/api")
-    for r in (auditoria.router, acompanhamento.router, auth.router, dois_fatores.router, avisos.router, caixa.router, caixa_email.router, escritorio.router, clientes.router, clientes_lote.router, cnpj.router, simulacoes.router, calculadoras.router, equipe.router, compartilhamento.router, financeiro.router, fiscal.router, honorarios.router):
+    for r in (exportacao.router, auditoria.router, acompanhamento.router, auth.router, dois_fatores.router, avisos.router, caixa.router, caixa_email.router, escritorio.router, clientes.router, clientes_lote.router, cnpj.router, simulacoes.router, calculadoras.router, equipe.router, compartilhamento.router, financeiro.router, fiscal.router, honorarios.router):
         api.include_router(r)
 
     @api.get("/saude", tags=["infra"])

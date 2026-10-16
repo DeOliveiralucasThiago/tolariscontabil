@@ -296,7 +296,7 @@ def aceitar_proposta(
     sim.aceite_ip = requisicao.client.host[:45] if requisicao.client else None
     _registrar_abertura(sim)
     auditar(db, escritorio.id, "proposta_aceita", entidade="simulacao", entidade_id=sim.id,
-            detalhe={"cliente_id": cliente.id, "aceite_nome": dados.nome[:80]})
+            detalhe={"cliente_id": cliente.id})
     db.commit()
 
     criador = db.get(Usuario, sim.criado_por_id) if sim.criado_por_id else None
