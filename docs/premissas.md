@@ -226,6 +226,16 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     DENY`, `frame-ancestors 'none'` e política de permissões; API com `Cache-Control: no-store`. Não há CSP de scripts (o
     Next usa scripts embutidos) nem HSTS: o HSTS vai no proxy HTTPS de quem hospeda.
 
+58. **Funil comercial:** conta uma proposta de honorários por cliente, a mais recente, para refazer a simulação não inflar
+    os números. "Criada" é a data em que a proposta foi definida; "enviada", o primeiro entre publicar no portal e um
+    e-mail que saiu com sucesso (e-mail que falhou não conta); "vista", a primeira abertura do relatório no portal;
+    "aceita", o aceite eletrônico. Cada etapa conta quem chegou até ela, mesmo se a proposta venceu depois. Vencida é a
+    proposta cuja validade passou sem aceite; um aceite posterior ao vencimento continua aceito. O período filtra pela data
+    em que a proposta foi criada. A taxa de aceite é aceitas sobre enviadas. Os alertas de "O que fazer" usam os mesmos
+    prazos da central de avisos (3 dias sem abrir, 7 dias sem responder) e avisam 3 dias antes do vencimento. A economia
+    mostrada é a diferença entre o melhor e o pior regime da simulação aceita, não a economia sobre o que o cliente paga hoje.
+    O funil não sabe de propostas fechadas fora do sistema (contrato assinado sem passar pelo aceite no portal).
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias?).
@@ -257,6 +267,8 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
       registro de atividades (hoje 24 meses) e os backups?
 - [ ] LGPD: quem responde ao titular, qual o prazo de guarda das notas de clientes que saem do escritório e o que consta
       do contrato de prestação de serviços (o texto do aceite da proposta e o aviso de privacidade ainda são genéricos).
+- [ ] Funil: o escritório marca como fechado o que foi acertado por telefone ou WhatsApp? Falta um "Marcar como fechado" (e
+      "perdido, com o motivo") para o funil não depender do aceite no portal.
 - [ ] Caixa de e-mail: o escritório tem uma caixa própria que aceite IMAP com senha de aplicativo?
 - [ ] Casos REC1 a REC3 da planilha (alíquota efetiva x % da repartição) e o tratamento do RBT12 estimado.
 

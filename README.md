@@ -93,6 +93,10 @@ portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofá
   de que IP, com filtros e CSV); exportação completa dos dados de um cliente (JSON) e exclusão definitiva sem sobras, só
   para administradores; backup com verificação (SQLite e PostgreSQL) e backup diário automático no pacote portátil;
   cabeçalhos de segurança no site e na API.
+- **Funil comercial:** a página Funil comercial mostra, para um período, quantas propostas de honorários foram criadas,
+  enviadas (portal ou e-mail), abertas pelo cliente e aceitas, com a conversão de cada etapa, o valor mensal em cada uma, a
+  taxa de aceite, o tempo médio até abrir e aceitar e a lista de propostas por urgência com a ação sugerida (enviar,
+  lembrar, ligar, renovar). Conta uma proposta por cliente (a mais recente).
 
 ## Rodando localmente
 

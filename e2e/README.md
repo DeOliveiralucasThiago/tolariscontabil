@@ -88,3 +88,10 @@ código do autenticador no próprio teste e também usa e-mail novo a cada execu
 ```bash
 node fluxo_seguranca.mjs saida
 ```
+
+O fluxo do funil comercial (quatro propostas em etapas diferentes, conversões, valores, ações sugeridas, filtros e celular)
+cria tudo pela API, usa o portal do cliente para o aceite e também usa e-mail novo a cada execução:
+
+```bash
+node fluxo_funil.mjs saida
+```

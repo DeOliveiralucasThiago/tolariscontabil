@@ -204,6 +204,11 @@ ok(status == 201 and json.loads(corpo)["criados"] == 2, f"clientes importados em
 status, corpo = pedir("GET", "/api/clientes-lote/pendentes")
 ok(status == 200 and json.loads(corpo)["pendentes"] == 1, "cliente de atividade não reconhecida fica por completar")
 
+status, corpo = pedir("GET", "/api/funil?dias=0")
+funil = json.loads(corpo)
+ok(status == 200 and [e["quantidade"] for e in funil["funil"]] == [1, 1, 1, 1] and funil["resumo"]["aceitas_valor_mensal"] == 940,
+   "funil comercial conta a proposta de R$ 940 publicada, vista e aceita pelo portal")
+
 # Segurança: backup do dia, registro de atividades, exportação LGPD e verificação em duas etapas
 ok(any((PASTA / "dados" / "backups").glob("tolaris-*.sqlite")), "backup do dia criado ao abrir o Tolaris (dados/backups)")
 status, corpo = pedir("GET", "/api/escritorio/auditoria?acao=documentos_importados")

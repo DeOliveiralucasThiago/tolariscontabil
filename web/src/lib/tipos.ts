@@ -671,3 +671,51 @@ export interface PaginaAuditoria {
   acoes: { codigo: string; rotulo: string }[];
   retencao_meses: number;
 }
+
+export interface EtapaFunil {
+  etapa: "criada" | "enviada" | "vista" | "aceita";
+  rotulo: string;
+  quantidade: number;
+  valor_mensal: number;
+  conversao: number | null;
+}
+
+export interface PropostaFunil {
+  simulacao_id: number;
+  cliente_id: number;
+  cliente: string;
+  cliente_status: StatusCliente;
+  etapa: "criada" | "enviada" | "vista" | "aceita" | "vencida";
+  rotulo_etapa: string;
+  valor_mensal: number;
+  adesao: number;
+  criada_em: string;
+  enviada_em: string | null;
+  visto_em: string | null;
+  aceite_em: string | null;
+  valido_ate: string;
+  dias_parada: number;
+  acao: string | null;
+  economia_anual: number | null;
+}
+
+export interface Funil {
+  dias: number | null;
+  funil: EtapaFunil[];
+  resumo: {
+    propostas: number;
+    aceitas_valor_mensal: number;
+    aceitas_adesao: number;
+    aceitas_primeiro_ano: number;
+    em_aberto: number;
+    em_aberto_valor_mensal: number;
+    vencidas: number;
+    vencidas_valor_mensal: number;
+    taxa_aceite: number | null;
+    dias_ate_visto: number | null;
+    dias_ate_aceite: number | null;
+    economia_anual_aceitas: number;
+  };
+  propostas: PropostaFunil[];
+  precisam_de_acao: number;
+}
