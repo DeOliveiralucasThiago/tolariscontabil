@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -53,6 +54,16 @@ class Settings(BaseSettings):
     """Na primeira verificação, só olha e-mails dos últimos N dias."""
     imap_permitir_rede_privada: bool = False
     """Aceita servidor IMAP em rede interna/localhost e portas diferentes de 993 (bloqueado por padrão, contra SSRF)."""
+
+    @field_validator("database_url")
+    @classmethod
+    def _url_do_banco(cls, valor: str) -> str:
+        """Aceita o endereço como os provedores (Neon, Render, Heroku) o entregam: ``postgres://`` ou ``postgresql://``."""
+        valor = valor.strip()
+        for prefixo in ("postgres://", "postgresql://"):
+            if valor.startswith(prefixo):
+                return "postgresql+psycopg://" + valor[len(prefixo):]
+        return valor
 
 
 @lru_cache

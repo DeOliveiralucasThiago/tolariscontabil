@@ -1,6 +1,9 @@
 .venv
 .git
-web
+web/node_modules
+web/.next
 **/__pycache__
 *.db
 validacao
+node_modules
+.next

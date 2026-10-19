@@ -124,6 +124,9 @@ cp .env.example .env    # preencha POSTGRES_PASSWORD e TOLARIS_SECRET_KEY
 docker compose up -d --build
 ```
 
+Para uma rodada de testes na internet, sem custo (Render + Neon + Brevo), veja
+[`docs/publicar-na-nuvem.md`](docs/publicar-na-nuvem.md).
+
 Para testar na rede do escritório (outros computadores e celulares acessando pelo IP da máquina),
 siga o passo a passo em [`docs/teste-rede-local.md`](docs/teste-rede-local.md). Sem Docker, há uma
 versão portátil para Windows (pasta `portatil/`), montada e testada pelo GitHub Actions.

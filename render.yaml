@@ -1,0 +1,37 @@
+# Publica o Tolaris (site + API num só container) no Render, sem custo, para uma rodada de testes.
+# Passo a passo em docs/publicar-na-nuvem.md. O banco fica no Neon (PostgreSQL gratuito).
+services:
+  - type: web
+    name: tolaris-contabil
+    runtime: docker
+    dockerfilePath: ./Dockerfile.nuvem
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/saude
+    envVars:
+      # Preencha no painel do Render na hora de criar (o valor não fica no repositório)
+      - key: TOLARIS_DATABASE_URL        # endereço de conexão do Neon
+        sync: false
+      - key: TOLARIS_URL_PUBLICA         # endereço do próprio serviço, depois que o Render o criar
+        sync: false
+      - key: TOLARIS_EMAIL_REMETENTE     # ex.: Tolaris Contábil <seu-email-verificado@exemplo.com>
+        sync: false
+      - key: TOLARIS_SMTP_USUARIO        # login SMTP do Brevo (algo@smtp-brevo.com)
+        sync: false
+      - key: TOLARIS_SMTP_SENHA          # chave SMTP do Brevo
+        sync: false
+      # O Render gera uma chave aleatória e a mantém entre os deploys
+      - key: TOLARIS_SECRET_KEY
+        generateValue: true
+      - key: TOLARIS_AMBIENTE
+        value: producao
+      - key: TOLARIS_COOKIE_SECURE
+        value: "true"
+      - key: TOLARIS_PROXY_SALTOS
+        value: "1"
+      - key: TOLARIS_EMAIL_BACKEND
+        value: smtp
+      - key: TOLARIS_SMTP_HOST
+        value: smtp-relay.brevo.com
+      - key: TOLARIS_SMTP_PORTA
+        value: "587"
