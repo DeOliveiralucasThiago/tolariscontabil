@@ -33,5 +33,6 @@ services:
         value: smtp
       - key: TOLARIS_SMTP_HOST
         value: smtp-relay.brevo.com
+      # O plano gratuito do Render bloqueia a saída pelas portas 25, 465 e 587; o Brevo também atende na 2525
       - key: TOLARIS_SMTP_PORTA
-        value: "587"
+        value: "2525"

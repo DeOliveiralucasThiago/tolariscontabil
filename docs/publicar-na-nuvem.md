@@ -19,7 +19,8 @@ Os limites e as exigências dos planos gratuitos mudam: confira nas páginas de 
 ## 2. Brevo (e-mail)
 1. **Senders, domains & dedicated IPs → Senders**: cadastre e verifique o e-mail que será o remetente.
 2. **SMTP & API → SMTP**: anote o **login** (`algo@smtp-brevo.com`) e gere uma **chave SMTP**.
-   Servidor `smtp-relay.brevo.com`, porta `587`.
+   Servidor `smtp-relay.brevo.com`, porta `2525` (o plano gratuito do Render bloqueia a saída pelas portas 25, 465 e 587;
+   se o e-mail falhar com `timed out`, é isso).
 3. Com remetente de e-mail pessoal (Gmail etc.), parte dos e-mails pode cair no spam. Avise os testadores.
 
 ## 3. Render (site + API)
