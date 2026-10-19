@@ -52,3 +52,9 @@ Os limites e as exigências dos planos gratuitos mudam: confira nas páginas de 
 - Não use a hospedagem gratuita para dados reais de clientes. Para produção, veja a seção "Preparação para produção" do README.
 - Sem uma proxy na frente que acrescente o IP de quem acessa (como a do Render), o cabeçalho `X-Forwarded-For` pode ser
   forjado; por isso `TOLARIS_PROXY_SALTOS=1` só vale atrás de uma hospedagem/proxy confiável.
+
+## Kit de teste para os testadores
+`kit-de-teste/` traz arquivos fictícios que entram no sistema do jeito que o roteiro descreve: clientes para importar,
+12 meses de dados contábeis, notas XML (com 3 arquivos que devem ser recusados de propósito) e um SPED. O pacote
+pronto para enviar é `kit-de-teste/Kit de teste Tolaris.zip`. Para refazê-lo: `python scripts/gerar_kit_teste.py`
+(o teste `tests/api/test_kit_teste.py` confere que o kit continua importando).

@@ -1,0 +1,37 @@
+﻿KIT DE TESTE DO TOLARIS CONTÁBIL
+================================
+
+Tudo aqui é inventado. Use só estes arquivos no teste: não coloque dados de clientes reais.
+
+O cliente fictício deste kit é o Mercadinho Estrela Ltda (CNPJ 12.345.678/0001-95, comércio no Simples Nacional).
+O CNPJ é válido, mas não existe na Receita Federal; por isso a consulta pelo CNPJ não encontra esse cliente
+(os dados dele já vêm preenchidos na planilha).
+
+ARQUIVOS
+
+1) 1-clientes-para-importar.xlsx
+   Para a tarefa C (Clientes > Importar planilha). Traz 10 linhas:
+   - o Mercadinho Estrela, com todos os dados;
+   - 7 CNPJ de grandes empresas públicas, só com o CNPJ, para testar "Completar pelo CNPJ" (precisa de internet);
+   - 1 CNPJ errado e 1 repetido, de propósito: o sistema deve avisar.
+   Depois de importar, abra o Mercadinho Estrela e mude a situação para Ativo.
+
+2) 2-dados-contabeis-12-meses.xlsx
+   Para a tarefa E (aba Dados contábeis do Mercadinho Estrela): receita, compras, folha, pró-labore e despesas de
+   outubro/2025 a setembro/2026. Depois de importar, clique em "Usar no planejamento".
+
+3) 3-notas-xml.zip
+   Para a tarefa E (aba Movimento fiscal do Mercadinho Estrela): envie o arquivo .zip direto, sem descompactar.
+   Traz 22 notas de venda e 11 de compra (outubro/2025 a agosto/2026). As vendas misturam refrigerante, cerveja,
+   perfume, shampoo e remédio (produtos com PIS/Cofins monofásico) com arroz, café e biscoito. Por isso o cartão
+   "Imposto pago a mais" deve mostrar um valor.
+   Na pasta "problemas-de-proposito" há 3 arquivos que o sistema deve RECUSAR com uma explicação: uma nota
+   cancelada, uma nota de outra empresa e um XML que não é nota.
+
+4) 4-sped-fiscal-2026-09.txt
+   Para a tarefa E também: SPED Fiscal de setembro/2026 do Mercadinho Estrela (cinco vendas e uma compra).
+
+5) Para a tarefa D: use a aba Novo planejamento do Mercadinho Estrela. Os números de faturamento anual podem ser
+   os de qualquer simulação sua; o regime atual é Simples Nacional.
+
+DICA: se algo for importado duas vezes, o sistema avisa e não soma de novo. Isso também é parte do teste.

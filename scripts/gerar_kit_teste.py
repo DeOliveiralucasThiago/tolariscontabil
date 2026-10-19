@@ -1,0 +1,272 @@
+"""Gera o kit de teste para os testadores: planilhas e notas de um cliente fictício.
+
+    python scripts/gerar_kit_teste.py            # grava em kit-de-teste/ (com o pacote "Kit de teste Tolaris.zip")
+
+Tudo é inventado, exceto os CNPJ de grandes empresas públicas da lista de clientes (servem para testar a consulta
+por CNPJ). O cliente fictício "Mercadinho Estrela" usa um CNPJ válido, mas que não existe na Receita.
+Os arquivos são conferidos com os mesmos leitores do sistema, então o que sai daqui entra no Tolaris.
+"""
+
+from __future__ import annotations
+
+import random
+import zipfile
+from datetime import date
+from decimal import Decimal
+from pathlib import Path
+
+from openpyxl import Workbook
+from openpyxl.styles import Font
+from openpyxl.utils import get_column_letter
+
+RAIZ = Path(__file__).resolve().parent.parent
+SAIDA = RAIZ / "kit-de-teste"
+
+CLIENTE = "12345678000195"
+CLIENTE_NOME = "Mercadinho Estrela Ltda"
+FORNECEDORES = {"11444777000161": "Distribuidora Boa Compra Ltda", "11222333000181": "Atacado Preço Justo Ltda"}
+CLIENTES_FINAIS = ["45997418000153", "11444777000161", "11222333000181"]
+
+# (descrição, NCM, CFOP, CSOSN, CST PIS, faixa de valor em reais)
+PRODUTOS_MONOFASICOS = [
+    ("Refrigerante cola 2L (fardo)", "22021000", "5405", "500", "01", (900, 2400)),
+    ("Cerveja lata 350ml (caixa)", "22030000", "5405", "500", "01", (1200, 3000)),
+    ("Shampoo 350ml (caixa)", "33051000", "5102", "102", "01", (700, 1800)),
+    ("Perfume 100ml (caixa)", "33030010", "5102", "102", "01", (900, 2200)),
+    ("Analgésico 500mg (caixa)", "30049099", "5102", "102", "01", (800, 2000)),
+]
+PRODUTOS_COMUNS = [
+    ("Arroz tipo 1 5kg (fardo)", "10063021", "5102", "102", "01", (1500, 3800)),
+    ("Biscoito recheado (caixa)", "19053100", "5102", "102", "01", (800, 2000)),
+    ("Sabão em pó 1kg (caixa)", "34022000", "5102", "102", "01", (600, 1500)),
+    ("Café torrado 500g (fardo)", "09012100", "5102", "102", "01", (900, 2300)),
+]
+
+MESES_XML = ["2025-10", "2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08"]
+MES_SPED = "2026-09"
+
+
+def _dv_chave(base43: str) -> str:
+    peso, soma = 2, 0
+    for d in reversed(base43):
+        soma += int(d) * peso
+        peso = 2 if peso == 9 else peso + 1
+    resto = soma % 11
+    return "0" if resto < 2 else str(11 - resto)
+
+
+def _chave(competencia: str, cnpj: str, numero: int) -> str:
+    aamm = competencia[2:4] + competencia[5:7]
+    base = f"35{aamm}{cnpj}55001{numero:09d}1{numero * 7919 % 10**8:08d}"
+    return base + _dv_chave(base)
+
+
+def _moeda(v: Decimal) -> str:
+    return f"{v:.2f}"
+
+
+def _item_xml(n: int, descricao: str, ncm: str, cfop: str, csosn: str, cst_pis: str, valor: Decimal) -> str:
+    return f"""    <det nItem="{n}"><prod><cProd>{n:03d}</cProd><xProd>{descricao}</xProd><NCM>{ncm}</NCM><CFOP>{cfop}</CFOP><uCom>CX</uCom><qCom>1.0000</qCom><vUnCom>{_moeda(valor)}</vUnCom><vProd>{_moeda(valor)}</vProd></prod>
+      <imposto><ICMS><ICMSSN{csosn}><orig>0</orig><CSOSN>{csosn}</CSOSN></ICMSSN{csosn}></ICMS><PIS><PISAliq><CST>{cst_pis}</CST><vBC>{_moeda(valor)}</vBC><pPIS>0.0000</pPIS><vPIS>0.00</vPIS></PISAliq></PIS></imposto></det>"""
+
+
+def nfe(competencia: str, numero: int, emit: str, dest: str, itens: list[tuple], dia: int = 10, status: str = "100",
+        tp_nf: str = "1") -> tuple[str, bytes, Decimal]:
+    chave = _chave(competencia, emit, numero)
+    total = sum((i[5] for i in itens), Decimal(0))
+    det = "\n".join(_item_xml(n, *item) for n, item in enumerate(itens, start=1))
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+  <NFe><infNFe Id="NFe{chave}" versao="4.00">
+    <ide><mod>55</mod><serie>1</serie><nNF>{numero}</nNF><dhEmi>{competencia}-{dia:02d}T10:00:00-03:00</dhEmi><tpNF>{tp_nf}</tpNF></ide>
+    <emit><CNPJ>{emit}</CNPJ></emit>
+    <dest><CNPJ>{dest}</CNPJ></dest>
+{det}
+    <total><ICMSTot><vICMS>0.00</vICMS><vIPI>0.00</vIPI><vPIS>0.00</vPIS><vCOFINS>0.00</vCOFINS><vNF>{_moeda(total)}</vNF></ICMSTot></total>
+  </infNFe></NFe>
+  <protNFe><infProt><chNFe>{chave}</chNFe><cStat>{status}</cStat></infProt></protNFe>
+</nfeProc>"""
+    return chave, xml.encode(), total
+
+
+def _itens_venda(rng: random.Random) -> list[tuple]:
+    escolhidos = rng.sample(PRODUTOS_MONOFASICOS, 3) + rng.sample(PRODUTOS_COMUNS, 3)
+    itens = []
+    for desc, ncm, cfop, csosn, cst, (lo, hi) in escolhidos:
+        itens.append((desc, ncm, cfop, csosn, cst, Decimal(rng.randrange(lo * 3, hi * 3, 10))))
+    return itens
+
+
+def gerar_notas() -> tuple[dict[str, bytes], dict[str, Decimal], list[str]]:
+    """Retorna (arquivos do zip, receita por mês, linhas do SPED)."""
+    rng = random.Random(2026)
+    arquivos: dict[str, bytes] = {}
+    receita: dict[str, Decimal] = {}
+    numero = 100
+    for i, comp in enumerate(MESES_XML):
+        sazonal = Decimal("1.0") + Decimal("0.18") * (1 if comp.endswith(("-11", "-12")) else 0)
+        total_mes = Decimal(0)
+        for dia in (8, 22):
+            numero += 1
+            itens = [(*x[:5], (x[5] * sazonal).quantize(Decimal(1))) for x in _itens_venda(rng)]
+            chave, xml, total = nfe(comp, numero, CLIENTE, CLIENTES_FINAIS[numero % 3], itens, dia=dia)
+            arquivos[f"vendas/venda-{comp}-{dia:02d}.xml"] = xml
+            total_mes += total
+        receita[comp] = total_mes
+        # uma compra por mês de um fornecedor (entrada: não vira receita)
+        numero += 1
+        forn = list(FORNECEDORES)[i % 2]
+        itens = [("Mercadorias diversas para revenda", "22021000", "5102", "102", "01", Decimal(rng.randrange(36000, 60000, 100)))]
+        _, xml, _ = nfe(comp, numero, forn, CLIENTE, itens, dia=5)
+        arquivos[f"compras/compra-{comp}.xml"] = xml
+
+    # Notas com problema de propósito: o sistema deve recusar e explicar
+    itens = [("Item de teste", "19059090", "5102", "102", "01", Decimal(500))]
+    _, xml, _ = nfe("2026-03", 900, CLIENTE, CLIENTES_FINAIS[0], itens, dia=15, status="101")
+    arquivos["problemas-de-proposito/nota-cancelada.xml"] = xml
+    _, xml, _ = nfe("2026-03", 901, "45997418000153", "11444777000161", itens, dia=15)
+    arquivos["problemas-de-proposito/nota-de-outra-empresa.xml"] = xml
+    arquivos["problemas-de-proposito/nao-e-nota.xml"] = b'<?xml version="1.0"?><pedido><item>caneta</item></pedido>'
+
+    # SPED Fiscal de setembro/2026 (só as notas, sem itens)
+    ini, fim = "01092026", "30092026"
+    sped = [
+        f"|0000|017|0|{ini}|{fim}|{CLIENTE_NOME.upper()}|{CLIENTE}||SP|123|3550308|||A|0|",
+        "|0001|0|",
+        f"|0150|C001|CLIENTE FINAL UM|01058|{CLIENTES_FINAIS[0]}||||||||",
+        f"|0150|F001|{FORNECEDORES['11444777000161'].upper()}|01058|11444777000161||||||||",
+    ]
+    total_sped = Decimal(0)
+    for n, (dia, valor) in enumerate([(3, 12540), (9, 19575), (17, 16020), (24, 21630), (29, 11880)], start=1):
+        v = Decimal(valor)
+        total_sped += v
+        d = f"{dia:02d}092026"
+        sped.append(f"|C100|1|0|C001|55|00|1|{500 + n}||{d}|{d}|{str(v).replace('.', ',')},00|0|0|0|{str(v).replace('.', ',')},00|9|0|0|0|0,00|0,00|0|0|0|0,00|0,00|0|0|")
+    sped.append("|C100|0|1|F001|55|00|1|777||12092026|13092026|42800,00|0|0|0|42800,00|9|0|0|0|0,00|0,00|0|0|0|0,00|0,00|0|0|")
+    sped.append("|9999|9|")
+    receita[MES_SPED] = total_sped
+    return arquivos, receita, sped
+
+
+def gerar_planilha_contabil(receita: dict[str, Decimal]) -> bytes:
+    from io import BytesIO
+
+    rng = random.Random(7)
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Dados contábeis"
+    cab = ["Competência", "Receita", "Compras", "Folha", "Pró-labore", "Despesas creditáveis", "Outras despesas"]
+    ws.append(cab)
+    for comp in sorted(receita):
+        r = receita[comp]
+        compras = (r * Decimal("0.58") + rng.randrange(-1500, 1500)).quantize(Decimal(1))
+        ws.append([comp, float(r), float(compras), 14500.0, 4500.0, float(rng.randrange(1800, 2600, 50)), float(rng.randrange(5200, 7400, 50))])
+    for c in range(1, len(cab) + 1):
+        ws.cell(row=1, column=c).font = Font(bold=True)
+        ws.column_dimensions[get_column_letter(c)].width = 24
+    for linha in ws.iter_rows(min_row=2, min_col=2, max_col=7):
+        for cel in linha:
+            cel.number_format = "#,##0.00"
+    saida = BytesIO()
+    wb.save(saida)
+    return saida.getvalue()
+
+
+def gerar_planilha_clientes() -> bytes:
+    from io import BytesIO
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Clientes"
+    cab = ["CNPJ", "Razão social", "Atividade", "Regime", "E-mail", "Telefone", "Contato"]
+    ws.append(cab)
+    linhas = [
+        ["12.345.678/0001-95", CLIENTE_NOME, "Comércio", "Simples Nacional", "contato@mercadinhoestrela.example", "(11) 98888-7777", "Dona Estrela"],
+        # só o CNPJ: o sistema completa pela consulta (precisa de internet)
+        ["00.000.000/0001-91", "", "", "", "", "", ""],
+        ["33.000.167/0001-01", "", "", "", "", "", ""],
+        ["47.960.950/0001-21", "", "", "", "", "", ""],
+        ["07.526.557/0001-00", "", "", "", "", "", ""],
+        ["33.592.510/0001-54", "", "", "", "", "", ""],
+        ["71.673.990/0001-77", "", "", "", "", "", ""],
+        ["16.670.085/0001-55", "", "", "", "", "", ""],
+        # de propósito: um CNPJ errado e um repetido
+        ["12.345.678/0001-96", "Empresa com CNPJ digitado errado", "Serviços", "MEI", "", "", ""],
+        ["71.673.990/0001-77", "", "", "", "", "", ""],
+    ]
+    for linha in linhas:
+        ws.append(linha)
+    for c in range(1, len(cab) + 1):
+        ws.cell(row=1, column=c).font = Font(bold=True)
+        ws.column_dimensions[get_column_letter(c)].width = 30
+    for linha in ws.iter_rows(min_row=2, max_col=1):
+        linha[0].number_format = "@"
+    saida = BytesIO()
+    wb.save(saida)
+    return saida.getvalue()
+
+
+LEIA_ME = f"""KIT DE TESTE DO TOLARIS CONTÁBIL
+================================
+
+Tudo aqui é inventado. Use só estes arquivos no teste: não coloque dados de clientes reais.
+
+O cliente fictício deste kit é o {CLIENTE_NOME} (CNPJ 12.345.678/0001-95, comércio no Simples Nacional).
+O CNPJ é válido, mas não existe na Receita Federal; por isso a consulta pelo CNPJ não encontra esse cliente
+(os dados dele já vêm preenchidos na planilha).
+
+ARQUIVOS
+
+1) 1-clientes-para-importar.xlsx
+   Para a tarefa C (Clientes > Importar planilha). Traz 10 linhas:
+   - o Mercadinho Estrela, com todos os dados;
+   - 7 CNPJ de grandes empresas públicas, só com o CNPJ, para testar "Completar pelo CNPJ" (precisa de internet);
+   - 1 CNPJ errado e 1 repetido, de propósito: o sistema deve avisar.
+   Depois de importar, abra o Mercadinho Estrela e mude a situação para Ativo.
+
+2) 2-dados-contabeis-12-meses.xlsx
+   Para a tarefa E (aba Dados contábeis do Mercadinho Estrela): receita, compras, folha, pró-labore e despesas de
+   outubro/2025 a setembro/2026. Depois de importar, clique em "Usar no planejamento".
+
+3) 3-notas-xml.zip
+   Para a tarefa E (aba Movimento fiscal do Mercadinho Estrela): envie o arquivo .zip direto, sem descompactar.
+   Traz 22 notas de venda e 11 de compra (outubro/2025 a agosto/2026). As vendas misturam refrigerante, cerveja,
+   perfume, shampoo e remédio (produtos com PIS/Cofins monofásico) com arroz, café e biscoito. Por isso o cartão
+   "Imposto pago a mais" deve mostrar um valor.
+   Na pasta "problemas-de-proposito" há 3 arquivos que o sistema deve RECUSAR com uma explicação: uma nota
+   cancelada, uma nota de outra empresa e um XML que não é nota.
+
+4) 4-sped-fiscal-2026-09.txt
+   Para a tarefa E também: SPED Fiscal de setembro/2026 do Mercadinho Estrela (cinco vendas e uma compra).
+
+5) Para a tarefa D: use a aba Novo planejamento do Mercadinho Estrela. Os números de faturamento anual podem ser
+   os de qualquer simulação sua; o regime atual é Simples Nacional.
+
+DICA: se algo for importado duas vezes, o sistema avisa e não soma de novo. Isso também é parte do teste.
+"""
+
+
+def main() -> None:
+    SAIDA.mkdir(exist_ok=True)
+    arquivos, receita, sped = gerar_notas()
+
+    zip_notas = SAIDA / "3-notas-xml.zip"
+    with zipfile.ZipFile(zip_notas, "w", zipfile.ZIP_DEFLATED) as zf:
+        for nome, conteudo in sorted(arquivos.items()):
+            zf.writestr(nome, conteudo)
+    (SAIDA / "4-sped-fiscal-2026-09.txt").write_bytes("\r\n".join(sped).encode("latin-1"))
+    (SAIDA / "2-dados-contabeis-12-meses.xlsx").write_bytes(gerar_planilha_contabil(receita))
+    (SAIDA / "1-clientes-para-importar.xlsx").write_bytes(gerar_planilha_clientes())
+    (SAIDA / "LEIA-ME.txt").write_bytes(("﻿" + LEIA_ME.replace("\n", "\r\n")).encode("utf-8"))
+
+    pacote = SAIDA / "Kit de teste Tolaris.zip"
+    pacote.unlink(missing_ok=True)
+    with zipfile.ZipFile(pacote, "w", zipfile.ZIP_DEFLATED) as zf:
+        for arq in sorted(f for f in SAIDA.iterdir() if f != pacote):
+            zf.write(arq, f"Kit de teste Tolaris/{arq.name}")
+    print("Kit gerado em", SAIDA, "e", pacote.name)
+    print("Receita por mês:", {k: float(v) for k, v in sorted(receita.items())})
+
+
+if __name__ == "__main__":
+    main()
