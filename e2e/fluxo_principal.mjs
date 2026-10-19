@@ -38,7 +38,7 @@ await page.locator("#cor").evaluate((el) => {
   const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
   set.call(el, "#0f5e4a"); el.dispatchEvent(new Event("input", { bubbles: true }));
 });
-await page.getByRole("button", { name: "Salvar", exact: true }).click();
+await page.getByRole("button", { name: "Salvar", exact: true }).first().click(); // o primeiro é o da identificação do escritório
 await page.getByText("Dados salvos.").waitFor();
 await page.setInputFiles("input[type=file]", LOGO);
 await page.getByAltText("Logo do escritório").waitFor();
