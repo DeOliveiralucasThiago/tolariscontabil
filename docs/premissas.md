@@ -236,6 +236,12 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     mostrada é a diferença entre o melhor e o pior regime da simulação aceita, não a economia sobre o que o cliente paga hoje.
     O funil não sabe de propostas fechadas fora do sistema (contrato assinado sem passar pelo aceite no portal).
 
+59. **Tour e ajuda:** o tour geral abre sozinho uma vez por usuário **e por navegador** (a marca fica no armazenamento
+    local, com versão: mudar `VERSAO` em `AjudaDoSistema.tsx` faz o tour abrir de novo para todos). Navegadores
+    automatizados (testes) não o abrem sozinhos, para não cobrir a tela dos fluxos de teste. Os textos descrevem o sistema
+    como ele é hoje: ao mudar uma tela ou criar uma funcionalidade, atualize `lib/tour.ts`. A ajuda não mostra nada que o
+    usuário não possa ver (o passo some para o centro se o elemento não existe, por exemplo para quem não é administrador).
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias?).

@@ -95,3 +95,11 @@ cria tudo pela API, usa o portal do cliente para o aceite e também usa e-mail n
 ```bash
 node fluxo_funil.mjs saida
 ```
+
+O fluxo do tour (abre sozinho no primeiro acesso, 11 passos, não reabre depois de concluído, "Ajuda desta tela" em todas as
+páginas, balão junto do elemento certo e celular com o menu aberto pelo tour) força a abertura automática e também usa
+e-mail novo a cada execução:
+
+```bash
+node fluxo_tour.mjs saida
+```

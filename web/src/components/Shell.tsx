@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
+import { AjudaDoSistema } from "./AjudaDoSistema";
 import { useSessao } from "./Sessao";
 
 const MENU = [
@@ -23,6 +24,13 @@ export function Shell({ children }: { children: ReactNode }) {
   const caminho = usePathname();
   const [aberto, setAberto] = useState(false);
 
+  // O tour de ajuda abre e fecha o menu do celular para mostrar os itens
+  useEffect(() => {
+    const aoPedir = (e: Event) => setAberto(Boolean((e as CustomEvent<boolean>).detail));
+    window.addEventListener("tolaris:menu", aoPedir);
+    return () => window.removeEventListener("tolaris:menu", aoPedir);
+  }, []);
+
   const navegacao = (
     <nav className="flex flex-col gap-1">
       {MENU.map((item) => {
@@ -31,6 +39,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <Link
             key={item.href}
             href={item.href}
+            data-tour={`menu-${item.href}`}
             onClick={() => setAberto(false)}
             aria-current={ativo ? "page" : undefined}
             className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
@@ -101,6 +110,7 @@ export function Shell({ children }: { children: ReactNode }) {
       )}
 
       <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8 sm:py-8">{children}</main>
+      <AjudaDoSistema />
     </div>
   );
 }

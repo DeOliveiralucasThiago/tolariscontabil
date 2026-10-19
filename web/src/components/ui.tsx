@@ -47,6 +47,11 @@ export function Spinner() {
   );
 }
 
+/** "Tabela de honorários" -> "tabela-de-honorarios": ponto de ancoragem do tour de ajuda, sem acento nem pontuação. */
+export function identificador(texto: string): string {
+  return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 export function Cartao({ titulo, acoes, children, className = "" }: {
   titulo?: ReactNode;
   acoes?: ReactNode;
@@ -54,7 +59,7 @@ export function Cartao({ titulo, acoes, children, className = "" }: {
   className?: string;
 }) {
   return (
-    <section className={`rounded-xl border border-borda bg-superficie p-5 ${className}`}>
+    <section data-tour={typeof titulo === "string" ? `cartao-${identificador(titulo)}` : undefined} className={`rounded-xl border border-borda bg-superficie p-5 ${className}`}>
       {(titulo || acoes) && (
         <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
           {titulo && <h2 className="text-base font-semibold">{titulo}</h2>}
@@ -149,7 +154,7 @@ export function Etiqueta({ tom = "inativo", children }: { tom?: string; children
 export function Titulo({ children, sub, acoes }: { children: ReactNode; sub?: ReactNode; acoes?: ReactNode }) {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-      <div>
+      <div data-tour="titulo">
         <h1 className="text-2xl font-semibold tracking-tight">{children}</h1>
         {sub && <p className="mt-1 text-sm text-tinta-2">{sub}</p>}
       </div>
@@ -172,6 +177,7 @@ export function Abas<T extends string>({
       {abas.map((a) => (
         <button
           key={a.id}
+          data-tour={`aba-${a.id}`}
           role="tab"
           aria-selected={ativa === a.id}
           onClick={() => onChange(a.id)}

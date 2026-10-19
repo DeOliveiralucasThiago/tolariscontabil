@@ -97,6 +97,10 @@ portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofá
   enviadas (portal ou e-mail), abertas pelo cliente e aceitas, com a conversão de cada etapa, o valor mensal em cada uma, a
   taxa de aceite, o tempo médio até abrir e aceitar e a lista de propostas por urgência com a ação sugerida (enviar,
   lembrar, ligar, renovar). Conta uma proposta por cliente (a mais recente).
+- **Tour de primeiro acesso e ajuda por tela:** no primeiro acesso, um tour guiado (balão e destaque sobre cada menu)
+  explica para que serve cada área; o botão **? Ajuda**, no canto de qualquer tela, refaz o tour e explica os botões e as
+  áreas da página aberta. Funciona no celular (abre o menu sozinho). O conteúdo está em `web/src/lib/tour.ts`; os alvos são
+  achados por seletor ou pelo texto do botão, então um passo cujo botão sumiu aparece no centro da tela em vez de quebrar.
 
 ## Rodando localmente
 

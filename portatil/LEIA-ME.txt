@@ -7,7 +7,8 @@ COMO USAR
    - Se o Windows mostrar "O Windows protegeu o computador", clique em
      "Mais informações" e depois em "Executar assim mesmo".
    - Se o Firewall perguntar, marque "Redes privadas" e clique em "Permitir".
-3. O navegador abre sozinho. Na primeira vez, clique em "Criar conta".
+3. O navegador abre sozinho. Na primeira vez, clique em "Criar conta". Um tour rápido mostra
+   para que serve cada menu; o botao "? Ajuda" (canto da tela) explica a pagina aberta.
 4. Mantenha a janela preta aberta enquanto usa. Para desligar, feche a janela.
 
 OUTROS COMPUTADORES E CELULARES
