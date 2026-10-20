@@ -50,7 +50,8 @@ def test_previa_sugere_as_colunas(logado: TestClient):
     j = r.json()
     assert j["total_linhas"] == 12 and len(j["amostra"]) == 5
     assert j["sugestao"] == {"competencia": 0, "receita": 1, "compras": 2, "folha": 3, "pro_labore": 4,
-                             "despesas_creditaveis": None, "outras_despesas": None}
+                             "despesas_creditaveis": None, "outras_despesas": None,
+                             "receita_exterior": None, "variacao_cambial": None}
     assert j["rotulos"]["receita"].startswith("Receita")
 
 
@@ -89,7 +90,8 @@ def test_reimportar_troca_so_o_que_veio_na_planilha(logado: TestClient):
     assert r.json()["meses_novos"] == 1 and r.json()["meses_atualizados"] == 1
     meses = logado.get(f"/api/clientes/{cid}/financeiro").json()["meses"]
     assert meses[0] == {"competencia": "2026-01", "receita": 12000.0, "compras": 6000.0, "folha": 1500.0, "pro_labore": 500.0,
-                        "despesas_creditaveis": None, "outras_despesas": None}
+                        "despesas_creditaveis": None, "outras_despesas": None,
+                        "receita_exterior": None, "variacao_cambial": None}
     assert meses[1]["receita"] == 9000.0 and meses[1]["compras"] is None
 
 
@@ -152,3 +154,29 @@ def test_excluir_cliente_leva_os_dados_contabeis(logado: TestClient):
         assert db.scalar(select(func.count()).select_from(FinanceiroMensal)) == 0
     finally:
         db.close()
+
+
+def test_receita_do_exterior_e_variacao_cambial_vao_para_o_planejamento(logado: TestClient):
+    cid = _cliente(logado)
+    cab = "Competência;Receita;Receita do exterior;Variação cambial;Folha"
+    linhas = [f"2025-{m:02d};50000,00;40000,00;{'-500,00' if m % 2 else '1.500,00'};2000,00" for m in range(1, 13)]
+    previa = _previa(logado, cid, "d.csv", ("\ufeff" + "\n".join([cab, *linhas])).encode("utf-8")).json()
+    mapa = previa["sugestao"]
+    assert (mapa["receita"], mapa["receita_exterior"], mapa["variacao_cambial"], mapa["folha"]) == (1, 2, 3, 4)
+    assert previa["rotulos"]["receita_exterior"].startswith("Receita do exterior")
+    r = _importar(logado, cid, "d.csv", ("\ufeff" + "\n".join([cab, *linhas])).encode("utf-8"), mapa)
+    assert r.status_code == 201, r.text
+    estado = logado.get(f"/api/clientes/{cid}/financeiro").json()
+    assert estado["meses"][0]["receita_exterior"] == 40000.0 and estado["meses"][0]["variacao_cambial"] == -500.0
+    p = estado["planejamento"]
+    assert p["receita_bruta_anual"] == 600000.0 and p["receita_exterior_anual"] == 480000.0
+    assert p["variacao_cambial_anual"] == 6 * -500.0 + 6 * 1500.0  # perdas e ganhos se compensam no ano
+
+
+def test_exterior_maior_que_a_receita_e_limitado_no_planejamento(logado: TestClient):
+    cid = _cliente(logado)
+    linhas = [f"2025-{m:02d};1000,00;5000,00" for m in range(1, 13)]
+    mapa = {"competencia": 0, "receita": 1, "receita_exterior": 2}
+    _importar(logado, cid, "d.csv", _csv(linhas), mapa)
+    p = logado.get(f"/api/clientes/{cid}/financeiro").json()["planejamento"]
+    assert p["receita_exterior_anual"] == p["receita_bruta_anual"] == 12000.0

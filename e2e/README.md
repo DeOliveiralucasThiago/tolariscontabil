@@ -103,3 +103,12 @@ e-mail novo a cada execução:
 ```bash
 node fluxo_tour.mjs saida
 ```
+
+O fluxo da receita do exterior (Anexos explicados no seletor, bloco opcional do planejamento, conversor de moeda pela PTAX,
+variação cambial e planilha com colunas do exterior) precisa da PTAX falsa, que o `mock_brasilapi.py` também responde.
+Suba a API com `TOLARIS_PTAX_URL`:
+
+```bash
+export TOLARIS_PTAX_URL=http://127.0.0.1:8099/ptax
+node fluxo_exterior.mjs saida
+```

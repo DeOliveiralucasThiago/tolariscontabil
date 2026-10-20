@@ -243,6 +243,10 @@ class FinanceiroMensal(Base):
     pro_labore_centavos: Mapped[int | None] = mapped_column(BigInteger)
     despesas_creditaveis_centavos: Mapped[int | None] = mapped_column(BigInteger)
     outras_despesas_centavos: Mapped[int | None] = mapped_column(BigInteger)
+    receita_exterior_centavos: Mapped[int | None] = mapped_column(BigInteger)
+    """Parte da receita que é exportação (já em reais)."""
+    variacao_cambial_centavos: Mapped[int | None] = mapped_column(BigInteger)
+    """Ganho (positivo) ou perda (negativo) cambial do mês, em reais."""
     importado_em: Mapped[datetime] = mapped_column(default=agora)
 
 

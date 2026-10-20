@@ -89,7 +89,8 @@ def test_xlsx_bomba_de_descompactacao(monkeypatch):
 def test_sugestao_de_colunas_pelo_cabecalho():
     cab = ["Mês/Ano", "Faturamento Bruto", "Custo das Mercadorias", "Folha de Pagamento", "Pró-labore", "Despesas Creditáveis", "Outras Despesas"]
     s = pl.sugerir_mapeamento(cab)
-    assert s == {"competencia": 0, "receita": 1, "compras": 2, "folha": 3, "pro_labore": 4, "despesas_creditaveis": 5, "outras_despesas": 6}
+    assert s == {"competencia": 0, "receita": 1, "compras": 2, "folha": 3, "pro_labore": 4, "despesas_creditaveis": 5, "outras_despesas": 6,
+                 "receita_exterior": None, "variacao_cambial": None}
 
 
 def test_sugestao_nao_repete_coluna_e_deixa_vazio_o_que_nao_acha():
@@ -116,3 +117,24 @@ def test_converter_ignora_linhas_ruins_e_soma_meses_repetidos():
     assert "2026-02" not in r.meses
     assert [n for n, _ in r.ignoradas] == [4, 5]
     assert "2026-01" in r.avisos[0]
+
+
+def test_sugestao_reserva_as_colunas_do_exterior():
+    cab = ["Mês", "Faturamento", "Receita do exterior", "Variação cambial", "Folha"]
+    s = pl.sugerir_mapeamento(cab)
+    assert (s["competencia"], s["receita"], s["receita_exterior"], s["variacao_cambial"], s["folha"]) == (0, 1, 2, 3, 4)
+    # só "Receita exterior" e nenhuma outra coluna de receita: a receita total fica sem sugestão
+    assert pl.sugerir_mapeamento(["Mês", "Receita exterior"])["receita"] is None
+
+
+def test_variacao_cambial_aceita_valor_negativo_e_os_outros_campos_nao():
+    assert pl.parse_dinheiro("-1.234,56", com_sinal=True) == -123456
+    assert pl.parse_dinheiro("(500,00)", com_sinal=True) == -50000
+    assert pl.parse_dinheiro("R$ 1.000,00", com_sinal=True) == 100000
+    with pytest.raises(ValueError, match="negativo"):
+        pl.parse_dinheiro("-10")
+    r = pl.converter([["2026-01", "10000,00", "-300,00"], ["2026-02", "20000,00", "450,50"]], {"competencia": 0, "receita_exterior": 1, "variacao_cambial": 2})
+    assert r.meses["2026-01"] == {"receita_exterior": 1_000_000, "variacao_cambial": -30_000}
+    assert r.meses["2026-02"]["variacao_cambial"] == 45_050
+    r2 = pl.converter([["2026-01", "-10"]], {"competencia": 0, "receita_exterior": 1})
+    assert r2.ignoradas and "negativo" in r2.ignoradas[0][1]

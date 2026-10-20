@@ -8,13 +8,62 @@ export type Atividade =
 export type StatusCliente = "prospect" | "ativo" | "inativo";
 export type Regime = "mei" | "simples" | "presumido" | "real" | "outro";
 
-export const ATIVIDADES: { valor: Atividade; rotulo: string; ajuda: string }[] = [
-  { valor: "comercio", rotulo: "Comércio", ajuda: "Revenda de mercadorias (Anexo I)" },
-  { valor: "industria", rotulo: "Indústria", ajuda: "Produção própria (Anexo II)" },
-  { valor: "servico_fator_r", rotulo: "Serviços com fator R", ajuda: "TI, consultoria, saúde, engenharia (Anexo III ou V)" },
-  { valor: "servico_anexo_iii", rotulo: "Serviços — Anexo III", ajuda: "Contabilidade, academias, agências, transporte" },
-  { valor: "servico_anexo_iv", rotulo: "Serviços — Anexo IV", ajuda: "Construção, vigilância, limpeza, advocacia" },
+export interface InfoAtividade {
+  valor: Atividade;
+  /** Nome curto, para listas e cartões. */
+  rotulo: string;
+  /** Nome completo com o Anexo, para os seletores. */
+  rotuloLongo: string;
+  ajuda: string;
+  exemplos: string;
+  como: string;
+}
+
+export const ATIVIDADES: InfoAtividade[] = [
+  {
+    valor: "comercio",
+    rotulo: "Comércio",
+    rotuloLongo: "Comércio — Anexo I",
+    ajuda: "Revenda de mercadorias (Anexo I)",
+    exemplos: "Lojas, mercados, distribuidoras, restaurantes e lanchonetes.",
+    como: "O Simples Nacional usa o Anexo I. ICMS e, no Lucro Presumido e Real, PIS/Cofins incidem sobre as vendas.",
+  },
+  {
+    valor: "industria",
+    rotulo: "Indústria",
+    rotuloLongo: "Indústria — Anexo II",
+    ajuda: "Produção própria (Anexo II)",
+    exemplos: "Fábricas, confecções, marcenarias, panificadoras com produção própria.",
+    como: "O Simples Nacional usa o Anexo II. Tem ICMS e IPI na partilha do DAS.",
+  },
+  {
+    valor: "servico_fator_r",
+    rotulo: "Serviços (fator R)",
+    rotuloLongo: "Serviços (fator R) — Anexo III ou V",
+    ajuda: "TI, consultoria, saúde, engenharia (Anexo III ou V)",
+    exemplos: "Consultoria, TI e software, engenharia e arquitetura, medicina, odontologia e psicologia, publicidade, auditoria, representação comercial.",
+    como: "Não há um Anexo fixo: se a folha dos últimos 12 meses (salários + pró-labore + FGTS) for 28% ou mais da receita, vale o Anexo III (mais barato); abaixo disso, o Anexo V.",
+  },
+  {
+    valor: "servico_anexo_iii",
+    rotulo: "Serviços (Anexo III)",
+    rotuloLongo: "Serviços — Anexo III (fixo)",
+    ajuda: "Contabilidade, agências, instalação e manutenção, transporte municipal",
+    exemplos: "Escritórios de contabilidade, agências de viagem, instalação e manutenção, transporte municipal de passageiros, creches e escolas, produções artísticas.",
+    como: "Sempre no Anexo III do Simples Nacional, sem depender do fator R.",
+  },
+  {
+    valor: "servico_anexo_iv",
+    rotulo: "Serviços (Anexo IV)",
+    rotuloLongo: "Serviços — Anexo IV (CPP por fora)",
+    ajuda: "Construção, vigilância, limpeza, advocacia",
+    exemplos: "Construção civil, vigilância e segurança, limpeza e conservação, advocacia.",
+    como: "Anexo IV do Simples Nacional: a contribuição previdenciária patronal (CPP) é paga à parte, fora do DAS.",
+  },
 ];
+
+export const NOTA_ANEXO_V =
+  "O Anexo V não é uma opção à parte: ele aparece como resultado do fator R, quando a folha fica abaixo de 28% da receita. Em dúvida, o CNAE principal define o Anexo (Anexo VI da Resolução CGSN 140/2018); a busca por CNPJ já sugere a atividade.";
 
 export const ROTULO_ATIVIDADE: Record<string, string> = Object.fromEntries(
   ATIVIDADES.map((a) => [a.valor, a.rotulo]),
@@ -158,6 +207,8 @@ export interface ResultadoRegime {
 
 export interface Comparativo {
   receita_anual: number;
+  receita_exterior_anual?: number;
+  variacao_cambial_anual?: number;
   atividade: Atividade;
   ano: number;
   regimes: ResultadoRegime[];
@@ -205,6 +256,7 @@ export interface ExpressaEntrada {
   folha_mensal: number;
   pro_labore_mensal: number;
   atividade: Atividade;
+  receita_exterior_mensal?: number;
   ano?: number;
 }
 
@@ -218,6 +270,8 @@ export interface CompletaEntrada {
   outras_despesas_anual: number;
   aliquota_iss: number;
   aliquota_icms: number;
+  receita_exterior_anual?: number;
+  variacao_cambial_anual?: number;
   ano?: number;
 }
 
@@ -503,6 +557,8 @@ export interface FinanceiroMes {
   pro_labore: number | null;
   despesas_creditaveis: number | null;
   outras_despesas: number | null;
+  receita_exterior?: number | null;
+  variacao_cambial?: number | null;
 }
 
 export interface FinanceiroImportacao {
@@ -525,6 +581,8 @@ export interface FinanceiroPlanejamento {
   pro_labore_anual: number;
   despesas_creditaveis_anual: number;
   outras_despesas_anual: number;
+  receita_exterior_anual?: number;
+  variacao_cambial_anual?: number;
 }
 
 export interface Financeiro {

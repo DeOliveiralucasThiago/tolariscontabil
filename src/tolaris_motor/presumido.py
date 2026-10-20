@@ -8,6 +8,7 @@ from decimal import Decimal
 from . import tabelas
 from .base import ZERO, D, Resultado, brl, pct
 from .empresa import PerfilEmpresa, inss_patronal_regime_normal, tributo_sobre_receita_local
+from .simples import alerta_exportacao
 
 
 def _base_presumida(
@@ -19,6 +20,7 @@ def _base_presumida(
     inicio_acrescimo: str,
     inicio_trimestre: date,
     trimestre: int,
+    variacao_cambial_trim: Decimal = ZERO,
 ) -> Decimal:
     base = receita_trim * percentual
     formula = f"{brl(receita_trim)} x {pct(percentual, 1)}"
@@ -32,7 +34,12 @@ def _base_presumida(
                 f" + acréscimo LC 224/2025: {brl(excedente)} excedente x {pct(percentual, 1)} x "
                 f"{pct(lc224['acrescimo_relativo'], 0)}"
             )
-    return res.passo(f"{trimestre}º tri - base presumida {tributo}", formula, base, "Lei 9.249/1995, arts. 15 e 20")
+    base_legal = "Lei 9.249/1995, arts. 15 e 20"
+    if variacao_cambial_trim:
+        base += variacao_cambial_trim
+        formula += f" + variação cambial ativa {brl(variacao_cambial_trim)} (100%)"
+        base_legal += "; Lei 9.430/1996, art. 25, II (demais receitas e resultados positivos); IN RFB 1.700/2017, art. 215"
+    return res.passo(f"{trimestre}º tri - base presumida {tributo}", formula, base, base_legal)
 
 
 def calcular(perfil: PerfilEmpresa) -> Resultado:
@@ -60,11 +67,12 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
 
     lc224 = tab.get("lc224")
     receita_trim = receita / 4
+    cambial_trim = max(ZERO, perfil.variacao_cambial_anual) / 4
     limite_adicional = D(tab["irpj_adicional_limite_trimestral"])
     irpj_total = csll_total = ZERO
     for t in range(1, 5):
         inicio = date(perfil.ano, 3 * t - 2, 1)
-        base_irpj = _base_presumida(res, "IRPJ", receita_trim, p_irpj, lc224, "irpj_inicio", inicio, t)
+        base_irpj = _base_presumida(res, "IRPJ", receita_trim, p_irpj, lc224, "irpj_inicio", inicio, t, cambial_trim)
         irpj = base_irpj * D(tab["irpj_aliquota"])
         adicional = max(ZERO, base_irpj - limite_adicional) * D(tab["irpj_adicional_aliquota"])
         irpj_total += res.passo(
@@ -74,7 +82,7 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             irpj + adicional,
             "Lei 9.430/1996, arts. 3º e 4º",
         )
-        base_csll = _base_presumida(res, "CSLL", receita_trim, p_csll, lc224, "csll_inicio", inicio, t)
+        base_csll = _base_presumida(res, "CSLL", receita_trim, p_csll, lc224, "csll_inicio", inicio, t, cambial_trim)
         csll_total += res.passo(
             f"{t}º tri - CSLL",
             f"{brl(base_csll)} x {pct(tab['csll_aliquota'], 0)}",
@@ -84,17 +92,32 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
 
     res.tributos["IRPJ"] = irpj_total
     res.tributos["CSLL"] = csll_total
+    interna = perfil.receita_interna_anual
     res.tributos["PIS"] = res.passo(
-        "PIS cumulativo", f"{brl(receita)} x {pct(tab['pis_cumulativo'])}",
-        receita * D(tab["pis_cumulativo"]), "Lei 9.715/1998",
+        "PIS cumulativo", f"{brl(interna)} x {pct(tab['pis_cumulativo'])}",
+        interna * D(tab["pis_cumulativo"]),
+        "Lei 9.715/1998; exportação: Lei 10.637/2002, art. 5º" if perfil.receita_exterior_anual else "Lei 9.715/1998",
     )
     res.tributos["Cofins"] = res.passo(
-        "Cofins cumulativa", f"{brl(receita)} x {pct(tab['cofins_cumulativo'])}",
-        receita * D(tab["cofins_cumulativo"]), "Lei 9.718/1998",
+        "Cofins cumulativa", f"{brl(interna)} x {pct(tab['cofins_cumulativo'])}",
+        interna * D(tab["cofins_cumulativo"]),
+        "Lei 9.718/1998; exportação: Lei 10.833/2003, art. 6º" if perfil.receita_exterior_anual else "Lei 9.718/1998",
     )
     tributo_sobre_receita_local(perfil, res)
     res.tributos["INSS patronal"] = inss_patronal_regime_normal(perfil, res)
 
+    alerta_exportacao(perfil, res)
+    if perfil.variacao_cambial_anual > 0:
+        res.alerta(
+            "Variação cambial ativa somada à base de IRPJ e CSLL (100%, sem a presunção). A Receita entende que o regime "
+            "de caixa do art. 30 da MP 2.158-35/2001 se aplica só ao Lucro Real, mas há quem defenda o contrário; "
+            "confirme o regime de reconhecimento (caixa ou competência) com o contador. Fora de PIS/Cofins (receita financeira)."
+        )
+    elif perfil.variacao_cambial_anual < 0:
+        res.alerta(
+            "Variação cambial passiva (perda) não reduz a base do Lucro Presumido, porque as despesas são presumidas; "
+            "o Lucro Real pode aproveitá-la."
+        )
     if lc224 and receita > D(lc224["receita_anual_isenta"]):
         res.alerta(
             "Aplicado o acréscimo de 10% na presunção (LC 224/2025) sobre a receita acima de R$ 5 mi/ano. "

@@ -22,7 +22,10 @@ LIMITE_COLUNAS = 40
 TETO_CENTAVOS = 10**13
 """R$ 100 bilhões por campo e mês: acima disso a coluna foi mapeada errado."""
 
-CAMPOS = ("receita", "compras", "folha", "pro_labore", "despesas_creditaveis", "outras_despesas")
+CAMPOS = ("receita", "compras", "folha", "pro_labore", "despesas_creditaveis", "outras_despesas",
+          "receita_exterior", "variacao_cambial")
+CAMPOS_COM_SINAL = frozenset({"variacao_cambial"})
+"""Campos que podem ser negativos (a variação cambial pode ser perda)."""
 ROTULOS = {
     "competencia": "Competência (mês)",
     "receita": "Receita (faturamento)",
@@ -31,6 +34,8 @@ ROTULOS = {
     "pro_labore": "Pró-labore",
     "despesas_creditaveis": "Despesas com crédito de PIS/Cofins",
     "outras_despesas": "Outras despesas",
+    "receita_exterior": "Receita do exterior (exportação)",
+    "variacao_cambial": "Variação cambial (ganho ou perda)",
 }
 
 SINONIMOS = {
@@ -41,6 +46,8 @@ SINONIMOS = {
     "pro_labore": ["pro labore", "prolabore", "pro-labore"],
     "despesas_creditaveis": ["despesas creditaveis", "despesas com credito", "despesas credito", "creditaveis"],
     "outras_despesas": ["outras despesas", "demais despesas", "despesas operacionais", "outros custos", "despesas"],
+    "receita_exterior": ["receita do exterior", "receita exterior", "exportacao", "receita de exportacao", "exterior"],
+    "variacao_cambial": ["variacao cambial", "variacao cambial liquida", "variacao monetaria", "cambial"],
 }
 
 MESES = {"jan": 1, "fev": 2, "mar": 3, "abr": 4, "mai": 5, "jun": 6, "jul": 7, "ago": 8, "set": 9, "out": 10, "nov": 11, "dez": 12}
@@ -131,9 +138,13 @@ def ler_tabela(nome: str, conteudo: bytes) -> tuple[list[str], list[list[str]]]:
 def sugerir_mapeamento(
     cabecalhos: list[str],
     sinonimos: dict[str, list[str]] = SINONIMOS,
-    campos: tuple[str, ...] = ("competencia", *CAMPOS),
+    campos: tuple[str, ...] = ("competencia", *dict.fromkeys(("receita_exterior", "variacao_cambial", *CAMPOS))),
 ) -> dict[str, int | None]:
-    """Índice da coluna sugerida para cada campo (ou None), pelo nome do cabeçalho."""
+    """Índice da coluna sugerida para cada campo (ou None), pelo nome do cabeçalho.
+
+    Os campos do exterior vêm antes de ``receita`` para reservarem as colunas deles ("Receita do exterior" também
+    contém a palavra "receita").
+    """
     normalizados = [_normalizar(c) for c in cabecalhos]
     usadas: set[int] = set()
     sugestao: dict[str, int | None] = {}
@@ -175,15 +186,21 @@ def parse_competencia(texto: str) -> str | None:
     return f"{ano:04d}-{mes:02d}" if 1 <= mes <= 12 and 2000 <= ano <= 2100 else None
 
 
-def parse_dinheiro(texto: str) -> int | None:
-    """Reais em texto (1.234,56 | 1234.56 | R$ 1.234,56) para centavos; vazio vira None; inválido levanta ValueError."""
+def parse_dinheiro(texto: str, com_sinal: bool = False) -> int | None:
+    """Reais em texto (1.234,56 | 1234.56 | R$ 1.234,56) para centavos; vazio vira None; inválido levanta ValueError.
+
+    ``com_sinal`` aceita valor negativo (-1.234,56 ou (1.234,56)), para campos como a variação cambial.
+    """
     t = re.sub(r"(?i)r\$|\s", "", texto)
     if not t or t in ("-", "–"):
         return None
+    negativo = False
     if t.startswith("(") and t.endswith(")"):
-        raise ValueError("valor negativo")
+        negativo, t = True, t[1:-1]
     t = t.removeprefix("+")
     if t.startswith("-"):
+        negativo, t = True, t[1:]
+    if negativo and not com_sinal:
         raise ValueError("valor negativo")
     if "," in t and "." in t:
         t = t.replace(".", "").replace(",", ".") if t.rfind(",") > t.rfind(".") else t.replace(",", "")
@@ -198,7 +215,7 @@ def parse_dinheiro(texto: str) -> int | None:
     centavos = int((valor * 100).quantize(Decimal(1)))
     if centavos >= TETO_CENTAVOS:
         raise ValueError("valor grande demais; confira a coluna escolhida")
-    return centavos
+    return -centavos if negativo else centavos
 
 
 @dataclass
@@ -232,7 +249,7 @@ def converter(linhas: list[list[str]], mapeamento: dict[str, int]) -> ResultadoC
             res.ignoradas.append((n, f"competência inválida: “{linha[mapeamento['competencia']][:20]}”"))
             continue
         try:
-            valores = {c: parse_dinheiro(linha[i]) for c, i in mapeamento.items() if c != "competencia"}
+            valores = {c: parse_dinheiro(linha[i], c in CAMPOS_COM_SINAL) for c, i in mapeamento.items() if c != "competencia"}
         except ValueError as erro:
             res.ignoradas.append((n, str(erro)))
             continue

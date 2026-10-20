@@ -110,7 +110,7 @@ const PAGINAS: { rota: RegExp; passos: Passo[] }[] = [
     rota: /^\/clientes\/\d+$/,
     passos: [
       { alvo: aba("simulacoes"), titulo: "Simulações", texto: "Todos os relatórios do cliente: abra o PDF, envie por e-mail, publique no portal do cliente, monte a proposta de honorários e recalcule quando a lei mudar." },
-      { alvo: aba("planejamento"), titulo: "Novo planejamento", texto: "Planejamento completo com valores anuais (folha, compras, despesas). É mais preciso que a simulação expressa; dá para preencher com notas ou planilha." },
+      { alvo: aba("planejamento"), titulo: "Novo planejamento", texto: "Planejamento completo com valores anuais (folha, compras, despesas). É mais preciso que a simulação expressa; dá para preencher com notas ou planilha. Quem recebe de clientes no exterior informa a receita de exportação e a variação cambial no bloco opcional, com conversor de moeda pela PTAX." },
       { alvo: aba("movimento"), titulo: "Movimento fiscal", texto: "Importe XML e SPED, gere o link para o cliente enviar as notas sozinho, traga a planilha contábil e descubra imposto pago a mais em produtos monofásicos e com ST." },
       { alvo: aba("acompanhamento"), titulo: "Acompanhamento", texto: "Compara o que foi planejado com o que aconteceu, diz se a recomendação ainda vale e avisa em que mês o cliente passa de um limite de enquadramento." },
       { alvo: aba("dados"), titulo: "Dados cadastrais", texto: "Cadastro do cliente, situação (prospect, ativo, inativo) e, para administradores, a exportação de todos os dados e a exclusão definitiva (LGPD)." },

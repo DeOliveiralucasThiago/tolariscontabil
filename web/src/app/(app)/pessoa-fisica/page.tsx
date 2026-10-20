@@ -6,9 +6,9 @@ import { Suspense, useState } from "react";
 import { CampoMoeda, CampoPercentual } from "@/components/CampoMoeda";
 import { ResultadoAutonomo, ResultadoProLabore, ResultadoSalario } from "@/components/ResultadosFase2";
 import { SalvarNoCliente } from "@/components/SalvarNoCliente";
+import { SelecaoAtividade } from "@/components/SelecaoAtividade";
 import { Abas, Botao, Campo, Cartao, MensagemErro, Selecao, Titulo } from "@/components/ui";
 import {
-  ATIVIDADES,
   type Atividade,
   type ResultadoAutonomo as TAutonomo,
   type ResultadoProLabore as TProLabore,
@@ -56,11 +56,7 @@ function AutonomoXCnpj({ clienteInicial }: { clienteInicial?: number }) {
             <div className="flex flex-col gap-4">
               <CampoMoeda id="receita_pf" rotulo="Receita mensal" valor={f.receita_mensal} onChange={set("receita_mensal")} obrigatorio />
               <CampoMoeda id="despesas_pf" rotulo="Despesas mensais da atividade" valor={f.despesas_mensais} onChange={set("despesas_mensais")} ajuda="Aluguel de consultório, materiais, etc. (livro-caixa)." />
-              <Selecao rotulo="Atividade" name="atividade_pf" value={f.atividade} onChange={(e) => set("atividade")(e.target.value as Atividade)}>
-                {ATIVIDADES.map((a) => (
-                  <option key={a.valor} value={a.valor}>{a.rotulo}</option>
-                ))}
-              </Selecao>
+              <SelecaoAtividade name="atividade_pf" value={f.atividade} onChange={(v) => set("atividade")((v || "servico_fator_r") as Atividade)} />
               <Campo rotulo="Dependentes" name="dependentes_pf" type="number" min={0} max={20} value={f.dependentes} onChange={(e) => set("dependentes")(Number(e.target.value || 0))} />
               <label className="flex items-start gap-2 text-sm">
                 <input type="checkbox" checked={f.mei_permitido} onChange={(e) => set("mei_permitido")(e.target.checked)} className="mt-1 accent-[var(--marca)]" />

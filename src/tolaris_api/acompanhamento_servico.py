@@ -65,6 +65,7 @@ def perfil_da_simulacao(sim: Simulacao) -> PerfilEmpresa | None:
                 receita_bruta_anual=Decimal(str(e["faturamento_mensal"])) * 12,
                 folha_clt_anual=Decimal(str(e["folha_mensal"])) * 12,
                 pro_labore_anual=Decimal(str(e.get("pro_labore_mensal", 0))) * 12,
+                receita_exterior_anual=Decimal(str(e.get("receita_exterior_mensal", 0))) * 12,
                 ano=e.get("ano", 2026),
             )
     except (KeyError, ValueError, TypeError):
@@ -144,10 +145,17 @@ def _entrada_real(base: Simulacao, realizado: dict[str, Decimal | None]) -> dict
         for campo, v in realizado.items():
             if v is not None:
                 e[CAMPO_DO_PERFIL[campo]] = float(round(v, 2))
+        # a parte vinda do exterior acompanha a receita real na mesma proporção do planejamento
+        plan_receita, plan_exterior = float(base.entrada.get("receita_bruta_anual") or 0), float(base.entrada.get("receita_exterior_anual") or 0)
+        if plan_exterior and plan_receita and realizado.get("receita") is not None:
+            e["receita_exterior_anual"] = float(round(min(plan_exterior / plan_receita, 1) * float(e["receita_bruta_anual"]), 2))
         if realizado.get("folha") is not None or realizado.get("pro_labore") is not None:
             e["folha_fator_r_anual"] = None  # o valor informado no planejamento ficou velho
     else:  # expressa: mensal
+        plan_fat, plan_ext = float(base.entrada.get("faturamento_mensal") or 0), float(base.entrada.get("receita_exterior_mensal") or 0)
         e["faturamento_mensal"] = float(round(realizado["receita"] / 12, 2))  # type: ignore[operator]
+        if plan_ext and plan_fat:
+            e["receita_exterior_mensal"] = float(round(min(plan_ext / plan_fat, 1) * e["faturamento_mensal"], 2))
         if realizado.get("folha") is not None:
             e["folha_mensal"] = float(round(realizado["folha"] / 12, 2))  # type: ignore[operator]
         if realizado.get("pro_labore") is not None:
@@ -180,7 +188,8 @@ def _fator_r_real(base_perfil: PerfilEmpresa, realizado: dict[str, Decimal | Non
     if realizado.get("folha") is None and realizado.get("pro_labore") is None:
         return None
     mudancas = {CAMPO_DO_PERFIL[c]: v for c, v in realizado.items() if v is not None and c in ("receita", "folha", "pro_labore")}
-    perfil = replace(base_perfil, folha_fator_r_anual=None, **mudancas)
+    # o fator R só usa folha e receita total: a parte do exterior não entra na conta
+    perfil = replace(base_perfil, folha_fator_r_anual=None, receita_exterior_anual=0, variacao_cambial_anual=0, **mudancas)
     return avisos.avaliar_fator_r(perfil)
 
 

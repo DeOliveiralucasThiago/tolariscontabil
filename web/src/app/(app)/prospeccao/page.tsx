@@ -6,10 +6,11 @@ import { useState } from "react";
 import { BuscaCnpj } from "@/components/BuscaCnpj";
 import { CampoMoeda } from "@/components/CampoMoeda";
 import { ResultadoComparativo } from "@/components/ResultadoComparativo";
-import { Botao, Campo, Cartao, MensagemErro, Selecao, Titulo } from "@/components/ui";
+import { SelecaoAtividade } from "@/components/SelecaoAtividade";
+import { Botao, Campo, Cartao, MensagemErro, Titulo } from "@/components/ui";
 import { api, ErroApi, urlProposta } from "@/lib/api";
 import { cnpjValido, soDigitos } from "@/lib/formato";
-import { ATIVIDADES, type Atividade, type Cliente, type ClienteForm, type Comparativo, type DadosCnpj, type Simulacao } from "@/lib/tipos";
+import { type Atividade, type Cliente, type ClienteForm, type Comparativo, type DadosCnpj, type Simulacao } from "@/lib/tipos";
 
 export default function Prospeccao() {
   const [cnpj, setCnpj] = useState("");
@@ -19,6 +20,7 @@ export default function Prospeccao() {
   const [faturamento, setFaturamento] = useState(0);
   const [folha, setFolha] = useState(0);
   const [proLabore, setProLabore] = useState(0);
+  const [exterior, setExterior] = useState(0);
   const [resultado, setResultado] = useState<Comparativo | null>(null);
   const [salvo, setSalvo] = useState<{ cliente: Cliente; simulacao: Simulacao } | null>(null);
   const [erro, setErro] = useState("");
@@ -30,6 +32,7 @@ export default function Prospeccao() {
     folha_mensal: folha,
     pro_labore_mensal: proLabore,
     atividade: atividade as Atividade,
+    ...(exterior > 0 ? { receita_exterior_mensal: exterior } : {}),
   });
 
   function preencher(d: DadosCnpj) {
@@ -54,6 +57,7 @@ export default function Prospeccao() {
     setSalvo(null);
     if (!atividade) return setErro("Escolha a atividade principal.");
     if (faturamento <= 0) return setErro("Informe o faturamento mensal.");
+    if (exterior > faturamento) return setErro("A parte do faturamento vinda do exterior não pode passar do faturamento mensal.");
     setCalculando(true);
     try {
       setResultado(await api<Comparativo>("/simulacoes/previa/expressa", { method: "POST", json: entrada() }));
@@ -103,20 +107,14 @@ export default function Prospeccao() {
                 value={cliente.razao_social}
                 onChange={(e) => setCliente((c) => ({ ...c, razao_social: e.target.value }))}
               />
-              <Selecao
+              <SelecaoAtividade
                 rotulo="Atividade principal"
                 name="atividade"
                 value={atividade}
-                onChange={(e) => setAtividade(e.target.value as Atividade)}
-                ajuda={justificativa || ATIVIDADES.find((a) => a.valor === atividade)?.ajuda}
-              >
-                <option value="">Selecione…</option>
-                {ATIVIDADES.map((a) => (
-                  <option key={a.valor} value={a.valor}>
-                    {a.rotulo}
-                  </option>
-                ))}
-              </Selecao>
+                onChange={setAtividade}
+                vazio="Selecione…"
+                ajuda={justificativa || undefined}
+              />
             </div>
           </Cartao>
 
@@ -125,6 +123,13 @@ export default function Prospeccao() {
               <CampoMoeda id="faturamento" rotulo="Faturamento mensal" valor={faturamento} onChange={setFaturamento} obrigatorio />
               <CampoMoeda id="folha" rotulo="Folha de salários (CLT)" valor={folha} onChange={setFolha} ajuda="Salários brutos dos empregados, sem encargos." />
               <CampoMoeda id="prolabore" rotulo="Pró-labore dos sócios" valor={proLabore} onChange={setProLabore} />
+              <CampoMoeda
+                id="exterior_mensal"
+                rotulo="Parte do faturamento vinda do exterior"
+                valor={exterior}
+                onChange={setExterior}
+                ajuda="Opcional: exportação de serviços ou mercadorias, em reais. Fica sem ISS/ICMS e PIS/Cofins."
+              />
             </div>
           </Cartao>
 

@@ -50,17 +50,20 @@ def planejamento_de(meses: list[FinanceiroMensal]) -> FinanceiroPlanejamento | N
         soma = sum(getattr(m, f"{campo}_centavos") or 0 for m in ultimos)
         return round(soma * fator / 100, 2)
 
+    receita = anual("receita")
     return FinanceiroPlanejamento(
         meses=n,
         anualizado=n < 12,
         periodo_inicio=ultimos[0].competencia,
         periodo_fim=ultimos[-1].competencia,
-        receita_bruta_anual=anual("receita"),
+        receita_bruta_anual=receita,
         compras_anual=anual("compras"),
         folha_clt_anual=anual("folha"),
         pro_labore_anual=anual("pro_labore"),
         despesas_creditaveis_anual=anual("despesas_creditaveis"),
         outras_despesas_anual=anual("outras_despesas"),
+        receita_exterior_anual=min(anual("receita_exterior"), receita),  # dado inconsistente não vira erro no cálculo
+        variacao_cambial_anual=anual("variacao_cambial"),
     )
 
 

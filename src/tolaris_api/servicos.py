@@ -52,6 +52,8 @@ def serializar_comparativo(c: Comparativo) -> dict[str, Any]:
     receita = c.perfil.receita_bruta_anual
     return {
         "receita_anual": _num(receita),
+        "receita_exterior_anual": _num(c.perfil.receita_exterior_anual),
+        "variacao_cambial_anual": _num(c.perfil.variacao_cambial_anual),
         "atividade": c.perfil.atividade.value,
         "ano": c.perfil.ano,
         "regimes": [serializar_resultado(r, receita) for r in c.resultados],
@@ -71,6 +73,7 @@ def executar_expressa(e: ExpressaEntrada) -> dict[str, Any]:
         pro_labore_mensal=e.pro_labore_mensal,
         margem_lucro=e.margem_lucro,
         ano=e.ano,
+        receita_exterior_mensal=e.receita_exterior_mensal,
     )
     return serializar_comparativo(c)
 

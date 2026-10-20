@@ -242,6 +242,45 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     como ele é hoje: ao mudar uma tela ou criar uma funcionalidade, atualize `lib/tour.ts`. A ajuda não mostra nada que o
     usuário não possa ver (o passo some para o centro se o elemento não existe, por exemplo para quem não é administrador).
 
+## Premissas da receita do exterior (exportação) e da variação cambial
+
+60. **O que conta como exportação de serviços:** prestação a pessoa física ou jurídica residente ou domiciliada no
+    exterior, com pagamento que represente ingresso de divisas, exceto o serviço desenvolvido no Brasil cujo resultado
+    aqui se verifique (Res. CGSN 140/2018, art. 25, §§ 4º e 4º-A; SC Cosit 78/2019 e 185/2025). O Tolaris **não verifica**
+    nada disso: o contador informa a parte da receita que é exportação e o sistema avisa dos requisitos em cada regime.
+    Para ISS, o critério é o local do resultado (LC 116/2003, art. 2º, I e parágrafo único), que pode divergir do de PIS/Cofins.
+61. **Simples Nacional:** a alíquota efetiva usa o RBT12 **total** (mercado interno + exportação). A receita exportada paga
+    o DAS menos a fatia de PIS, Cofins e ISS da partilha da faixa (serviços), ou de PIS, Cofins, ICMS e IPI (mercadorias).
+    IRPJ, CSLL e CPP continuam. A exclusão do ISS na exportação de serviços foi tratada como regra (a SC Cosit 78/2019 só
+    cita PIS/Cofins; a fonte para o ISS é a LC 116/2003 e a desconsideração dos percentuais no art. 25 da Res. CGSN 140).
+    **Não conseguimos ler o texto consolidado** da Resolução CGSN 140/2018, nem a alteração da Res. CGSN 190/2026 sobre o
+    art. 25: o resultado mostra um aviso para conferir a redação vigente.
+62. **Limites do Simples com exportação:** mercado interno e exportação têm, cada um, o limite de R$ 4,8 mi (Res. CGSN
+    140/2018, art. 2º, § 1º, após a Res. CGSN 156/2020); o sublimite estadual de ICMS/ISS (R$ 3,6 mi) conta só o mercado
+    interno. Se o total passar de R$ 4,8 mi por causa da exportação, usamos a última faixa do Anexo (aproximação com alerta).
+    Não calculamos o RBT12 separado por mercado que o PGDAS-D usa em casos de ultrapassagem.
+63. **Lucro Presumido:** a receita de exportação fica fora de PIS/Cofins (Leis 10.637/2002, art. 5º, e 10.833/2003, art. 6º,
+    com a condição do ingresso de divisas) e de ISS/ICMS, mas **entra** na base presumida de IRPJ e CSLL. O crédito de ICMS
+    das compras é mantido (CF, art. 155, § 2º, X, a).
+64. **Lucro Real:** os débitos de PIS/Cofins consideram só o mercado interno e os créditos continuam; o saldo credor não
+    entra no total (como já era). ISS/ICMS só sobre o mercado interno.
+65. **Variação cambial:** informada pelo contador como valor líquido do ano (ganho ou perda), em reais. No Presumido, o
+    ganho soma 100% na base de IRPJ e CSLL (sem presunção) e a perda **não** abate; fora de PIS/Cofins (receita financeira
+    no regime cumulativo). No Real, entra no lucro (ganho soma, perda deduz). **No Simples não é calculada** (aviso).
+    Regime de reconhecimento (caixa ou competência, IN RFB 1.700/2017, arts. 152 e 153) é do contador: o Tolaris recebe o
+    valor já apurado. A Receita entende que a regra de caixa do art. 30 da MP 2.158-35/2001 vale só para o Real; há quem
+    defenda o contrário.
+66. **Câmbio:** a conversão para reais usa a PTAX de compra do Banco Central (fechamento do último dia útil até a data
+    informada), por padrão, e o contador pode trocar a taxa pela do contrato de câmbio. A consulta usa o serviço público
+    Olinda do Banco Central (moedas AUD, CAD, CHF, DKK, EUR, GBP, JPY, NOK, SEK, USD). **Não foi testada contra o serviço
+    real** (o ambiente de desenvolvimento não alcança o Banco Central): o formato da resposta segue a documentação.
+67. **Reforma tributária, planejado × realizado e notas:** as calculadoras da Reforma (IBS/CBS, Simples na Reforma) **não**
+    separam exportação (que não tem IBS/CBS na LC 214/2025). O acompanhamento mantém a proporção de exterior do
+    planejamento ao reavaliar com a receita real. NF-e de exportação (CFOP 7xxx) e a nota fiscal de serviços ainda não
+    alimentam a receita do exterior: ela vem do planejamento ou da planilha.
+68. **Seleção de atividade:** as opções mostram o Anexo e exemplos. O Anexo V não é opção: é o resultado do fator R. Os
+    exemplos de serviços por Anexo são orientativos (LC 123/2006, art. 18, §§ 5º-B a 5º-M); o enquadramento é pelo CNAE.
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias?).
@@ -277,6 +316,12 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
       "perdido, com o motivo") para o funil não depender do aceite no portal.
 - [ ] Caixa de e-mail: o escritório tem uma caixa própria que aceite IMAP com senha de aplicativo?
 - [ ] Casos REC1 a REC3 da planilha (alíquota efetiva x % da repartição) e o tratamento do RBT12 estimado.
+
+- [ ] Receita do exterior: o ISS sai do DAS na exportação de serviços (premissa 61)? O texto vigente do art. 25 da Res. CGSN 140
+      depois da Res. CGSN 190/2026? Quais municípios exigem comprovação (contrato, câmbio) e qual a alíquota na exportação?
+- [ ] Variação cambial: caixa ou competência no Presumido? Entra na receita bruta do Simples? Ganho em conta no exterior?
+- [ ] Taxa de conversão: PTAX de compra ou venda, do dia do câmbio ou da emissão da nota? Cada cliente tem a sua política.
+- [ ] Os exemplos de serviços por Anexo (seletor de atividade) batem com o que o escritório usa?
 
 ## Fora do escopo da Fase 0 (próximos passos do motor)
 

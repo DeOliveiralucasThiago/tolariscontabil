@@ -68,6 +68,10 @@ class PerfilEmpresa:
     """Chave de ``lucro_presumido.json/presuncoes``; padrão conforme a atividade."""
     folha_fator_r_anual: Numero | None = None
     """Folha para o fator R, se o contador já tiver o valor apurado."""
+    receita_exterior_anual: Numero = 0
+    """Parte de ``receita_bruta_anual`` que é exportação (de serviços ou de mercadorias), já em reais."""
+    variacao_cambial_anual: Numero = 0
+    """Variação cambial líquida do ano (ativa - passiva), em reais; negativa quando houve perda."""
     ano: int = 2026
 
     def __post_init__(self) -> None:
@@ -93,6 +97,12 @@ class PerfilEmpresa:
         )
         if self.folha_fator_r_anual is not None:
             self.folha_fator_r_anual = D(self.folha_fator_r_anual)
+        self.receita_exterior_anual = D(self.receita_exterior_anual)
+        self.variacao_cambial_anual = D(self.variacao_cambial_anual)
+        if self.receita_exterior_anual < 0:
+            raise ValueError("receita_exterior_anual não pode ser negativo")
+        if self.receita_exterior_anual > self.receita_bruta_anual:
+            raise ValueError("receita_exterior_anual não pode passar da receita bruta anual")
         if self.presuncao is None:
             self.presuncao = PRESUNCAO_PADRAO[self.atividade]
 
@@ -100,14 +110,19 @@ class PerfilEmpresa:
     def fgts_anual(self) -> Decimal:
         return self.folha_clt_anual * ALIQUOTA_FGTS
 
+    @property
+    def receita_interna_anual(self) -> Decimal:
+        """Receita do mercado interno: a que paga ISS/ICMS e PIS/Cofins."""
+        return self.receita_bruta_anual - self.receita_exterior_anual
+
 
 def icms_liquido(perfil: PerfilEmpresa, res: Resultado) -> Decimal:
     """ICMS não cumulativo (débito nas saídas - crédito nas compras), igual no Presumido e no Real."""
     debito = res.passo(
         "ICMS - débito nas vendas",
-        f"{brl(perfil.receita_bruta_anual)} x {pct(perfil.aliquota_icms)}",
-        perfil.receita_bruta_anual * perfil.aliquota_icms,
-        "LC 87/1996 e legislação estadual",
+        f"{brl(perfil.receita_interna_anual)} x {pct(perfil.aliquota_icms)}",
+        perfil.receita_interna_anual * perfil.aliquota_icms,
+        "LC 87/1996 e legislação estadual (exportação: CF, art. 155, §2º, X, a)" if perfil.receita_exterior_anual else "LC 87/1996 e legislação estadual",
     )
     credito = res.passo(
         "ICMS - crédito nas compras",
@@ -127,9 +142,9 @@ def tributo_sobre_receita_local(perfil: PerfilEmpresa, res: Resultado) -> None:
     else:
         res.tributos["ISS"] = res.passo(
             "ISS",
-            f"{brl(perfil.receita_bruta_anual)} x {pct(perfil.aliquota_iss)}",
-            perfil.receita_bruta_anual * perfil.aliquota_iss,
-            "LC 116/2003 e lei municipal",
+            f"{brl(perfil.receita_interna_anual)} x {pct(perfil.aliquota_iss)}",
+            perfil.receita_interna_anual * perfil.aliquota_iss,
+            "LC 116/2003, art. 2º, I (exportação não paga ISS) e lei municipal" if perfil.receita_exterior_anual else "LC 116/2003 e lei municipal",
         )
 
 

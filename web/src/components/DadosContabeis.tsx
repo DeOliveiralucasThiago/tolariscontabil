@@ -8,7 +8,7 @@ import type { CompletaEntrada, Financeiro, FinanceiroImportacao, FinanceiroPlane
 
 import { Botao, Cartao, MensagemErro, Selecao } from "./ui";
 
-const CAMPOS = ["competencia", "receita", "compras", "folha", "pro_labore", "despesas_creditaveis", "outras_despesas"] as const;
+const CAMPOS = ["competencia", "receita", "compras", "folha", "pro_labore", "despesas_creditaveis", "outras_despesas", "receita_exterior", "variacao_cambial"] as const;
 const COLUNAS_TABELA: { campo: keyof Financeiro["meses"][number]; rotulo: string }[] = [
   { campo: "receita", rotulo: "Receita" },
   { campo: "compras", rotulo: "Compras" },
@@ -16,6 +16,8 @@ const COLUNAS_TABELA: { campo: keyof Financeiro["meses"][number]; rotulo: string
   { campo: "pro_labore", rotulo: "Pró-labore" },
   { campo: "despesas_creditaveis", rotulo: "Desp. c/ crédito" },
   { campo: "outras_despesas", rotulo: "Outras desp." },
+  { campo: "receita_exterior", rotulo: "Receita exterior" },
+  { campo: "variacao_cambial", rotulo: "Var. cambial" },
 ];
 
 export function paraPlanejamento(p: FinanceiroPlanejamento): Partial<CompletaEntrada> {
@@ -26,6 +28,8 @@ export function paraPlanejamento(p: FinanceiroPlanejamento): Partial<CompletaEnt
     pro_labore_anual: p.pro_labore_anual,
     despesas_creditaveis_anual: p.despesas_creditaveis_anual,
     outras_despesas_anual: p.outras_despesas_anual,
+    receita_exterior_anual: p.receita_exterior_anual ?? 0,
+    variacao_cambial_anual: p.variacao_cambial_anual ?? 0,
   };
 }
 
@@ -128,7 +132,7 @@ export function DadosContabeis({
       <div className="flex flex-col gap-3 text-sm">
         <p className="text-tinta-2">
           Sem digitar: exporte do seu sistema contábil uma planilha com uma linha por mês (receita, compras, folha, pró-labore,
-          despesas) em .csv ou .xlsx. Você escolhe qual coluna é qual; reenviar um mês troca só o que a planilha trouxer.{" "}
+          despesas; se houver, a receita do exterior e a variação cambial) em .csv ou .xlsx. Você escolhe qual coluna é qual; reenviar um mês troca só o que a planilha trouxer.{" "}
           <a className="font-medium text-marca underline" href="/api/financeiro/modelo.csv">Baixar planilha modelo</a>
         </p>
         <input

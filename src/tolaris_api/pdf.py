@@ -140,6 +140,7 @@ def _entradas_legiveis(sim: Simulacao) -> list[tuple[str, str]]:
             ("Faturamento mensal", brl(e["faturamento_mensal"])),
             ("Folha de salários mensal", brl(e["folha_mensal"])),
             ("Pró-labore mensal", brl(e.get("pro_labore_mensal", 0))),
+            *([("Receita mensal do exterior", brl(e["receita_exterior_mensal"]))] if float(e.get("receita_exterior_mensal") or 0) else []),
             ("Ano-calendário", str(e.get("ano", ""))),
         ]
     rotulos = [
@@ -149,9 +150,12 @@ def _entradas_legiveis(sim: Simulacao) -> list[tuple[str, str]]:
         ("compras_anual", "Compras e insumos"),
         ("despesas_creditaveis_anual", "Despesas com crédito de PIS/Cofins"),
         ("outras_despesas_anual", "Outras despesas"),
+        ("receita_exterior_anual", "Receita do exterior (exportação)"),
     ]
     linhas = [("Atividade", atividade)]
     linhas += [(r, brl(e[c])) for c, r in rotulos if float(e.get(c) or 0)]
+    if float(e.get("variacao_cambial_anual") or 0):
+        linhas.append(("Variação cambial líquida", brl(e["variacao_cambial_anual"])))
     if e.get("atividade") in ("comercio", "industria"):
         linhas.append(("ICMS", pct(e.get("aliquota_icms", 0))))
     else:

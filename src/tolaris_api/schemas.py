@@ -7,7 +7,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from tolaris_motor import Atividade
 
@@ -194,7 +194,15 @@ class ExpressaEntrada(BaseModel):
     pro_labore_mensal: Dinheiro = Field(default=Decimal(0), ge=0)
     atividade: Atividade
     margem_lucro: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
+    receita_exterior_mensal: Dinheiro = Field(default=Decimal(0), ge=0)
+    """Parte do faturamento mensal que vem do exterior (exportação), em reais."""
     ano: int = Field(default=2026, ge=2025, le=2026)
+
+    @model_validator(mode="after")
+    def _exterior_cabe_no_faturamento(self) -> "ExpressaEntrada":
+        if self.receita_exterior_mensal > self.faturamento_mensal:
+            raise ValueError("A receita do exterior não pode passar do faturamento mensal")
+        return self
 
 
 class CompletaEntrada(BaseModel):
@@ -210,7 +218,17 @@ class CompletaEntrada(BaseModel):
     rat: Decimal = Field(default=Decimal("0.02"), ge=0, le=Decimal("0.06"))
     terceiros: Decimal = Field(default=Decimal("0.058"), ge=0, le=Decimal("0.10"))
     folha_fator_r_anual: Dinheiro | None = Field(default=None, ge=0)
+    receita_exterior_anual: Dinheiro = Field(default=Decimal(0), ge=0)
+    """Parte da receita bruta que é exportação (de serviços ou de mercadorias), em reais."""
+    variacao_cambial_anual: Dinheiro = Field(default=Decimal(0), ge=-Decimal("100000000000"), le=Decimal("100000000000"))
+    """Variação cambial líquida do ano, em reais: positiva é ganho, negativa é perda."""
     ano: int = Field(default=2026, ge=2025, le=2026)
+
+    @model_validator(mode="after")
+    def _exterior_cabe_na_receita(self) -> "CompletaEntrada":
+        if self.receita_exterior_anual > self.receita_bruta_anual:
+            raise ValueError("A receita do exterior não pode passar da receita bruta anual")
+        return self
 
 
 class ProspeccaoEntrada(BaseModel):
@@ -537,6 +555,8 @@ class FinanceiroMes(BaseModel):
     pro_labore: float | None
     despesas_creditaveis: float | None
     outras_despesas: float | None
+    receita_exterior: float | None = None
+    variacao_cambial: float | None = None
 
 
 class FinanceiroImportacaoSaida(BaseModel):
@@ -561,6 +581,8 @@ class FinanceiroPlanejamento(BaseModel):
     pro_labore_anual: float
     despesas_creditaveis_anual: float
     outras_despesas_anual: float
+    receita_exterior_anual: float = 0
+    variacao_cambial_anual: float = 0
 
 
 class FinanceiroSaida(BaseModel):

@@ -4,7 +4,6 @@ import { useState } from "react";
 
 import { cnpjValido, mascaraCnpj, soDigitos } from "@/lib/formato";
 import {
-  ATIVIDADES,
   ROTULO_REGIME,
   ROTULO_STATUS,
   type Atividade,
@@ -16,6 +15,7 @@ import {
 } from "@/lib/tipos";
 
 import { BuscaCnpj } from "./BuscaCnpj";
+import { SelecaoAtividade } from "./SelecaoAtividade";
 import { Botao, Campo, MensagemErro, Rotulo, Selecao, classeCampo } from "./ui";
 
 const vazio = (v: string) => (v.trim() === "" ? null : v.trim());
@@ -108,12 +108,14 @@ export function FormCliente({
         </Selecao>
         <Campo rotulo="Razão social" name="razao_social" required minLength={2} value={f.razao_social} onChange={muda("razao_social")} />
         <Campo rotulo="Nome fantasia" name="nome_fantasia" value={f.nome_fantasia} onChange={muda("nome_fantasia")} />
-        <Selecao rotulo="Atividade (para os cálculos)" name="atividade" value={f.atividade} onChange={muda("atividade")} ajuda={dica}>
-          <option value="">Selecione…</option>
-          {ATIVIDADES.map((a) => (
-            <option key={a.valor} value={a.valor}>{a.rotulo}</option>
-          ))}
-        </Selecao>
+        <SelecaoAtividade
+          rotulo="Atividade (para os cálculos)"
+          name="atividade"
+          value={(f.atividade ?? "") as Atividade | ""}
+          onChange={(v) => setF((x) => ({ ...x, atividade: v }))}
+          vazio="Selecione…"
+          ajuda={dica}
+        />
         <Selecao rotulo="Regime atual" name="regime_atual" value={f.regime_atual} onChange={muda("regime_atual")}>
           <option value="">Não informado</option>
           {Object.entries(ROTULO_REGIME).map(([v, r]) => (

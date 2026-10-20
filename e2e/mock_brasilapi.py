@@ -9,8 +9,20 @@ DADOS = {
         "opcao_pelo_simples": True, "opcao_pelo_mei": False},
 }
 
+# PTAX falsa (Banco Central): um boletim de abertura e um de fechamento no dia 2026-10-15, sempre devolvidos
+PTAX = {"value": [
+    {"cotacaoCompra": 3.9500, "cotacaoVenda": 3.9510, "dataHoraCotacao": "2026-10-15 10:08:40.123", "tipoBoletim": "Abertura"},
+    {"cotacaoCompra": 4.0000, "cotacaoVenda": 4.0100, "dataHoraCotacao": "2026-10-15 13:06:11.500", "tipoBoletim": "Fechamento"},
+]}
+
 class H(BaseHTTPRequestHandler):
     def do_GET(self):
+        if "CotacaoMoedaPeriodo" in self.path:
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(PTAX).encode())
+            return
         cnpj = self.path.rstrip("/").split("/")[-1]
         corpo = DADOS.get(cnpj)
         self.send_response(200 if corpo else 404)

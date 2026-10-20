@@ -139,6 +139,7 @@ versão portátil para Windows (pasta `portatil/`), montada e testada pelo GitHu
 | `TOLARIS_SECRET_KEY` | chave de desenvolvimento | Assina a sessão. Obrigatória (32+ caracteres) quando `TOLARIS_AMBIENTE=producao` |
 | `TOLARIS_COOKIE_SECURE` | `false` | `true` atrás de HTTPS |
 | `TOLARIS_BRASILAPI_URL` | BrasilAPI pública | Consulta de CNPJ |
+| `TOLARIS_PTAX_URL` | serviço Olinda do Banco Central | Taxa PTAX para converter receita em moeda estrangeira |
 | `TOLARIS_SESSAO_HORAS` | `12` | Duração da sessão |
 | `TOLARIS_URL_PUBLICA` | `http://localhost:3000` | Endereço do site nos links enviados por e-mail |
 | `TOLARIS_EMAIL_BACKEND` | `console` | `console` (não envia), `arquivo` (grava em `TOLARIS_EMAIL_PASTA`), `smtp` ou `resend` |
@@ -190,14 +191,18 @@ verificação em duas etapas guardados no banco não podem ser lidos (o usuário
 
 | Módulo | Conteúdo |
 |---|---|
-| `simples` | Simples Nacional: anexos I a V, 6 faixas, alíquota efetiva, fator R (com FGTS), CPP fora do DAS no Anexo IV, pró-labore mínimo para atingir 28% |
-| `presumido` | Lucro Presumido trimestral: presunções por atividade, adicional de IRPJ, PIS/Cofins cumulativos, ISS/ICMS, INSS patronal, acréscimo da LC 224/2025 |
-| `real` | Lucro Real anual (estimativa gerencial): PIS/Cofins não cumulativos com créditos, IRPJ + adicional, CSLL, prejuízo fiscal |
+| `simples` | Simples Nacional: anexos I a V, 6 faixas, alíquota efetiva, fator R (com FGTS), CPP fora do DAS no Anexo IV, pró-labore mínimo para atingir 28%; **receita do exterior** (exportação) sem ISS/ICMS/IPI e PIS/Cofins, com limites próprios |
+| `presumido` | Lucro Presumido trimestral: presunções por atividade, adicional de IRPJ, PIS/Cofins cumulativos, ISS/ICMS, INSS patronal, acréscimo da LC 224/2025; exportação fora de PIS/Cofins/ISS/ICMS e **variação cambial** ativa na base |
+| `real` | Lucro Real anual (estimativa gerencial): PIS/Cofins não cumulativos com créditos, IRPJ + adicional, CSLL, prejuízo fiscal; exportação e variação cambial (ganho soma, perda deduz) |
 | `comparativo` | Comparação entre os três regimes e **simulação expressa** com 3 entradas (faturamento, folha, atividade) |
 | `reforma_simples` | Simples na Reforma: partilha do DAS, IBS/CBS no DAS × por fora, ponto de equilíbrio B2B |
 | `autonomo` | Autônomo (carnê-leão) × MEI × Simples × Presumido, valores mensais |
 | `pessoa_fisica` | INSS 2025/2026, IRPF mensal com a redução da Lei 15.270/2025, retenção de 10% sobre dividendos, alíquota do IRPFM, pró-labore × dividendos |
 | `reforma` | Transição IBS/CBS ano a ano (2025–2033) com créditos, redução setorial e alíquotas de referência configuráveis |
+
+**Receitas do exterior:** o planejamento completo, a simulação expressa e a planilha de dados contábeis aceitam a parte da receita
+que vem do exterior e a variação cambial; a tela traz um conversor de moeda pela PTAX do Banco Central (a taxa pode ser trocada à mão).
+As premissas e o que o contador precisa validar estão em `docs/premissas.md` (itens 60 a 68).
 
 Todo resultado traz uma **memória de cálculo** (descrição, fórmula, valor e base legal
 de cada passo) e **alertas** (premissas e limitações). As tabelas legais ficam em

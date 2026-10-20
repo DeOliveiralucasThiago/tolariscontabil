@@ -27,6 +27,18 @@ export function ResultadoComparativo({ resultado, acoes }: { resultado: Comparat
         acoes={acoes}
       />
 
+      {(resultado.receita_exterior_anual ?? 0) > 0 && (
+        <p className="rounded-lg border border-borda bg-superficie px-3 py-2 text-sm" data-testid="nota-exterior">
+          Considera <strong className="num">{brl(resultado.receita_exterior_anual ?? 0)}</strong> de receita do exterior (exportação),
+          sem ISS/ICMS e sem PIS/Cofins
+          {(resultado.variacao_cambial_anual ?? 0) !== 0 && (
+            <>, e variação cambial {(resultado.variacao_cambial_anual ?? 0) > 0 ? "de ganho" : "de perda"} de{" "}
+              <strong className="num">{brl(Math.abs(resultado.variacao_cambial_anual ?? 0))}</strong></>
+          )}
+          . Veja os avisos de cada regime abaixo.
+        </p>
+      )}
+
       <Cartao titulo="Tributos por regime (R$/ano)">
         <GraficoRegimes regimes={resultado.regimes} melhor={resultado.melhor} />
         <div className="mt-4 overflow-x-auto">

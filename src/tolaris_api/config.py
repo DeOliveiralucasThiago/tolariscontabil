@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     """True em produção (HTTPS)."""
     cookie_nome: str = "tolaris_sessao"
     brasilapi_url: str = "https://brasilapi.com.br/api/cnpj/v1"
+    ptax_url: str = "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata"
     cnpj_timeout_segundos: float = 10.0
     logo_max_bytes: int = 512 * 1024
     ambiente: str = "desenvolvimento"

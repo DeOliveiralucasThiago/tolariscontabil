@@ -6,8 +6,9 @@ import { Suspense, useState } from "react";
 import { CampoMoeda, CampoPercentual } from "@/components/CampoMoeda";
 import { ResultadoReforma, ResultadoSimplesReforma } from "@/components/ResultadosFase2";
 import { SalvarNoCliente } from "@/components/SalvarNoCliente";
+import { SelecaoAtividade } from "@/components/SelecaoAtividade";
 import { Abas, Botao, Cartao, MensagemErro, Selecao, Titulo } from "@/components/ui";
-import { ATIVIDADES, type Atividade, type ResultadoReforma as TReforma, type ResultadoSimplesReforma as TSimples } from "@/lib/tipos";
+import { type Atividade, type ResultadoReforma as TReforma, type ResultadoSimplesReforma as TSimples } from "@/lib/tipos";
 import { useCalculo } from "@/lib/useCalculo";
 
 const REDUCOES = [
@@ -171,11 +172,7 @@ function SimplesNaReforma({ clienteInicial }: { clienteInicial?: number }) {
       >
         <Cartao titulo="Empresa do Simples Nacional">
           <div className="flex flex-col gap-4">
-            <Selecao rotulo="Atividade" name="atividade_sr" value={f.atividade} onChange={(e) => set("atividade")(e.target.value as Atividade)}>
-              {ATIVIDADES.map((a) => (
-                <option key={a.valor} value={a.valor}>{a.rotulo}</option>
-              ))}
-            </Selecao>
+            <SelecaoAtividade name="atividade_sr" value={f.atividade} onChange={(v) => set("atividade")((v || "servico_fator_r") as Atividade)} />
             <CampoMoeda id="receita_sr" rotulo="Receita bruta anual (RBT12)" valor={f.receita_bruta_anual} onChange={set("receita_bruta_anual")} obrigatorio />
             {f.atividade === "servico_fator_r" && (
               <CampoMoeda

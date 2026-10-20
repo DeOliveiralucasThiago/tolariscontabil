@@ -6,6 +6,7 @@ from decimal import Decimal
 
 from .base import ZERO, D, Resultado, brl, pct
 from .empresa import PerfilEmpresa, inss_patronal_regime_normal, tributo_sobre_receita_local
+from .simples import alerta_exportacao
 
 PIS_NC = D("0.0165")
 COFINS_NC = D("0.076")
@@ -21,10 +22,11 @@ def calcular(
     """Lucro Real anual sem LALUR detalhado: ``adicoes``/``exclusoes`` permitem ajustar o lucro contábil."""
     res = Resultado("Lucro Real")
     receita = perfil.receita_bruta_anual
+    interna = perfil.receita_interna_anual
     base_credito = perfil.compras_anual + perfil.despesas_creditaveis_anual
 
     for nome, aliq, lei in (("PIS", PIS_NC, "Lei 10.637/2002"), ("Cofins", COFINS_NC, "Lei 10.833/2003")):
-        debito = res.passo(f"{nome} - débito", f"{brl(receita)} x {pct(aliq)}", receita * aliq, lei)
+        debito = res.passo(f"{nome} - débito", f"{brl(interna)} x {pct(aliq)}", interna * aliq, lei)
         credito = res.passo(
             f"{nome} - crédito",
             f"({brl(perfil.compras_anual)} compras + {brl(perfil.despesas_creditaveis_anual)} despesas "
@@ -56,6 +58,14 @@ def calcular(
         - tributos_dedutiveis,
         "Lei 6.404/1976 (DRE)",
     )
+    variacao = perfil.variacao_cambial_anual
+    if variacao:
+        lucro_contabil = res.passo(
+            "Lucro com variação cambial",
+            f"{brl(lucro_contabil)} + variação cambial líquida {brl(variacao)}",
+            lucro_contabil + variacao,
+            "Lei 9.718/1998, art. 9º; MP 2.158-35/2001, art. 30",
+        )
     lucro_real = lucro_contabil + D(adicoes) - D(exclusoes)
     if adicoes or exclusoes:
         res.passo("Lucro real (LALUR)", f"{brl(lucro_contabil)} + {brl(adicoes)} - {brl(exclusoes)}", lucro_real)
@@ -74,6 +84,12 @@ def calcular(
     res.tributos["CSLL"] = res.passo(
         "CSLL", f"{brl(lucro_real)} x {pct(CSLL, 0)}", lucro_real * CSLL, "Lei 7.689/1988, art. 3º"
     )
+    alerta_exportacao(perfil, res)
+    if variacao:
+        res.alerta(
+            "Variação cambial entra no lucro do Lucro Real (ganho soma, perda deduz). A regra geral é o reconhecimento "
+            "pelo regime de caixa, com opção irrevogável pela competência no ano; confirme a opção do cliente."
+        )
     res.alerta(
         "Estimativa gerencial: considera todo o estoque comprado como vendido no ano e não detalha "
         "adições/exclusões do LALUR além das informadas."
