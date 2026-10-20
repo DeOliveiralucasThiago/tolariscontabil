@@ -8,3 +8,4 @@ dist/
 .env
 *.db
 caixa-de-saida/
+e2e/node_modules
