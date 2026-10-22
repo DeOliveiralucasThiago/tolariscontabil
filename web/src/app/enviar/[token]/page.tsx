@@ -59,13 +59,13 @@ export default function PaginaEnvioDeNotas() {
   }
 
   if (!caixa) {
-    return <div className="grid min-h-screen place-items-center p-6 text-center text-sm text-tinta-2">{erroPagina || "Carregando…"}</div>;
+    return <div className="grid min-h-[calc(100vh-var(--faixa))] place-items-center p-6 text-center text-sm text-tinta-2">{erroPagina || "Carregando…"}</div>;
   }
   const esc = caixa.escritorio;
   const total = resultados.reduce((s, r) => s + r.importados, 0);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-[calc(100vh-var(--faixa))]">
       <header className="bg-marca text-white">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-8">
           <div className="flex items-center gap-3">

@@ -82,8 +82,8 @@ export function Shell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
-      <aside className="sticky top-0 hidden h-screen flex-col justify-between border-r border-borda bg-superficie p-4 lg:flex">
+    <div className="min-h-[calc(100vh-var(--faixa))] lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
+      <aside className="sticky top-[var(--faixa)] hidden h-[calc(100vh-var(--faixa))] flex-col justify-between border-r border-borda bg-superficie p-4 lg:flex">
         <div className="flex flex-col gap-6">
           {marca}
           {navegacao}
@@ -91,7 +91,7 @@ export function Shell({ children }: { children: ReactNode }) {
         {rodape}
       </aside>
 
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-borda bg-superficie px-4 py-3 lg:hidden">
+      <header className="sticky top-[var(--faixa)] z-20 flex items-center justify-between border-b border-borda bg-superficie px-4 py-3 lg:hidden">
         {marca}
         <button
           onClick={() => setAberto((v) => !v)}

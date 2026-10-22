@@ -9,6 +9,12 @@
   --tinta-2: #5b6775;
   --borda: #e3e8ec;
   --neutro: #b8c2cc;
+  /* Altura da faixa de ambiente de teste (0 quando ela não aparece); as telas de altura cheia descontam esse valor. */
+  --faixa: 0px;
+}
+
+body:has(.faixa-de-teste) {
+  --faixa: 2.25rem;
 }
 
 @theme inline {

@@ -25,6 +25,9 @@ services:
         generateValue: true
       - key: TOLARIS_AMBIENTE
         value: producao
+      # Mostra a barra "Ambiente de testes" no topo do site; apague esta variável para tirá-la
+      - key: TOLARIS_AMBIENTE_TESTE
+        value: "true"
       - key: TOLARIS_COOKIE_SECURE
         value: "true"
       - key: TOLARIS_PROXY_SALTOS

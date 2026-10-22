@@ -151,6 +151,7 @@ versão portátil para Windows (pasta `portatil/`), montada e testada pelo GitHu
 | `TOLARIS_IMAP_PERMITIR_REDE_PRIVADA` | `false` | Aceita servidor IMAP em rede interna e portas diferentes de 993 (por padrão é bloqueado contra SSRF) |
 | `TOLARIS_PROXY_SALTOS` | `0` (compose e portátil: `1`) | Quantos proxies confiáveis ficam na frente da API; define de onde sai o IP do cliente (limite de login e registro de atividades) |
 | `TOLARIS_AUDITORIA_RETENCAO_MESES` | `24` | Tempo de guarda do registro de atividades |
+| `TOLARIS_AMBIENTE_TESTE` | desligado | Variável do **site** (Next): com `true`, mostra a barra "Ambiente de testes" no topo de todas as telas |
 
 ### Backup e restauração
 

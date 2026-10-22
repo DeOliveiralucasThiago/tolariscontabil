@@ -1,8 +1,9 @@
 export default function LayoutPublico({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
+    <div className="grid min-h-[calc(100vh-var(--faixa))] lg:grid-cols-2">
       <div className="hidden flex-col justify-between bg-marca p-12 text-white lg:flex">
-        <div className="text-lg font-semibold">Tolaris Contábil</div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-tolaris.png" alt="Tolaris — Tecnologia Integrada" className="h-36 w-auto self-start" />
         <div>
           <h2 className="text-3xl font-semibold leading-tight">
             Diagnóstico tributário em minutos.
