@@ -20,7 +20,13 @@ await page.goto(`${BASE}/login`);
 const logo = page.getByRole("img", { name: "Tolaris — Tecnologia Integrada" });
 await logo.waitFor();
 const caixa = await logo.boundingBox();
-if (!caixa || caixa.x > 80 || caixa.y > 120 || caixa.width < 80) throw new Error("logo fora do canto esquerdo: " + JSON.stringify(caixa));
+const titulo = await page.getByRole("heading", { name: /Diagnóstico tributário em minutos/ }).boundingBox();
+if (!caixa || !titulo) throw new Error("logo ou título não encontrados");
+if (caixa.width < 240 || caixa.width > 300) throw new Error("tamanho da logo fora do esperado (≈260px): " + caixa.width);
+if (caixa.y + caixa.height > titulo.y) throw new Error("a logo devia ficar acima do título: " + JSON.stringify({ caixa, titulo }));
+if (titulo.y - (caixa.y + caixa.height) > 90) throw new Error("a logo ficou longe do título");
+if (Math.abs(caixa.x - titulo.x) > 24) throw new Error("a logo devia alinhar à esquerda com o título");
+if (caixa.y < 120) throw new Error("a logo continua encostada no topo: y=" + caixa.y);
 if (await page.getByText("Tolaris Contábil", { exact: true }).count()) throw new Error("o texto “Tolaris Contábil” ainda aparece no login");
 const ok = await logo.evaluate((img) => img.complete && img.naturalWidth > 0);
 if (!ok) throw new Error("a imagem da logo não carregou");
@@ -34,7 +40,7 @@ if (!(await faixa.innerText()).includes("dados fictícios")) throw new Error("te
 const altura = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
 if (altura > 1) throw new Error(`o login ganhou rolagem vertical de ${altura}px por causa da barra`);
 await page.screenshot({ path: `${OUT}/marca_1_login.png` });
-passo("login: logo no canto esquerdo no lugar do texto, barra azul de ambiente de testes e sem rolagem extra");
+passo("login: logo grande acima do título, alinhada a ele, no lugar do texto, barra azul de ambiente de testes e sem rolagem extra");
 
 // 2. Ícone da aba
 const icones = await page.locator('link[rel~="icon"]').evaluateAll((els) => els.map((e) => e.getAttribute("href")));
