@@ -12,7 +12,7 @@ from datetime import date
 from decimal import Decimal
 
 from . import tabelas
-from .autonomo import LIMITE_MEI_ANUAL
+from .autonomo import limite_mei
 from .base import ZERO, D
 
 MIN_MESES = 6
@@ -57,6 +57,16 @@ class Limite:
     codigo: str
     rotulo: str
     valor: Decimal
+    degraus: tuple[tuple[str, Decimal], ...] = ()
+    """Limite que muda no tempo: pares (competência de início AAAA-MM, valor). Vazio quando o ``valor`` vale sempre."""
+
+    def valor_em(self, competencia: str) -> Decimal:
+        """Limite vigente na competência (o MEI sobe de R$ 81 mil para R$ 110 mil em 2027 e R$ 140 mil em 2028)."""
+        vigente = self.valor
+        for inicio, valor in self.degraus:
+            if inicio <= competencia:
+                vigente = valor
+        return vigente
 
 
 @dataclass(frozen=True)
@@ -125,7 +135,8 @@ def projetar(receitas: dict[str, Decimal], horizonte: int = HORIZONTE) -> Projec
 
 def limites_do_regime(regime: str | None, data: date) -> list[Limite]:
     if regime == "mei":
-        return [Limite("mei_limite", "limite do MEI", LIMITE_MEI_ANUAL)]
+        degraus = tuple((v["inicio"][:7], D(v["limite_receita_anual"])) for v in tabelas.carregar("mei")["vigencias"])
+        return [Limite("mei_limite", "limite do MEI", limite_mei(data), degraus)]
     if regime == "simples":
         t = tabelas.vigente("simples_nacional", data)
         return [
@@ -145,7 +156,8 @@ def cruzamentos(proj: Projecao, limites: list[Limite]) -> list[Cruzamento]:
         if proj.rbt12_atual > lim.valor:
             continue  # já passou: é assunto dos avisos de limite atuais
         for k, p in enumerate(proj.pontos, start=1):
-            if p.rbt12 > lim.valor:
-                achados.append(Cruzamento(lim.codigo, lim.rotulo, lim.valor, p.competencia, k))
+            vigente = lim.valor_em(p.competencia)
+            if p.rbt12 > vigente:
+                achados.append(Cruzamento(lim.codigo, lim.rotulo, vigente, p.competencia, k))
                 break
     return achados

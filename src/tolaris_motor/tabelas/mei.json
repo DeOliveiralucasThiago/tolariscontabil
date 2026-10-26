@@ -1,0 +1,20 @@
+{
+  "fonte": "LC 123/2006, art. 18-A, §§ 1º e 2º (redação da LC 238/2026, arts. 1º, 2º e 10): R$ 81.000 até 2026, R$ 110.000 em 2027 e R$ 140.000 a partir de 2028; texto lido no autógrafo da Câmara (14/10/2026), confirme na versão publicada",
+  "vigencias": [
+    {
+      "inicio": "2018-01-01",
+      "limite_receita_anual": "81000",
+      "limite_mensal_inicio_atividade": "6750"
+    },
+    {
+      "inicio": "2027-01-01",
+      "limite_receita_anual": "110000",
+      "limite_mensal_inicio_atividade": "9166.67"
+    },
+    {
+      "inicio": "2028-01-01",
+      "limite_receita_anual": "140000",
+      "limite_mensal_inicio_atividade": "11666.67"
+    }
+  ]
+}

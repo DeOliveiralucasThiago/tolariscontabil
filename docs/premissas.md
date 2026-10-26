@@ -43,7 +43,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 11. **Autônomo × CNPJ (valores mensais):**
     - Autônomo: INSS de 20% até o teto; carnê-leão com livro-caixa ou desconto simplificado (o maior) e a
       redução de 2026; ISS fixo municipal informado à parte.
-    - MEI: R$ 81.000/ano; DAS 2026 = 5% do salário mínimo (R$ 81,05) + R$ 5 (ISS) ou R$ 1 (ICMS).
+    - MEI: R$ 81.000/ano até 2026 (R$ 110.000 em 2027 e R$ 140.000 a partir de 2028, premissa 76); DAS 2026 = 5% do salário mínimo (R$ 81,05) + R$ 5 (ISS) ou R$ 1 (ICMS).
     - Simples: compara pró-labore de um salário mínimo com o pró-labore que leva o fator R a 28% e escolhe
       o melhor; sócio paga INSS de 11% e IRPF sobre o pró-labore; lucro distribuído isento.
     - Presumido: pró-labore de um salário mínimo; CPP de 20% sobre ele.
@@ -53,7 +53,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 | Tabela | Valores | Fonte |
 |---|---|---|
 | Partilha do DAS | Percentuais por tributo de cada faixa dos Anexos I a V; ISS limitado a 5% efetivo | LC 123/2006, Anexos I a V |
-| MEI | Limite R$ 81.000/ano; INSS 5% do salário mínimo; ISS R$ 5; ICMS R$ 1 | LC 123/2006, art. 18-A |
+| MEI | Limite R$ 81.000/ano em 2026 (R$ 110.000 em 2027; R$ 140.000 a partir de 2028); INSS 5% do salário mínimo; ISS R$ 5; ICMS R$ 1 | LC 123/2006, art. 18-A |
 
 ## Premissas da Fase 3 (importação fiscal)
 
@@ -106,7 +106,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     percentuais acima do mínimo, gera aviso de atenção (risco de cair no Anexo V).
 30. **Limites de receita:** a receita de 12 meses vem das notas importadas (média x 12 se há menos de 12 meses) ou,
     sem notas, do último planejamento. Atenção a partir de 80% do limite, crítico a partir de 95% ou acima.
-    MEI: R$ 81 mil, com tolerância de 20% (R$ 97,2 mil); Simples: sublimite de R$ 3,6 milhões e limite de
+    MEI: R$ 81 mil em 2026, com tolerância de 20% (R$ 97,2 mil; o limite do ano vem da tabela `mei.json`); Simples: sublimite de R$ 3,6 milhões e limite de
     R$ 4,8 milhões (tolerância de 20%, R$ 5,76 milhões); Presumido: R$ 5 milhões (LC 224/2025) e R$ 78 milhões.
 31. **Simulação desatualizada:** o sistema refaz, com as regras atuais, a simulação mais recente de cada tipo por
     cliente e compara os números (textos explicativos e campos novos são ignorados). Se mudou, avisa e oferece
@@ -189,7 +189,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     sem dado dentro da janela são desconhecidos, não zero, e fecham o RBT12 pela média). Não considera sazonalidade,
     contratos novos nem perdas. Confiança "alta" com 12 meses e r² de 0,5 ou mais, "média" com 9 meses ou r² de 0,3 ou
     mais, e "baixa" nos demais casos; projeção de confiança baixa não gera aviso próprio, só é mostrada na aba.
-50. **Limites projetados:** MEI R$ 81 mil, sublimite (R$ 3,6 mi) e limite (R$ 4,8 mi) do Simples e limite do Presumido
+50. **Limites projetados:** MEI R$ 81 mil em 2026 (e o degrau de cada ano seguinte, premissa 76), sublimite (R$ 3,6 mi) e limite (R$ 4,8 mi) do Simples e limite do Presumido
     (R$ 78 mi), conforme o regime atual do cliente. Só aparece o cruzamento de limite ainda não ultrapassado. O aviso
     é "atenção" até 6 meses e "informativo" de 7 a 12; se o aviso de limite atual já existe, ganha a data prevista
     no texto. O limite do MEI usa o RBT12, como os avisos atuais; o limite legal é por ano-calendário (proporcional no
@@ -343,7 +343,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     CGIBS) e art. 38-B (redução das multas fixas das ME e EPP de 50% para 60%). A **LC 238/2026** (PLP 186/2026, DOU de 21/10/2026)
     sobe o limite do MEI para **R$ 110 mil em 2027** e **R$ 140 mil a partir de 2028** (início de atividade: R$ 9.166,67 e R$ 11.666,67
     por mês), permite até **dois empregados** (a partir de 2027) e concede remissão dos créditos da União do MEI até 13/10/2026. Os
-    avisos do MEI continuam com R$ 81 mil, o limite de 2026. As duas leis estão no feed de mudanças como "ainda não incorporadas".
+    os avisos do MEI passaram a usar o limite de cada ano (premissa 76). A LC 227 também está no feed de mudanças como "ainda não incorporada".
 
 74. **LC 214/2025, pontos que mexem no Simples (lida no autógrafo do PLP 68/2024 e conferida com o autógrafo da LC 227, em 26/10/2026):**
     (a) o optante pode apurar IBS e CBS pelo **regime regular**, e então essas parcelas deixam de ser cobradas no DAS (art. 41 e LC 123,
@@ -369,11 +369,20 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     A RBT12 de 2027 (12 meses anteriores ao mês anterior) não muda o cálculo, que supõe faturamento constante. Conferir com a
     publicação oficial, pois parte do texto veio dos autógrafos (LC 214 e LC 227) e da resolução, sem o Planalto.
 
+76. **Limite do MEI por ano (LC 238/2026, lida no autógrafo da Câmara de 14/10/2026):** a nova redação do art. 18-A, §§ 1º e 2º, da LC 123 fixa o
+    limite em **R$ 140.000** (início de atividade: R$ 11.666,67 por mês), com efeitos a partir de 01/01/2028; para **2027** vale **R$ 110.000**
+    (início de atividade: R$ 9.166,67 por mês) pelo art. 2º da lei. A tabela `tabelas/mei.json` guarda os três degraus (R$ 81.000 até 2026) e os
+    avisos de limite, a projeção do RBT12 e o comparativo "Vale abrir CNPJ?" usam o limite do ano da data de referência. A projeção compara cada mês
+    projetado com o limite vigente naquele mês (um MEI que passaria de R$ 81 mil em fev/2027 só cruza o limite de R$ 110 mil mais adiante). Os avisos
+    de 2026 explicam que a ampliação não vale para o ano em curso. **Limites do modelo:** o Tolaris compara o RBT12 com o limite anual, como antes
+    (o MEI é medido pela receita do ano-calendário); o limite proporcional de quem inicia a atividade, a regra de até dois empregados a partir de 2027
+    e o novo valor do DAS-MEI (Anexo XIII da Res. CGSN 190/2026) não entram no cálculo. Confirme o texto na versão publicada.
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias? A lei, art. 18, § 24, soma também a CPP efetivamente recolhida).
 - [ ] RAT/terceiros padrão (2% e 5,8%) para os clientes típicos do escritório.
-- [ ] MEI: a LC 238/2026 muda os limites a partir de 2027; avisar os clientes MEI e, quando o ano de 2027 entrar no cálculo, ajustar os avisos de limite.
+- [ ] MEI: a LC 238/2026 muda os limites a partir de 2027 (R$ 110 mil em 2027, R$ 140 mil em 2028); conferir os avisos de limite de 2027 e avisar os clientes MEI perto do limite de R$ 81 mil em 2026.
 - [ ] **Prazo:** decisão sobre o regime regular de IBS/CBS (jan-jun/2027) até 30/10/2026; cancelamento irretratável de 03/11 a 20/12/2026 (Res. CGSN 194/2026). Rodar o "Simples na Reforma" dos clientes B2B antes.
 - [ ] NFS-e nacional obrigatória a partir de 01/11/2026 para os optantes que prestam serviços (Res. CGSN 191/2026): conferir os clientes ainda em emissor municipal.
 - [ ] Enquadramento: conferir o Anexo de cada CNAE do cliente na descrição da atividade (Res. CGSN 140/2018, art. 25, § 1º), já que a tabela por CNAE é comercial, e se há atividade real que justifique segregar receita no Anexo III.

@@ -239,7 +239,7 @@ Lucro Real ainda calculam PIS/Cofins (a transição desses regimes está na calc
 **Legislação lida:** LC 123/2006 (texto completo), LC 214/2025 (pontos do Simples), LC 227/2026 e LC 238/2026 (MEI de R$ 110 mil em 2027 e
 R$ 140 mil em 2028) e as Resoluções CGSN 190, 191, 194 e 195 (itens 71 a 75 de `docs/premissas.md`). `docs/fontes-da-legislacao.md` diz onde
 cada texto foi lido e o que cada fonte entrega. O feed de mudanças (`tabelas/mudancas.json`) marca o que ainda não entrou no cálculo
-(por exemplo, os limites do MEI de 2027 em diante). Leis e instruções normativas que não foram lidas no texto original (Leis 9.249 e 9.430,
+(por exemplo, o limite proporcional do MEI que inicia atividade). Leis e instruções normativas que não foram lidas no texto original (Leis 9.249 e 9.430,
 Decreto 9.580/2018, INs da Receita) constam só por resumos e precisam de conferência.
 
 **Fora do escopo (decisão do produto):** folha de pagamento dos clientes e split payment não serão implementados no Tolaris. A "folha" que o
@@ -309,7 +309,7 @@ As capturas de tela da apresentação saem de `e2e/capturas_apresentacao.mjs` (v
 - **Fase 1 (concluída):** login, cadastro de clientes, prospecção com CNPJ, proposta em PDF com a marca do escritório.
 - **Fase 2 (concluída):** simulador da reforma, Simples na reforma e módulo de pessoa física, com relatórios em PDF.
 - **Fase 3 (atual):** equipe, recuperação de senha, envio por e-mail, portal do cliente, importação de XML/SPED, recuperação de tributos (monofásico e ST), central de avisos, recálculo por mudança de regra, honorários na proposta, leitura e aceite no portal, receitas do exterior, enquadramento do Simples com busca de CNAEs e tabelas do Simples de 2027 a 2033.
-- **Próximos:** cobrança da assinatura, NFS-e, resumo semanal dos avisos por e-mail, envio recorrente, limites do MEI de 2027 em diante nos avisos.
+- **Próximos:** cobrança da assinatura, NFS-e, resumo semanal dos avisos por e-mail, envio recorrente.
 - **Fase 4:** integrações (Serpro Integra Contador, ERPs), WhatsApp, assistente de IA.
 
 > As estimativas não substituem a análise do contador responsável.

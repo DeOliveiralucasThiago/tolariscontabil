@@ -127,7 +127,7 @@
         "mei"
       ],
       "efeito": "Clientes MEI perto do limite de R$ 81 mil ganham folga a partir de 2027.",
-      "observacao": "Ainda não incorporado: os avisos de limite do MEI usam R$ 81.000 até 2026."
+      "observacao": "Incorporado: os avisos, a projeção de limites e o comparativo autônomo × CNPJ usam o limite de cada ano (R$ 81.000 até 2026, R$ 110.000 em 2027 e R$ 140.000 a partir de 2028). Ainda fora do cálculo: o limite proporcional de quem inicia a atividade e a regra de até dois empregados."
     },
     {
       "id": "simples-anexos-2027",

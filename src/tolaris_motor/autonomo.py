@@ -15,7 +15,11 @@ from . import presumido, simples, tabelas
 from .base import ZERO, D, Numero, Resultado, arredondar, brl, pct
 from .empresa import Atividade, PerfilEmpresa
 
-LIMITE_MEI_ANUAL = D("81000")
+def limite_mei(data: date) -> Decimal:
+    """Limite anual de receita do MEI na data: R$ 81.000 até 2026, R$ 110.000 em 2027 e R$ 140.000 a partir de 2028."""
+    return D(tabelas.vigente("mei", data)["limite_receita_anual"])
+
+
 MEI_INSS = D("0.05")
 MEI_ISS = D("5.00")
 MEI_ICMS = D("1.00")
@@ -95,11 +99,12 @@ def _mei(e: EntradaAutonomo) -> OpcaoAutonomo:
     res = Resultado("MEI")
     anual = e.receita_mensal * 12
     sm = pf.salario_minimo(e.data)
-    aplicavel = e.mei_permitido and anual <= LIMITE_MEI_ANUAL
+    limite = limite_mei(e.data)
+    aplicavel = e.mei_permitido and anual <= limite
     if not e.mei_permitido:
         res.alerta("Ocupação fora da lista do MEI (profissões intelectuais regulamentadas, em regra, não podem).")
-    if anual > LIMITE_MEI_ANUAL:
-        res.alerta(f"Receita anual de {brl(anual)} acima do limite do MEI ({brl(LIMITE_MEI_ANUAL)}).")
+    if anual > limite:
+        res.alerta(f"Receita anual de {brl(anual)} acima do limite do MEI ({brl(limite)}).")
     if not aplicavel:
         res.aplicavel = False
         return OpcaoAutonomo(res.titulo, False, ZERO, ZERO, ZERO, res)

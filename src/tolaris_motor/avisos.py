@@ -12,7 +12,7 @@ from datetime import date
 from decimal import Decimal
 
 from . import pessoa_fisica, simples, tabelas
-from .autonomo import LIMITE_MEI_ANUAL
+from .autonomo import limite_mei
 from .base import ZERO, D, Numero, arredondar, brl, pct
 from .empresa import Atividade, PerfilEmpresa
 
@@ -121,6 +121,14 @@ def _faixa_de_risco(razao: Decimal) -> str | None:
     return None
 
 
+def _nota_limite_mei_futuro(data: date) -> str:
+    """Quando o limite do MEI do ano seguinte é maior (LC 238/2026), avisa que a ampliação não alcança o ano em curso."""
+    proximo, atual = limite_mei(date(data.year + 1, 1, 1)), limite_mei(data)
+    if proximo <= atual:
+        return ""
+    return f" A LC 238/2026 sobe o limite para {brl(proximo)} em {data.year + 1}, mas isso não vale para {data.year}."
+
+
 def avaliar_limites(rbt12: Numero, regime: str | None, data: date, fonte: str = "") -> list[Aviso]:
     """Avisos de limite para a receita dos últimos 12 meses (``rbt12``) conforme o regime atual do cliente."""
     rbt12 = D(rbt12)
@@ -130,23 +138,25 @@ def avaliar_limites(rbt12: Numero, regime: str | None, data: date, fonte: str = 
     avisos: list[Aviso] = []
 
     if regime == "mei":
-        razao = rbt12 / LIMITE_MEI_ANUAL
-        teto_tolerado = LIMITE_MEI_ANUAL * (1 + TOLERANCIA_EXCESSO)
+        limite_anual = limite_mei(data)
+        futuro = _nota_limite_mei_futuro(data)
+        razao = rbt12 / limite_anual
+        teto_tolerado = limite_anual * (1 + TOLERANCIA_EXCESSO)
         if rbt12 > teto_tolerado:
             avisos.append(Aviso(
                 "mei_limite", "critico", f"Receita de {brl(rbt12)} passou de {brl(teto_tolerado)}: MEI desenquadrado",
-                f"Acima de {brl(teto_tolerado)} (20% sobre o limite de {brl(LIMITE_MEI_ANUAL)}) o desenquadramento "
-                f"vale desde 1º de janeiro{de}. É preciso migrar para o Simples Nacional.", None, BASE_LEGAL_MEI))
-        elif rbt12 > LIMITE_MEI_ANUAL:
+                f"Acima de {brl(teto_tolerado)} (20% sobre o limite de {brl(limite_anual)}) o desenquadramento "
+                f"vale desde 1º de janeiro{de}. É preciso migrar para o Simples Nacional.{futuro}", None, BASE_LEGAL_MEI))
+        elif rbt12 > limite_anual:
             avisos.append(Aviso(
-                "mei_limite", "critico", f"Receita de {brl(rbt12)} acima do limite do MEI ({brl(LIMITE_MEI_ANUAL)})",
+                "mei_limite", "critico", f"Receita de {brl(rbt12)} acima do limite do MEI ({brl(limite_anual)})",
                 f"Excesso de até 20% (até {brl(teto_tolerado)}): o desenquadramento vale a partir de janeiro do ano "
-                f"seguinte e o excesso é tributado pelas regras do Simples. Acima disso, é retroativo{de}.",
+                f"seguinte e o excesso é tributado pelas regras do Simples. Acima disso, é retroativo{de}.{futuro}",
                 None, BASE_LEGAL_MEI))
         elif (g := _faixa_de_risco(razao)) is not None:
             avisos.append(Aviso(
                 "mei_limite", g, f"Receita em {pct(razao, 0)} do limite do MEI",
-                f"{brl(rbt12)} de {brl(LIMITE_MEI_ANUAL)}{de}. Planeje a migração para o Simples antes de passar do limite.",
+                f"{brl(rbt12)} de {brl(limite_anual)}{de}. Planeje a migração para o Simples antes de passar do limite.{futuro}",
                 None, BASE_LEGAL_MEI))
 
     elif regime == "simples":
