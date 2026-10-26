@@ -91,6 +91,13 @@ def anexo_da_atividade(perfil: PerfilEmpresa, res: Resultado | None = None) -> s
             r,
             BASE_LEGAL_FATOR_R,
         )
+        if perfil.folha_fator_r_anual is None:
+            res.alerta(
+                "Folha do fator R (LC 123/2006, art. 18, §§ 24 a 26; Res. CGSN 140/2018, art. 26): remunerações pagas a pessoas "
+                "físicas (com o 13º salário), pró-labore e FGTS; não entram aluguéis nem distribuição de lucros. A contribuição "
+                "patronal só entra se for recolhida fora do DAS, o que não é o caso dos Anexos III e V. Se o valor apurado no "
+                "eSocial ou no PGDAS-D for diferente, informe-o em \"Folha do fator R informada\"."
+            )
         if anexo == "V":
             extra = pro_labore_minimo_fator_r(perfil.receita_bruta_anual, folha, data)
             res.alerta(

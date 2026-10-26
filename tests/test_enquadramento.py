@@ -92,3 +92,16 @@ def test_fator_r_informado_tambem_sobe():
 def test_comparativo_continua_aceitando_o_perfil_separado():
     cmp = comparar(perfil(receita_anexo_iii_anual=300_000))
     assert len(cmp.resultados) == 3
+
+
+def test_aviso_da_composicao_da_folha_do_fator_r():
+    calculada = simples.calcular(perfil())
+    aviso = next(a for a in calculada.alertas if a.startswith("Folha do fator R"))
+    assert "13º" in aviso and "distribuição de lucros" in aviso and "art. 18, §§ 24 a 26" in aviso and "Folha do fator R informada" in aviso
+    # com a folha informada, o valor é usado e o aviso de composição não aparece
+    informada = simples.calcular(perfil(folha_fator_r_anual=250_000))
+    assert not any(a.startswith("Folha do fator R") for a in informada.alertas)
+    passo = next(p for p in informada.memoria if p.descricao.startswith("Fator R"))
+    assert "250.000,00 (informada)" in passo.formula
+    # a folha informada muda o Anexo: 250.000 / 600.000 = 41,7% (>= 28%) contra os 6% calculados
+    assert simples.calcular(perfil()).tributos["DAS"] > informada.tributos["DAS"]

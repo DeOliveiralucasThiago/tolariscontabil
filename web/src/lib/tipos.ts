@@ -328,6 +328,7 @@ export interface CompletaEntrada {
   receita_exterior_anual?: number;
   variacao_cambial_anual?: number;
   receita_anexo_iii_anual?: number;
+  folha_fator_r_anual?: number | null;
   ano?: number;
 }
 

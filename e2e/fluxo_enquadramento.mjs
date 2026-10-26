@@ -85,6 +85,7 @@ await page.getByRole("button", { name: "Analisar enquadramento" }).click();
 const res = page.getByTestId("resultado-enquadramento");
 await res.waitFor();
 const t = await res.innerText();
+if (!(await res.innerText()).includes("Folha do fator R (LC 123")) throw new Error("faltou o aviso da composição da folha do fator R");
 for (const trecho of ["Como está hoje", "Pró-labore +", "25% da receita", "30% da receita", "50% da receita", "100% da receita", "Fator R hoje: 6,00%", "exercida de fato"]) {
   if (!t.includes(trecho)) throw new Error(`resultado sem “${trecho}”: ${t}`);
 }
@@ -101,6 +102,22 @@ if (!sim) throw new Error("simulação de enquadramento não ficou no histórico
 const pdf = await page.request.get(`${BASE}/api/simulacoes/${sim.id}/proposta.pdf`);
 if (!pdf.ok() || !(await pdf.body()).subarray(0, 4).equals(Buffer.from("%PDF"))) throw new Error("PDF do enquadramento inválido");
 passo("simulação salva no histórico e PDF gerado");
+
+// 4b. Folha do fator R informada pelo contador (eSocial/PGDAS-D) substitui a calculada
+const blocoFolha = page.getByTestId("bloco-folha-fator-r");
+await blocoFolha.locator("summary").click();
+const textoBloco = await blocoFolha.innerText();
+for (const trecho of ["salários + pró-labore + FGTS de 8%", "13º", "distribuição de lucros"]) {
+  if (!textoBloco.includes(trecho)) throw new Error(`bloco da folha sem “${trecho}”: ${textoBloco}`);
+}
+await page.fill("#folha_fator_r", "25000000"); // máscara: R$ 250.000,00
+await page.getByRole("button", { name: "Analisar enquadramento" }).click();
+await page.getByText("Fator R hoje: 41,67%").waitFor();
+const comFolha = await page.getByTestId("resultado-enquadramento").innerText();
+if (!comFolha.includes("já chega a 28%")) throw new Error(`com a folha informada o fator R já passa de 28%: ${comFolha.slice(0, 300)}`);
+if (comFolha.includes("Folha do fator R (LC 123")) throw new Error("aviso de composição não deveria aparecer com a folha informada");
+await page.screenshot({ path: `${OUT}/enquadramento_3_folha_informada.png`, fullPage: true });
+passo("folha do fator R informada: usada no lugar da calculada (41,67%) e sem o aviso de composição");
 
 // 5. Menu e celular
 await page.setViewportSize({ width: 390, height: 800 });

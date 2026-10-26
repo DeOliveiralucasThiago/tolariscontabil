@@ -121,7 +121,7 @@ export default function Prospeccao() {
           <Cartao titulo="Números do mês">
             <div className="flex flex-col gap-4">
               <CampoMoeda id="faturamento" rotulo="Faturamento mensal" valor={faturamento} onChange={setFaturamento} obrigatorio />
-              <CampoMoeda id="folha" rotulo="Folha de salários (CLT)" valor={folha} onChange={setFolha} ajuda="Salários brutos dos empregados, sem encargos." />
+              <CampoMoeda id="folha" rotulo="Folha de salários (CLT)" valor={folha} onChange={setFolha} ajuda="Salários brutos dos empregados (com 13º e férias), sem encargos." />
               <CampoMoeda id="prolabore" rotulo="Pró-labore dos sócios" valor={proLabore} onChange={setProLabore} />
               <CampoMoeda
                 id="exterior_mensal"

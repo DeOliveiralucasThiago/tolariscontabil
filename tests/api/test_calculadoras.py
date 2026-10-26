@@ -109,3 +109,14 @@ def test_completa_com_receita_do_anexo_iii_e_validacoes(logado: TestClient):
     assert simples(separada) < simples(todos_v)
     assert logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "receita_anexo_iii_anual": 700000}).status_code == 422
     assert logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "atividade": "comercio", "receita_anexo_iii_anual": 1000}).status_code == 422
+
+
+def test_folha_do_fator_r_informada_pelo_contador(logado: TestClient):
+    calculada = logado.post("/api/calculadoras/enquadramento", json=ENTRADAS["enquadramento"]).json()
+    informada = logado.post("/api/calculadoras/enquadramento", json={**ENTRADAS["enquadramento"], "folha_fator_r_anual": 250000}).json()
+    assert calculada["fator_r_atual"] == 0.06 and informada["fator_r_atual"] == 0.416667
+    assert informada["cenarios"][0]["anexos_simples"] == ["III"] and len(informada["cenarios"]) == 1  # já chega a 28%
+    cid = logado.post("/api/clientes", json={"razao_social": "Folha Ltda", "atividade": "servico_fator_r"}).json()["id"]
+    sim = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**ENTRADAS["enquadramento"], "folha_fator_r_anual": 250000}).json()
+    passo = next(p for r in sim["resultado"]["regimes"] if r["titulo"] == "Simples Nacional" for p in r["memoria"] if p["descricao"].startswith("Fator R"))
+    assert "(informada)" in passo["formula"]

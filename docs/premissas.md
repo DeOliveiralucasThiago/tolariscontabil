@@ -305,7 +305,10 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     redação da LC 155/2016) foram comparadas com `simples_nacional.json`, sem divergência. **Fator R:** art. 18, §§ 5º-I, 5º-J e 5º-M
     (28%), § 5º-K (12 meses anteriores) e § 24 (folha = remunerações a pessoas físicas, inclusive pró-labore, mais a contribuição patronal
     efetivamente recolhida e o FGTS); o § 26 exclui aluguéis e distribuição de lucros. O Tolaris soma salários, pró-labore e FGTS de 8%,
-    sem a CPP (que no Anexo III e no V já está dentro do DAS): ponto para o contador. **Vedações:** os incisos XI (atividade intelectual) e
+    sem a CPP (que no Anexo III e no V já está dentro do DAS): ponto para o contador. Somar uma CPP estimada inflaria o fator R e poderia
+    indicar o Anexo III sem que a empresa chegue a 28%, por isso não foi feito. O resultado avisa a composição legal da folha (13º
+    incluído; aluguéis e distribuição de lucros fora) e o planejamento aceita a folha apurada no eSocial ou no PGDAS-D no campo
+    "Folha do fator R informada", que substitui a calculada. **Vedações:** os incisos XI (atividade intelectual) e
     XIII (consultoria) do art. 17 foram revogados em 2014, então serviço intelectual pode optar pelo Simples; seguem vedados, entre outros,
     sócio domiciliado no exterior (art. 17, II), locação de imóveis próprios (XV, LC 214/2025), filial no exterior (art. 3º, § 4º, XII) e
     sócios com pessoalidade, subordinação e habitualidade com o contratante (art. 3º, § 4º, XI). **Exclusão:** art. 29, §§ 1º e 2º (3

@@ -39,6 +39,7 @@ export function FormCompleta({
     receita_exterior_anual: 0,
     variacao_cambial_anual: 0,
     receita_anexo_iii_anual: 0,
+    folha_fator_r_anual: null,
     ...inicial,
   });
   const [erro, setErro] = useState("");
@@ -58,13 +59,13 @@ export function FormCompleta({
         if ((f.receita_anexo_iii_anual ?? 0) > f.receita_bruta_anual) {
           return setErro("A receita do Anexo III não pode passar da receita bruta anual (ela é uma parte dela).");
         }
-        onCalcular(f);
+        onCalcular({ ...f, folha_fator_r_anual: f.folha_fator_r_anual || null });
       }}
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <SelecaoAtividade name="atividade_completa" value={f.atividade} onChange={(v) => set("atividade")((v || "servico_fator_r") as Atividade)} />
         <CampoMoeda id="receita" rotulo="Receita bruta anual" valor={f.receita_bruta_anual} onChange={set("receita_bruta_anual")} obrigatorio />
-        <CampoMoeda id="folha_anual" rotulo="Folha CLT anual" valor={f.folha_clt_anual} onChange={set("folha_clt_anual")} ajuda="Salários brutos, sem encargos." />
+        <CampoMoeda id="folha_anual" rotulo="Folha CLT anual" valor={f.folha_clt_anual} onChange={set("folha_clt_anual")} ajuda="Salários brutos, incluindo 13º e férias, sem encargos. O FGTS de 8% é somado pelo sistema." />
         <CampoMoeda id="prolabore_anual" rotulo="Pró-labore anual" valor={f.pro_labore_anual} onChange={set("pro_labore_anual")} />
         <CampoMoeda
           id="compras"
@@ -132,6 +133,24 @@ export function FormCompleta({
           <ConversorDeMoeda onUsar={(reais) => set("receita_exterior_anual")(reais)} />
         </div>
       </details>
+      {f.atividade === "servico_fator_r" && (
+        <details className="rounded-lg border border-borda p-3" open={(f.folha_fator_r_anual ?? 0) > 0} data-testid="bloco-folha-fator-r">
+          <summary className="cursor-pointer text-sm font-medium">
+            Folha do fator R informada
+            <span className="ml-2 text-xs font-normal text-tinta-2">Opcional: use o valor apurado no eSocial ou no PGDAS-D</span>
+          </summary>
+          <div className="mt-3 flex flex-col gap-3">
+            <p className="text-xs text-tinta-2">
+              Sem este campo, a folha é calculada: salários + pró-labore + FGTS de 8%. A lei considera as remunerações (com o 13º), o
+              pró-labore, o FGTS e a contribuição patronal recolhida fora do DAS, e exclui aluguéis e distribuição de lucros (LC
+              123/2006, art. 18, §§ 24 a 26). Informe o valor anual dos últimos 12 meses se ele for diferente do calculado.
+            </p>
+            <div className="max-w-xs">
+              <CampoMoeda id="folha_fator_r" rotulo="Folha anual para o fator R" valor={f.folha_fator_r_anual ?? 0} onChange={set("folha_fator_r_anual")} />
+            </div>
+          </div>
+        </details>
+      )}
       {mostrarAnexoIII && f.atividade === "servico_fator_r" && (
         <details className="rounded-lg border border-borda p-3" open={(f.receita_anexo_iii_anual ?? 0) > 0} data-testid="bloco-anexo-iii">
           <summary className="cursor-pointer text-sm font-medium">
