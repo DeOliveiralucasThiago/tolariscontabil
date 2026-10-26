@@ -59,7 +59,7 @@ export function ConversorDeMoeda({ onUsar }: { onUsar: (reais: number) => void }
             <option key={m.codigo} value={m.codigo}>{m.codigo} — {m.nome}</option>
           ))}
         </Selecao>
-        <CampoMoeda id="valor_moeda" rotulo="Valor na moeda" valor={valor} onChange={setValor} />
+        <CampoMoeda id="valor_moeda" rotulo="Valor na moeda" valor={valor} onChange={setValor} prefixo={moeda} />
         <div>
           <Rotulo htmlFor="data_cambio">Data do câmbio (recebimento)</Rotulo>
           <input id="data_cambio" type="date" max={hoje()} className={classeCampo} value={data} onChange={(e) => setData(e.target.value)} />

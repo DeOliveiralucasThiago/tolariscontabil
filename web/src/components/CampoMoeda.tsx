@@ -12,6 +12,7 @@ export function CampoMoeda({
   ajuda,
   id,
   obrigatorio,
+  prefixo = "R$",
 }: {
   rotulo: string;
   valor: number;
@@ -19,17 +20,19 @@ export function CampoMoeda({
   ajuda?: string;
   id: string;
   obrigatorio?: boolean;
+  /** Símbolo à esquerda do valor; "R$" por padrão (o conversor usa o código da moeda estrangeira). */
+  prefixo?: string;
 }) {
   return (
     <div>
       <Rotulo htmlFor={id}>{rotulo}</Rotulo>
       <div className="relative">
-        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-tinta-2">R$</span>
+        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-tinta-2">{prefixo}</span>
         <input
           id={id}
           inputMode="numeric"
           required={obrigatorio}
-          className={`${classeCampo} num pl-10 text-right`}
+          className={`${classeCampo} num pl-12 text-right`}
           value={formatador.format(valor)}
           onChange={(e) => {
             const digitos = e.target.value.replace(/\D/g, "").slice(0, 15);
