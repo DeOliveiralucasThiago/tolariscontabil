@@ -113,13 +113,19 @@ def executar_enquadramento(e: EnquadramentoEntrada) -> dict[str, Any]:
     economia = atual.melhor_total - melhor.melhor_total
     alertas = [
         "Os dois caminhos só valem na vida real: o pró-labore precisa ser pago de verdade, e a atividade do Anexo III precisa "
-        "ser exercida de fato, com o CNAE no cadastro e nota fiscal do serviço. A Receita enquadra pela atividade realmente "
-        "exercida; incluir um CNAE sem a atividade pode ser desconsiderado e gerar cobrança com multa. Valide com o contador.",
+        "ser exercida de fato, com o CNAE no cadastro e nota fiscal do serviço, e a receita de cada atividade é segregada "
+        "(LC 123/2006, art. 18, §§ 4º, 5º-B e 5º-F). A Receita enquadra pela atividade realmente exercida; incluir um CNAE sem a "
+        "atividade pode ser desconsiderado, com cobrança, multa e até exclusão do Simples (art. 29, §§ 1º e 2º: impedimento de 3 "
+        "anos, ou de 10 em caso de artifício ou fraude). Valide com o contador.",
+        "Antes de comparar regimes, confirme que o Simples é permitido: não pode optar quem tem sócio domiciliado no exterior ou "
+        "filial no exterior (LC 123/2006, art. 17, II; art. 3º, § 4º, XII), quem tem sócio administrador de outra empresa com receita "
+        "global acima do limite (art. 3º, § 4º, V) ou sócios com relação de pessoalidade, subordinação e habitualidade com o contratante "
+        "do serviço (art. 3º, § 4º, XI), nem quem tem débitos com o INSS ou as Fazendas sem exigibilidade suspensa (art. 17, V).",
     ]
     if perfil.atividade is not Atividade.SERVICO_FATOR_R:
         alertas.append(
-            "Esta análise é para empresas de serviços do fator R (Anexo III ou V conforme a folha). Para as demais "
-            "atividades o Anexo já é definido pela atividade."
+            "Esta análise é para empresas de serviços do fator R (Anexo III ou V conforme a folha: LC 123/2006, art. 18, §§ 5º-I, 5º-J "
+            "e 5º-M). Para as demais atividades o Anexo já é definido pela atividade."
         )
     return {
         "receita_anual": _num(receita),

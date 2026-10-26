@@ -96,7 +96,7 @@ def test_enquadramento_compara_os_caminhos_para_o_anexo_iii(logado: TestClient):
 
 def test_enquadramento_fora_do_fator_r_so_traz_o_cenario_atual(logado: TestClient):
     d = logado.post("/api/calculadoras/enquadramento", json={**ENTRADAS["enquadramento"], "atividade": "comercio"}).json()
-    assert [c["chave"] for c in d["cenarios"]] == ["atual"] and "serviços do fator R" in d["alertas"][1]
+    assert [c["chave"] for c in d["cenarios"]] == ["atual"] and "serviços do fator R" in d["alertas"][2]
     assert d["economia_vs_pior"] == 0
 
 

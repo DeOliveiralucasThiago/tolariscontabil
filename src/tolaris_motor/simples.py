@@ -159,68 +159,63 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             res.alerta(f"Receita de exportação acima de {brl(limite)}: empresa não pode optar pelo Simples Nacional.")
         return res
 
-    extrapolar = receita > limite
     anexo = anexo_da_atividade(perfil, res)
     partes = _partes_por_anexo(perfil, anexo)
     multiplas = len(partes) > 1
     tipo = "mercadorias" if perfil.atividade.vende_mercadoria else "servicos"
     desconsiderados = TRIBUTOS_DESCONSIDERADOS_EXPORTACAO[tipo]
+    # A alíquota de cada mercado sai do RBT12 daquele mercado (LC 123/2006, art. 3º, § 15; Res. CGSN 140/2018, art. 23)
+    mercados = [("mercado interno", interna), ("exportação", exterior)] if exterior else [("", receita)]
     das_total = ZERO
     passos_das: list[Decimal] = []
-    for anx, parte in partes:
-        n, f = faixa(anx, receita, data, extrapolar)
-        aliq = aliquota_efetiva(anx, receita, data, extrapolar)
-        res.passo(
-            f"Alíquota efetiva - Anexo {anx}, {n}ª faixa",
-            f"({brl(receita)} x {pct(D(f['aliquota']))} - {brl(f['deduzir'])}) / {brl(receita)} = {pct(aliq, 4)}",
-            aliq,
-            BASE_LEGAL_ALIQUOTA,
-        )
-        sufixo = f" (Anexo {anx}, {brl(parte)})" if multiplas else ""
-        proporcao = parte / receita if receita else D(1)
-        interna_parte, exterior_parte = interna * proporcao, exterior * proporcao
-        if exterior == 0:
-            das_parte = res.passo(
-                "DAS anual" if not multiplas else f"DAS{sufixo}",
-                f"{brl(parte)} x {pct(aliq, 4)}",
-                parte * aliq,
-                "LC 123/2006, art. 13",
+    for mercado, rbt12 in mercados:
+        if rbt12 <= 0:
+            continue
+        em_mercado = f", {mercado}" if mercado else ""
+        for anx, parte in partes:
+            n, f = faixa(anx, rbt12, data)
+            aliq = aliquota_efetiva(anx, rbt12, data)
+            res.passo(
+                f"Alíquota efetiva - Anexo {anx}, {n}ª faixa{em_mercado}",
+                f"({brl(rbt12)} x {pct(D(f['aliquota']))} - {brl(f['deduzir'])}) / {brl(rbt12)} = {pct(aliq, 4)}",
+                aliq,
+                BASE_LEGAL_ALIQUOTA + ("; art. 3º, § 15" if mercado else ""),
             )
-        else:
-            fracoes = partilha(anx, receita, data, extrapolar)
-            fracao_excluida = sum((fracoes.get(k, ZERO) for k in desconsiderados), ZERO)
-            das_interno = res.passo(
-                f"DAS - mercado interno{sufixo}",
-                f"{brl(interna_parte)} x {pct(aliq, 4)}",
-                interna_parte * aliq,
-                "LC 123/2006, art. 13",
-            )
-            das_exterior = res.passo(
-                f"DAS - exportação{sufixo}",
-                f"{brl(exterior_parte)} x {pct(aliq, 4)} x (1 - {pct(fracao_excluida, 2)} de "
-                f"{'/'.join(t.upper() for t in desconsiderados)} na partilha da faixa)",
-                exterior_parte * aliq * (1 - fracao_excluida),
-                BASE_LEGAL_EXPORTACAO,
-            )
-            das_parte = das_interno + das_exterior
-        das_total += das_parte
-        passos_das.append(das_parte)
+            valor = rbt12 * (parte / receita if receita else D(1))  # parcela do mercado neste Anexo
+            sufixo = f" (Anexo {anx}, {brl(valor)})" if multiplas else ""
+            if not mercado:
+                das_parte = res.passo(
+                    "DAS anual" if not multiplas else f"DAS{sufixo}",
+                    f"{brl(valor)} x {pct(aliq, 4)}",
+                    valor * aliq,
+                    "LC 123/2006, art. 13",
+                )
+            elif mercado == "mercado interno":
+                das_parte = res.passo(f"DAS - mercado interno{sufixo}", f"{brl(valor)} x {pct(aliq, 4)}", valor * aliq, "LC 123/2006, art. 13")
+            else:
+                fracoes = partilha(anx, rbt12, data)
+                fracao_excluida = sum((fracoes.get(k, ZERO) for k in desconsiderados), ZERO)
+                das_parte = res.passo(
+                    f"DAS - exportação{sufixo}",
+                    f"{brl(valor)} x {pct(aliq, 4)} x (1 - {pct(fracao_excluida, 2)} de "
+                    f"{'/'.join(t.upper() for t in desconsiderados)} na partilha da faixa)",
+                    valor * aliq * (1 - fracao_excluida),
+                    BASE_LEGAL_EXPORTACAO,
+                )
+            das_total += das_parte
+            passos_das.append(das_parte)
     if exterior == 0 and not multiplas:
         res.tributos["DAS"] = das_total
     else:
         res.tributos["DAS"] = res.passo(
             "DAS anual", " + ".join(brl(v) for v in passos_das), das_total, "LC 123/2006, art. 13 e art. 18, §§ 1º e 4º"
         )
-    if exterior and extrapolar:
-        res.alerta(
-            f"Receita total de {brl(receita)} passa de {brl(limite)} por causa da exportação: usada a última faixa "
-            "do Anexo (aproximação). Confira a apuração no PGDAS-D."
-        )
     if multiplas:
         res.alerta(
             f"Receita de {brl(perfil.receita_anexo_iii_anual)} separada como atividade do Anexo III: o Simples só aceita "
             "isso se a empresa exerce de fato essa atividade, tem o CNAE no cadastro e emite a nota com o serviço "
-            "correspondente. Não basta incluir o CNAE: a Receita enquadra pela atividade realmente exercida."
+            "correspondente (LC 123/2006, art. 18, §§ 4º e 5º-B). Não basta incluir o CNAE: a Receita enquadra pela "
+            "atividade realmente exercida."
         )
 
     if anexo == "IV":
@@ -246,8 +241,14 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
         )
     if exterior:
         res.alerta(
-            "A Resolução CGSN 190/2026 alterou o art. 25 da Resolução CGSN 140/2018: confira a redação consolidada "
-            "sobre a qualificação da operação como exportação antes de segregar a receita no PGDAS-D."
+            "Cálculo pelas regras vigentes em 2026 (LC 123/2006, art. 3º, § 15 e art. 18, § 14; Res. CGSN 140/2018, arts. 23 e 25): "
+            "cada mercado usa o RBT12 do próprio mercado. A Resolução CGSN 190/2026 muda o art. 25 e o cálculo do RBT12 a partir de "
+            "01/01/2027, fora do alcance desta estimativa. Confira a qualificação da operação como exportação antes de segregar a "
+            "receita no PGDAS-D."
+        )
+        res.alerta(
+            "Vedações a conferir para quem exporta (LC 123/2006, art. 17, II e art. 3º, § 4º, XII): titular ou sócio domiciliado no "
+            "exterior, ou filial, sucursal, agência ou representação no exterior, impedem o Simples Nacional."
         )
     res.alerta("Estimativa com faturamento mensal constante; o DAS real varia mês a mês com o RBT12.")
     return res

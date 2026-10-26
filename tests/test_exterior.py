@@ -35,21 +35,23 @@ def test_sem_exterior_nada_muda():
 
 
 def test_simples_servico_exportado_sem_iss_pis_cofins():
-    # Fator R = 40% (>= 28%): Anexo III, RBT12 600.000 = 4ª faixa
+    # Fator R = 40% (>= 28%): Anexo III. Cada mercado tem a sua alíquota, pelo RBT12 do próprio mercado (art. 3º, § 15)
     todos = simples.calcular(perfil())
     parcial = simples.calcular(perfil(receita_exterior_anual=300_000))
     tudo = simples.calcular(perfil(receita_exterior_anual=600_000))
-    aliq = simples.aliquota_efetiva("III", 600_000, HOJE)
-    fr = simples.partilha("III", 600_000, HOJE)
-    excluida = fr["pis"] + fr["cofins"] + fr["iss"]
-    assert 0 < excluida < 1
-    assert todos.tributos["DAS"] == D(600_000) * aliq
-    assert tudo.tributos["DAS"] == D(600_000) * aliq * (1 - excluida)
-    assert parcial.tributos["DAS"] == D(300_000) * aliq + D(300_000) * aliq * (1 - excluida)
+    aliq600 = simples.aliquota_efetiva("III", 600_000, HOJE)
+    aliq300 = simples.aliquota_efetiva("III", 300_000, HOJE)
+    exc600 = sum(simples.partilha("III", 600_000, HOJE)[k] for k in ("pis", "cofins", "iss"))
+    exc300 = sum(simples.partilha("III", 300_000, HOJE)[k] for k in ("pis", "cofins", "iss"))
+    assert 0 < exc600 < 1 and 0 < exc300 < 1
+    assert todos.tributos["DAS"] == D(600_000) * aliq600
+    assert tudo.tributos["DAS"] == D(600_000) * aliq600 * (1 - exc600)  # só exportação: o RBT12 de exportação é o total
+    assert parcial.tributos["DAS"] == D(300_000) * aliq300 + D(300_000) * aliq300 * (1 - exc300)
     assert tudo.tributos["DAS"] < parcial.tributos["DAS"] < todos.tributos["DAS"]
-    # a alíquota efetiva continua calculada sobre o RBT12 total (inclui exportação)
-    efetiva = next(p for p in parcial.memoria if p.descricao.startswith("Alíquota efetiva"))
-    assert "600.000,00" in efetiva.formula  # a faixa e a alíquota usam o RBT12 total
+    # com os dois mercados, cada alíquota usa o RBT12 do mercado (R$ 300.000), não o total (R$ 600.000)
+    efetivas = [p for p in parcial.memoria if p.descricao.startswith("Alíquota efetiva")]
+    assert len(efetivas) == 2 and all("300.000,00" in p.formula for p in efetivas)
+    assert {p.descricao.split(", ")[-1] for p in efetivas} == {"mercado interno", "exportação"}
     assert any("exportação de serviços" in a and "ingresso de divisas" in a for a in parcial.alertas)
     assert any("Resolução CGSN 190/2026" in a for a in parcial.alertas)
 
@@ -57,17 +59,23 @@ def test_simples_servico_exportado_sem_iss_pis_cofins():
 def test_simples_mercadoria_exportada_sem_icms_ipi_pis_cofins():
     p = PerfilEmpresa(atividade=Atividade.COMERCIO, receita_bruta_anual=1_000_000, receita_exterior_anual=400_000, compras_anual=500_000)
     r = simples.calcular(p)
-    aliq = simples.aliquota_efetiva("I", 1_000_000, HOJE)
-    fr = simples.partilha("I", 1_000_000, HOJE)
+    aliq_int = simples.aliquota_efetiva("I", 600_000, HOJE)
+    aliq_exp = simples.aliquota_efetiva("I", 400_000, HOJE)
+    fr = simples.partilha("I", 400_000, HOJE)
     excluida = fr["pis"] + fr["cofins"] + fr["icms"] + fr.get("ipi", D(0))
-    assert r.tributos["DAS"] == D(600_000) * aliq + D(400_000) * aliq * (1 - excluida)
+    assert r.tributos["DAS"] == D(600_000) * aliq_int + D(400_000) * aliq_exp * (1 - excluida)
     assert any("exportação de mercadorias" in a for a in r.alertas)
 
 
 def test_simples_limites_separados_para_interno_e_exportacao():
-    # R$ 4,8 mi no mercado interno + R$ 3 mi de exportação: cabe, usa a última faixa e avisa
+    # R$ 4,8 mi no mercado interno + R$ 3 mi de exportação: cada mercado cabe no seu limite e usa a sua faixa
     r = simples.calcular(perfil(receita_bruta_anual=7_800_000, receita_exterior_anual=3_000_000, pro_labore_anual=2_000_000))
-    assert r.aplicavel and any("passa de" in a and "exportação" in a for a in r.alertas)
+    assert r.aplicavel and not any("última faixa" in a for a in r.alertas)
+    # fator R = 2.000.000 / 7.800.000 = 25,6% (sobre a receita total): Anexo V
+    interna = simples.aliquota_efetiva("V", 4_800_000, HOJE)
+    exportacao = simples.aliquota_efetiva("V", 3_000_000, HOJE)
+    exc = sum(simples.partilha("V", 3_000_000, HOJE)[k] for k in ("pis", "cofins", "iss"))
+    assert r.tributos["DAS"] == D(4_800_000) * interna + D(3_000_000) * exportacao * (1 - exc)
     # interno acima do limite
     assert not simples.calcular(perfil(receita_bruta_anual=5_000_000, receita_exterior_anual=100_000)).aplicavel
     # exportação acima do limite

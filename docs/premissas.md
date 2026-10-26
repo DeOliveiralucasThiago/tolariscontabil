@@ -249,16 +249,16 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     aqui se verifique (Res. CGSN 140/2018, art. 25, §§ 4º e 4º-A; SC Cosit 78/2019 e 185/2025). O Tolaris **não verifica**
     nada disso: o contador informa a parte da receita que é exportação e o sistema avisa dos requisitos em cada regime.
     Para ISS, o critério é o local do resultado (LC 116/2003, art. 2º, I e parágrafo único), que pode divergir do de PIS/Cofins.
-61. **Simples Nacional:** a alíquota efetiva usa o RBT12 **total** (mercado interno + exportação). A receita exportada paga
-    o DAS menos a fatia de PIS, Cofins e ISS da partilha da faixa (serviços), ou de PIS, Cofins, ICMS e IPI (mercadorias).
-    IRPJ, CSLL e CPP continuam. A exclusão do ISS na exportação de serviços foi tratada como regra (a SC Cosit 78/2019 só
-    cita PIS/Cofins; a fonte para o ISS é a LC 116/2003 e a desconsideração dos percentuais no art. 25 da Res. CGSN 140).
-    **Não conseguimos ler o texto consolidado** da Resolução CGSN 140/2018, nem a alteração da Res. CGSN 190/2026 sobre o
-    art. 25: o resultado mostra um aviso para conferir a redação vigente.
-62. **Limites do Simples com exportação:** mercado interno e exportação têm, cada um, o limite de R$ 4,8 mi (Res. CGSN
-    140/2018, art. 2º, § 1º, após a Res. CGSN 156/2020); o sublimite estadual de ICMS/ISS (R$ 3,6 mi) conta só o mercado
-    interno. Se o total passar de R$ 4,8 mi por causa da exportação, usamos a última faixa do Anexo (aproximação com alerta).
-    Não calculamos o RBT12 separado por mercado que o PGDAS-D usa em casos de ultrapassagem.
+61. **Simples Nacional:** a receita exportada paga o DAS menos a fatia de PIS, Cofins e ISS da partilha da faixa (serviços), ou
+    de PIS, Cofins, ICMS e IPI (mercadorias); IRPJ, CSLL e CPP continuam (LC 123/2006, art. 18, § 14; Res. CGSN 140/2018, art.
+    25, § 3º). Conferido no texto consolidado da Resolução, em 26/10/2026. A exclusão do ISS na exportação de serviços segue a
+    LC 116/2003 e a desconsideração dos percentuais do art. 25; a SC Cosit 78/2019 só cita PIS/Cofins. A Res. CGSN 190/2026
+    revoga os §§ 4º e 4º-A do art. 25 e muda o cálculo a partir de 01/01/2027: o Tolaris calcula 2025 e 2026 e avisa.
+62. **Limites e alíquota do Simples com exportação:** mercado interno e exportação têm, cada um, o limite de R$ 4,8 mi (LC
+    123/2006, art. 3º, § 14; Res. CGSN 140/2018, art. 2º, § 1º). **Cada mercado usa o RBT12 do próprio mercado** para achar a
+    faixa e a alíquota efetiva (LC 123/2006, art. 3º, § 15, redação da LC 147/2014; Res. CGSN 140/2018, art. 23). A primeira
+    versão do Tolaris usava o RBT12 total e superestimava o DAS de quem tem os dois mercados (quem só exporta, ou só vende no país,
+    não muda). O fator R continua sobre a receita total. O sublimite estadual de ICMS/ISS (R$ 3,6 mi) conta só o mercado interno.
 63. **Lucro Presumido:** a receita de exportação fica fora de PIS/Cofins (Leis 10.637/2002, art. 5º, e 10.833/2003, art. 6º,
     com a condição do ingresso de divisas) e de ISS/ICMS, mas **entra** na base presumida de IRPJ e CSLL. O crédito de ICMS
     das compras é mantido (CF, art. 155, § 2º, X, a).
@@ -286,7 +286,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 69. **Enquadramento (Anexo V → III):** para atividade do fator R, o Tolaris compara a situação de hoje com (a) pró-labore elevado
     até o fator R chegar a 28%, somando o INSS de 11% do sócio sobre o acréscimo (o IRRF do sócio não entra) e (b) uma parte da
     receita em atividade que tributa direto no Anexo III, em 25%, 50%, 100% e um percentual do contador. No Simples, cada parte
-    da receita usa a alíquota efetiva do seu Anexo calculada sobre o RBT12 total, e a receita do exterior é repartida
+    da receita usa a alíquota efetiva do seu Anexo (calculada sobre o RBT12 do mercado), e a receita do exterior é repartida
     proporcionalmente entre as partes. O fator R continua medido sobre a receita total. Presumido e Real não mudam com a
     separação por Anexo. **Só vale se a atividade for exercida de fato**, com o CNAE no cadastro e nota fiscal do serviço: a Receita
     enquadra pela atividade real, e um CNAE incluído sem a atividade pode ser desconsiderado, com cobrança e multa. A tela e o
@@ -301,9 +301,22 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     lista os CNAEs de Anexo III direto, sem fator R, que o contador pode avaliar, sempre com o aviso de que só vale para atividade
     exercida de fato. Para atualizar, baixe as fontes de novo e rode `scripts/gerar_tabela_cnae.py`.
 
+71. **Conferência com o texto da LC 123/2006 (26/10/2026):** as tabelas dos Anexos I a V (alíquotas, parcelas a deduzir e partilha, na
+    redação da LC 155/2016) foram comparadas com `simples_nacional.json`, sem divergência. **Fator R:** art. 18, §§ 5º-I, 5º-J e 5º-M
+    (28%), § 5º-K (12 meses anteriores) e § 24 (folha = remunerações a pessoas físicas, inclusive pró-labore, mais a contribuição patronal
+    efetivamente recolhida e o FGTS); o § 26 exclui aluguéis e distribuição de lucros. O Tolaris soma salários, pró-labore e FGTS de 8%,
+    sem a CPP (que no Anexo III e no V já está dentro do DAS): ponto para o contador. **Vedações:** os incisos XI (atividade intelectual) e
+    XIII (consultoria) do art. 17 foram revogados em 2014, então serviço intelectual pode optar pelo Simples; seguem vedados, entre outros,
+    sócio domiciliado no exterior (art. 17, II), locação de imóveis próprios (XV, LC 214/2025), filial no exterior (art. 3º, § 4º, XII) e
+    sócios com pessoalidade, subordinação e habitualidade com o contratante (art. 3º, § 4º, XI). **Exclusão:** art. 29, §§ 1º e 2º (3
+    anos de impedimento; 10 se houver artifício ou fraude). **Anexo pela atividade:** § 5º-B (Anexo III, entre elas cursos "gerenciais e
+    escolas livres", instalação, reparos e manutenção em geral, produções culturais), § 5º-C (IV), § 5º-D e § 5º-I (V pelo fator R);
+    os §§ 5º-D, IV e VI exigem que o programa ou a página sejam desenvolvidos "em estabelecimento do optante". Escritórios contábeis
+    recolhem ISS em valor fixo (§ 22-A), o que o cálculo não trata.
+
 ## Pontos para o contador validar
 
-- [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias?).
+- [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias? A lei, art. 18, § 24, soma também a CPP efetivamente recolhida).
 - [ ] RAT/terceiros padrão (2% e 5,8%) para os clientes típicos do escritório.
 - [ ] Enquadramento: conferir o Anexo de cada CNAE do cliente na descrição da atividade (Res. CGSN 140/2018, art. 25, § 1º), já que a tabela por CNAE é comercial, e se há atividade real que justifique segregar receita no Anexo III.
 - [ ] Pró-labore elevado para o fator R: custo do INSS (11% do sócio) e do IRRF, e se a retirada total já comporta o valor.
