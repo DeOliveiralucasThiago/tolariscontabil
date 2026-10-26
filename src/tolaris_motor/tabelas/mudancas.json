@@ -140,6 +140,19 @@
       ],
       "efeito": "Muda o DAS de 2027 em diante e a comparação do Simples na Reforma.",
       "observacao": "Ainda não incorporado como tabela de cálculo: o Simples na Reforma já usa a fatia de CBS e IBS conferida com a Resolução."
+    },
+    {
+      "id": "simples-credito-ibs-cbs-adquirente",
+      "data": "2027-01-01",
+      "titulo": "Simples: o cliente do regime regular só se credita do que o DAS cobra de IBS e CBS",
+      "resumo": "A empresa fora do Simples que compra de ME ou EPP optante tem crédito de IBS e CBS em montante equivalente ao cobrado no DAS (a alíquota vem pelos percentuais do Anexo da faixa, informados na nota). Quem opta pelo regime regular de IBS e CBS passa a gerar crédito cheio ao comprador, e as parcelas de IBS e CBS deixam de ser cobradas no DAS. A opção vale por semestre (janeiro e julho), é irretratável no período e é feita nos meses de setembro e março anteriores, nos termos do CGSN.",
+      "base_legal": "LC 214/2025, arts. 41 e 47, § 9º; LC 123/2006, arts. 13, §§ 9º a 11, e 23, § 1º-A (redação da LC 227/2026)",
+      "areas": [
+        "simples",
+        "reforma"
+      ],
+      "efeito": "Para clientes B2B, o crédito do comprador pode pesar mais que a economia do DAS: rodar o Simples na Reforma antes do prazo.",
+      "observacao": "A regra já alimenta o Simples na Reforma; os prazos de 2026 seguem a Res. CGSN 194/2026."
     }
   ]
 }

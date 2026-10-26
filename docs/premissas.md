@@ -344,6 +344,17 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     por mês), permite até **dois empregados** (a partir de 2027) e concede remissão dos créditos da União do MEI até 13/10/2026. Os
     avisos do MEI continuam com R$ 81 mil, o limite de 2026. As duas leis estão no feed de mudanças como "ainda não incorporadas".
 
+74. **LC 214/2025, pontos que mexem no Simples (lida no autógrafo do PLP 68/2024 e conferida com o autógrafo da LC 227, em 26/10/2026):**
+    (a) o optante pode apurar IBS e CBS pelo **regime regular**, e então essas parcelas deixam de ser cobradas no DAS (art. 41 e LC 123,
+    art. 13, §§ 9º a 11); a opção vale por semestre, é irretratável no período e é feita antes dele (a LC 227 fixa setembro e março, com
+    semestres iniciados em janeiro e julho; para 2027 valem os prazos da Res. CGSN 194/2026, premissa 72); (b) o adquirente **fora do
+    Simples** se credita de IBS e CBS em montante equivalente ao cobrado pelo DAS, com a alíquota informada na nota pelos percentuais do
+    Anexo da faixa (art. 47, § 9º; LC 123, art. 23, §§ 1º-A a 3º); é a base do modelo do "Simples na Reforma"; (c) o teto de ISS no DAS
+    cai com a transição (5% em 2027-28, 4,5% em 2029, 4% em 2030, 3,5% em 2031, 3% em 2032), com a diferença indo ao IBS e aos federais;
+    (d) os Anexos de 2027-28 da LC 227 coincidem com os da Res. CGSN 190; a partir de 2029 as tabelas escalonam ICMS/ISS para IBS por
+    ano (ex.: Anexo III 2029: ISS 30,15% e IBS 3,35% na 1ª faixa). **Limites:** o texto lido é o autógrafo (antes de vetos e sanção);
+    as tabelas de 2029 em diante não estão carregadas como vigências do motor, que calcula 2025-2026.
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias? A lei, art. 18, § 24, soma também a CPP efetivamente recolhida).
