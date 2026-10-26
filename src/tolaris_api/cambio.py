@@ -7,6 +7,8 @@ O contrato de câmbio fecha a taxa real da operação: a PTAX serve de referênc
 
 from __future__ import annotations
 
+import re
+import time
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -27,7 +29,14 @@ MOEDAS = {
     "NOK": "Coroa norueguesa",
     "SEK": "Coroa sueca",
 }
-"""Moedas com boletim PTAX."""
+"""Moedas mais comuns, com o nome em português. Servem de lista de reserva quando o Banco Central não responde
+e de nome para as moedas que ele lista só em maiúsculas."""
+
+VALIDADE_LISTA_SEGUNDOS = 24 * 3600
+"""Por quanto tempo a lista de moedas do Banco Central fica guardada em memória."""
+
+_CODIGO = re.compile(r"^[A-Z]{3}$")
+_lista_guardada: tuple[float, dict[str, str]] | None = None
 
 JANELA_DIAS = 10
 """Quantos dias para trás procurar uma cotação (cobre fins de semana e feriados prolongados)."""
@@ -53,7 +62,7 @@ class Ptax:
     def como_dict(self) -> dict:
         return {
             "moeda": self.moeda,
-            "nome": MOEDAS.get(self.moeda, self.moeda),
+            "nome": nome_da_moeda(self.moeda),
             "data_solicitada": self.data_solicitada.isoformat(),
             "data_cotacao": self.data_cotacao.isoformat(),
             "compra": float(self.compra),
@@ -61,6 +70,50 @@ class Ptax:
             "boletim": self.boletim,
             "dia_anterior": self.data_cotacao != self.data_solicitada,
         }
+
+
+def nome_da_moeda(codigo: str) -> str:
+    if codigo in MOEDAS:
+        return MOEDAS[codigo]
+    if _lista_guardada and codigo in _lista_guardada[1]:
+        return _lista_guardada[1][codigo]
+    return codigo
+
+
+def listar_moedas(transport: httpx.BaseTransport | None = None) -> dict[str, str]:
+    """Todas as moedas com PTAX segundo o Banco Central (serviço ``Moedas``), guardadas por um dia.
+
+    Se o Banco Central não responder, devolve as moedas mais comuns; a tela segue funcionando e a taxa manual continua valendo.
+    """
+    global _lista_guardada
+    agora = time.monotonic()
+    if _lista_guardada and agora - _lista_guardada[0] < VALIDADE_LISTA_SEGUNDOS:
+        return _lista_guardada[1]
+    cfg = get_settings()
+    try:
+        with httpx.Client(timeout=cfg.cnpj_timeout_segundos, transport=transport) as cliente:
+            resp = cliente.get(f"{cfg.ptax_url}/Moedas", params={"$format": "json"})
+        resp.raise_for_status()
+        registros = resp.json()["value"]
+    except (httpx.HTTPError, ValueError, KeyError, TypeError):
+        return dict(MOEDAS)
+    achadas: dict[str, str] = {}
+    for r in registros:
+        try:
+            codigo = str(r["simbolo"]).strip().upper()
+        except (KeyError, TypeError):
+            continue
+        if codigo == "BRL" or not _CODIGO.match(codigo):
+            continue
+        nome = MOEDAS.get(codigo) or str(r.get("nomeFormatado") or "").strip().capitalize() or codigo
+        achadas[codigo] = nome
+    if not achadas:
+        return dict(MOEDAS)
+    # as comuns primeiro e na ordem de sempre; as demais em ordem alfabética do nome
+    ordenadas = {c: achadas[c] for c in MOEDAS if c in achadas}
+    ordenadas.update(sorted(((c, n) for c, n in achadas.items() if c not in ordenadas), key=lambda x: x[1]))
+    _lista_guardada = (agora, ordenadas)
+    return ordenadas
 
 
 def escolher_cotacao(moeda: str, data: date, registros: list[dict]) -> Ptax:
@@ -84,7 +137,7 @@ def escolher_cotacao(moeda: str, data: date, registros: list[dict]) -> Ptax:
 
 def consultar_ptax(moeda: str, data: date, transport: httpx.BaseTransport | None = None) -> Ptax:
     moeda = moeda.upper()
-    if moeda not in MOEDAS:
+    if not _CODIGO.match(moeda):
         raise CotacaoNaoEncontrada(f"Moeda sem PTAX: {moeda}")
     cfg = get_settings()
     inicio = data - timedelta(days=JANELA_DIAS)

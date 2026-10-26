@@ -202,7 +202,7 @@ verificação em duas etapas guardados no banco não podem ser lidos (o usuário
 | `reforma` | Transição IBS/CBS ano a ano (2025–2033) com créditos, redução setorial e alíquotas de referência configuráveis |
 
 **Receitas do exterior:** o planejamento completo, a simulação expressa e a planilha de dados contábeis aceitam a parte da receita
-que vem do exterior e a variação cambial; a tela traz um conversor de moeda pela PTAX do Banco Central (a taxa pode ser trocada à mão).
+que vem do exterior e a variação cambial; a tela traz um conversor de moeda pela PTAX do Banco Central, com todas as moedas que ele cota (a taxa pode ser trocada à mão).
 As premissas e o que o contador precisa validar estão em `docs/premissas.md` (itens 60 a 68).
 
 Todo resultado traz uma **memória de cálculo** (descrição, fórmula, valor e base legal

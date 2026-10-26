@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 from tolaris_api import cambio
 from tolaris_api.main import app
-from tolaris_api.routers.cambio import get_consulta_ptax
+from tolaris_api.routers.cambio import get_consulta_ptax, get_lista_moedas
 
 BOLETINS = [
     {"cotacaoCompra": 3.9500, "cotacaoVenda": 3.9510, "dataHoraCotacao": "2026-10-15 10:08:40.123", "tipoBoletim": "Abertura"},
@@ -53,15 +53,60 @@ def test_erros_do_banco_central():
         cambio.consultar_ptax("USD", date(2026, 10, 15), transport=com(lambda r: (_ for _ in ()).throw(httpx.ConnectError("sem rede"))))
     with pytest.raises(cambio.CotacaoNaoEncontrada):
         cambio.consultar_ptax("USD", date(2026, 10, 15), transport=com(lambda r: httpx.Response(200, json={"value": []})))
-    with pytest.raises(cambio.CotacaoNaoEncontrada):
-        cambio.consultar_ptax("XXX", date(2026, 10, 15))
+    with pytest.raises(cambio.CotacaoNaoEncontrada):  # código fora do formato nem chega ao Banco Central
+        cambio.consultar_ptax("X1", date(2026, 10, 15))
+    # moeda fora das dez comuns: o Banco Central decide
+    p = cambio.consultar_ptax("ZAR", date(2026, 10, 15), transport=com(lambda r: httpx.Response(200, json={"value": BOLETINS})))
+    assert p.moeda == "ZAR" and p.como_dict()["nome"] == "ZAR"
+
+
+MOEDAS_BCB = {
+    "value": [
+        {"simbolo": "USD", "nomeFormatado": "DOLAR DOS EUA", "tipoMoeda": "A"},
+        {"simbolo": "ZAR", "nomeFormatado": "RAND", "tipoMoeda": "A"},
+        {"simbolo": "ARS", "nomeFormatado": "PESO ARGENTINO", "tipoMoeda": "A"},
+        {"simbolo": "BRL", "nomeFormatado": "REAL", "tipoMoeda": "A"},
+        {"simbolo": "lixo!"},
+        {"nomeFormatado": "sem símbolo"},
+    ]
+}
+
+
+@pytest.fixture
+def sem_cache(monkeypatch):
+    monkeypatch.setattr(cambio, "_lista_guardada", None)
+
+
+def test_lista_de_moedas_vem_do_banco_central_e_fica_guardada(sem_cache):
+    chamadas = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        chamadas.append(req.url.path)
+        return httpx.Response(200, json=MOEDAS_BCB)
+
+    lista = cambio.listar_moedas(transport=httpx.MockTransport(handler))
+    assert list(lista) == ["USD", "ARS", "ZAR"]  # comuns primeiro, depois ordem alfabética do nome
+    assert lista["USD"] == "Dólar dos EUA" and lista["ZAR"] == "Rand" and "BRL" not in lista
+    assert chamadas[0].endswith("/Moedas")
+    cambio.listar_moedas(transport=httpx.MockTransport(handler))  # segunda vez: do cache
+    assert len(chamadas) == 1
+    assert cambio.nome_da_moeda("ZAR") == "Rand" and cambio.nome_da_moeda("QQQ") == "QQQ"
+
+
+def test_lista_de_moedas_cai_para_as_comuns_quando_o_banco_central_falha(sem_cache):
+    com = lambda h: httpx.MockTransport(h)  # noqa: E731
+    assert cambio.listar_moedas(transport=com(lambda r: httpx.Response(500))) == cambio.MOEDAS
+    assert cambio.listar_moedas(transport=com(lambda r: httpx.Response(200, json={"x": 1}))) == cambio.MOEDAS
+    assert cambio.listar_moedas(transport=com(lambda r: httpx.Response(200, json={"value": []}))) == cambio.MOEDAS
+    assert cambio._lista_guardada is None  # falha não fica guardada
 
 
 def test_rota_exige_login_e_usa_a_consulta(logado: TestClient):
     anonimo = TestClient(logado.app)
     assert anonimo.get("/api/cambio/ptax?moeda=CAD&data=2026-10-15").status_code == 401
     assert anonimo.get("/api/cambio/moedas").status_code == 401
-    assert {m["codigo"] for m in logado.get("/api/cambio/moedas").json()} >= {"USD", "CAD", "EUR"}
+    app.dependency_overrides[get_lista_moedas] = lambda: (lambda: {"USD": "Dólar", "CAD": "Dólar canadense", "ZAR": "Rand"})
+    assert [m["codigo"] for m in logado.get("/api/cambio/moedas").json()] == ["USD", "CAD", "ZAR"]
 
     chamadas = []
 
@@ -73,6 +118,7 @@ def test_rota_exige_login_e_usa_a_consulta(logado: TestClient):
     r = logado.get("/api/cambio/ptax?moeda=cad&data=2026-10-15")
     assert r.status_code == 200 and r.json()["compra"] == 3.97 and r.json()["moeda"] == "CAD" and chamadas == [("CAD", date(2026, 10, 15))]
     assert logado.get("/api/cambio/ptax?moeda=XXX&data=2026-10-15").status_code == 422
+    assert logado.get("/api/cambio/ptax?moeda=zar&data=2026-10-15").status_code == 200  # fora das dez comuns, mas listada
     assert logado.get("/api/cambio/ptax?moeda=CAD&data=2999-01-01").status_code == 422
     assert logado.get("/api/cambio/ptax?moeda=CAD&data=ontem").status_code == 422
 

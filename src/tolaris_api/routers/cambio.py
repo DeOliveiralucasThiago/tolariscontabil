@@ -5,13 +5,14 @@ from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from ..cambio import MOEDAS, CambioIndisponivel, CotacaoNaoEncontrada, Ptax, consultar_ptax
+from ..cambio import CambioIndisponivel, CotacaoNaoEncontrada, Ptax, consultar_ptax, listar_moedas
 from ..models import Usuario
 from ..seguranca import usuario_atual
 
 router = APIRouter(prefix="/cambio", tags=["câmbio"])
 
 ConsultaPtax = Callable[[str, date], Ptax]
+ListaMoedas = Callable[[], dict[str, str]]
 
 
 def get_consulta_ptax() -> ConsultaPtax:
@@ -19,9 +20,14 @@ def get_consulta_ptax() -> ConsultaPtax:
     return consultar_ptax
 
 
+def get_lista_moedas() -> ListaMoedas:
+    """Dependência substituível nos testes (sem rede)."""
+    return listar_moedas
+
+
 @router.get("/moedas")
-def moedas(_: Usuario = Depends(usuario_atual)) -> list[dict[str, str]]:
-    return [{"codigo": c, "nome": n} for c, n in MOEDAS.items()]
+def moedas(_: Usuario = Depends(usuario_atual), lista: ListaMoedas = Depends(get_lista_moedas)) -> list[dict[str, str]]:
+    return [{"codigo": c, "nome": n} for c, n in lista().items()]
 
 
 @router.get("/ptax")
@@ -30,8 +36,9 @@ def ptax(
     data: date = Query(),
     _: Usuario = Depends(usuario_atual),
     consulta: ConsultaPtax = Depends(get_consulta_ptax),
+    lista: ListaMoedas = Depends(get_lista_moedas),
 ) -> dict:
-    if moeda.upper() not in MOEDAS:
+    if moeda.upper() not in lista():
         raise HTTPException(422, "Moeda sem cotação PTAX do Banco Central")
     if data > date.today():
         raise HTTPException(422, "A data não pode ser futura")

@@ -272,8 +272,10 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     defenda o contrário.
 66. **Câmbio:** a conversão para reais usa a PTAX de compra do Banco Central (fechamento do último dia útil até a data
     informada), por padrão, e o contador pode trocar a taxa pela do contrato de câmbio. A consulta usa o serviço público
-    Olinda do Banco Central (moedas AUD, CAD, CHF, DKK, EUR, GBP, JPY, NOK, SEK, USD). **Não foi testada contra o serviço
-    real** (o ambiente de desenvolvimento não alcança o Banco Central): o formato da resposta segue a documentação.
+    Olinda do Banco Central. A lista de moedas vem do próprio serviço (`Moedas`, guardada por um dia); se ele não
+    responder, a tela oferece as dez mais comuns (AUD, CAD, CHF, DKK, EUR, GBP, JPY, NOK, SEK, USD) e a taxa manual segue
+    valendo. **Não foi testada contra o serviço real** (o ambiente de desenvolvimento não alcança o Banco Central): o
+    formato das respostas segue a documentação.
 67. **Reforma tributária, planejado × realizado e notas:** as calculadoras da Reforma (IBS/CBS, Simples na Reforma) **não**
     separam exportação (que não tem IBS/CBS na LC 214/2025). O acompanhamento mantém a proporção de exterior do
     planejamento ao reavaliar com a receita real. NF-e de exportação (CFOP 7xxx) e a nota fiscal de serviços ainda não
