@@ -22,7 +22,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 from tolaris_motor import Atividade, PerfilEmpresa, Resultado, brl, pct
 from tolaris_motor import pessoa_fisica as pf
-from tolaris_motor import autonomo, avisos, presumido, real, recuperacao, reforma, reforma_simples, simples
+from tolaris_motor import autonomo, avisos, enquadramento, presumido, real, recuperacao, reforma, reforma_simples, simples
 
 FONTE = "Arial"
 AZUL_ESCURO = "1F3A5F"
@@ -60,6 +60,26 @@ def _perfil_desc(p: PerfilEmpresa) -> str:
     else:
         partes.append(f"ISS {pct(p.aliquota_iss, 0)}")
     return "; ".join(partes)
+
+
+def _resultado_enquadramento(p: PerfilEmpresa, percentual: str | None = None) -> Resultado:
+    """Um Resultado por empresa: o DAS de cada caminho (hoje, pró-labore até o fator R de 28% e parte no Anexo III).
+
+    As linhas de ``tributos`` são alternativas, não se somam; a memória traz o fator R e a alíquota efetiva de cada caminho.
+    """
+    r = Resultado("Enquadramento")
+    for c in enquadramento.analisar(p, percentual):
+        simples_res = next(x for x in c.comparativo.resultados if x.titulo.startswith("Simples"))
+        r.tributos[f"DAS - {c.descricao}"] = simples_res.tributos["DAS"] if simples_res.aplicavel else Decimal(0)
+        if c.custo_extra_anual:
+            r.tributos[f"INSS do sócio sobre o pró-labore adicional ({c.chave})"] = c.custo_extra_anual
+        for passo in simples_res.memoria:
+            r.passo(f"{c.chave}: {passo.descricao}", passo.formula, passo.valor, passo.base_legal)
+    r.alerta("Os caminhos são alternativas: o DAS de cada um é calculado como se a empresa seguisse só aquele caminho.")
+    r.alerta("Receita no Anexo III só vale se a empresa exerce de fato a atividade, tem o CNAE no cadastro e emite a nota com ela "
+             "(LC 123/2006, art. 18, §§ 4º e 5º-B). O motor só mostra o efeito no imposto; a decisão é do contador.")
+    r.alerta("O INSS do sócio (11% sobre o pró-labore a mais, dentro do teto) é custo do caminho do fator R; o IRRF não entra.")
+    return r
 
 
 def casos() -> list[Caso]:
@@ -125,6 +145,43 @@ def casos() -> list[Caso]:
                 reforma_simples.EntradaSimplesReforma("servico_fator_r", 1_200_000, "0.3", folha_fator_r_anual=400_000)),
     }
     for cod, (desc, e) in simples_b2b.items():
+        for c in reforma_simples.simular(e):
+            lista.append(Caso(f"{cod}-{c.ano}", f"Simples na Reforma - {c.ano}",
+                              f"{desc}; receita {brl(e.receita_bruta_anual)}", c.resultado))
+
+    enq = {
+        "ENQ1": ("Serviços do fator R, pró-labore de R$ 3.000/mês e sem empregados (o caso do kit de teste)",
+                 PerfilEmpresa(Atividade.SERVICO_FATOR_R, 600_000, pro_labore_anual=36_000, outras_despesas_anual=60_000), "0.3"),
+        "ENQ2": ("Serviços do fator R com um empregado e pró-labore baixo",
+                 PerfilEmpresa(Atividade.SERVICO_FATOR_R, 1_200_000, folha_clt_anual=150_000, pro_labore_anual=48_000,
+                               outras_despesas_anual=300_000), None),
+        "ENQ3": ("Serviços do fator R, receita baixa e só pró-labore",
+                 PerfilEmpresa(Atividade.SERVICO_FATOR_R, 300_000, pro_labore_anual=24_000, outras_despesas_anual=30_000), None),
+        "ENQ4": ("Serviços do fator R, receita alta (5ª faixa) e fator R de 18,5%",
+                 PerfilEmpresa(Atividade.SERVICO_FATOR_R, 2_400_000, folha_clt_anual=300_000, pro_labore_anual=120_000,
+                               outras_despesas_anual=600_000), None),
+        "ENQ5": ("Fator R já acima de 28% (folha CLT de R$ 140.000, pró-labore de R$ 28.000 e FGTS): só o cenário de hoje",
+                 PerfilEmpresa(Atividade.SERVICO_FATOR_R, 600_000, folha_clt_anual=140_000, pro_labore_anual=28_000,
+                               outras_despesas_anual=60_000), None),
+        "ENQ6": ("Folha do fator R informada pelo contador (R$ 100.000) em vez da calculada, receita de R$ 600.000",
+                 PerfilEmpresa(Atividade.SERVICO_FATOR_R, 600_000, pro_labore_anual=36_000, outras_despesas_anual=60_000,
+                               folha_fator_r_anual=100_000), None),
+    }
+    for cod, (desc, p, percentual) in enq.items():
+        extra = f"; cenário próprio de {int(Decimal(percentual) * 100)}% no Anexo III" if percentual else ""
+        lista.append(Caso(cod, "Enquadramento: Anexo V ao III (2026)", f"{desc}; {_perfil_desc(p)}{extra}",
+                          _resultado_enquadramento(p, percentual)))
+
+    simples_b2b_intermediarios = {
+        "SR4": ("Comércio, 80% B2B, compras de fornecedores do regime regular",
+                reforma_simples.EntradaSimplesReforma("comercio", 2_000_000, "0.8", compras_creditaveis_anual=1_200_000,
+                                                      anos=[2028, 2029, 2030, 2031, 2032])),
+        "SR5": ("Serviços (Anexo III), 100% B2B, sem compras",
+                reforma_simples.EntradaSimplesReforma("servico_anexo_iii", 600_000, 1, anos=[2029, 2031])),
+        "SR6": ("Serviços (Anexo III), 5ª faixa (o teto do ISS no DAS atua), 50% B2B",
+                reforma_simples.EntradaSimplesReforma("servico_anexo_iii", 3_000_000, "0.5", anos=[2028, 2029, 2032])),
+    }
+    for cod, (desc, e) in simples_b2b_intermediarios.items():
         for c in reforma_simples.simular(e):
             lista.append(Caso(f"{cod}-{c.ano}", f"Simples na Reforma - {c.ano}",
                               f"{desc}; receita {brl(e.receita_bruta_anual)}", c.resultado))
@@ -214,6 +271,8 @@ def gerar(saida: Path) -> Path:
         ("• ICMS não cumulativo (débito - crédito sobre compras), 18% nas vendas e nas compras, salvo indicação.", None),
         ("• Lucro Real: estimativa gerencial sem LALUR detalhado; todo o estoque comprado é vendido no ano.", None),
         ("• Reforma: alíquotas de referência estimadas CBS 8,8% e IBS 17,7% (ainda não fixadas pelo Senado).", None),
+        ("• Simples de 2027 a 2033 (casos SR): tabelas da Resolução CGSN 190/2026, com CBS e IBS na partilha do DAS e teto de ISS decrescente.", None),
+        ("• Enquadramento (casos ENQ): cada linha é o DAS de um caminho alternativo (hoje, pró-labore até o fator R de 28%, parte da receita no Anexo III); não se somam.", None),
         ("", None),
         ("Exemplo de preenchimento: se o motor indicar R$ 28.800,00 de IRPJ e você apurar R$ 28.800,00, "
          "digite 28800 em 'Valor correto' e escolha 'Sim' em 'Confere?'.", None),
@@ -240,8 +299,8 @@ def gerar(saida: Path) -> Path:
     for n, caso in enumerate(todos):
         fill = CINZA if n % 2 else None
         itens = list(caso.resultado.tributos.items())
-        # No Simples na Reforma e nos avisos as linhas são alternativas ou resultados: somá-las não faz sentido
-        if not caso.modulo.startswith(("Simples na Reforma", "Avisos")):
+        # No Simples na Reforma, no Enquadramento e nos avisos as linhas são alternativas ou resultados: somá-las não faz sentido
+        if not caso.modulo.startswith(("Simples na Reforma", "Avisos", "Enquadramento")):
             itens.append(("TOTAL", None))
         inicio = linha
         for nome, valor in itens:

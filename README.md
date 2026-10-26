@@ -285,7 +285,7 @@ print(reforma.tabela_resumo(anos))
 
 ## Validação com contador
 
-`validacao/casos_validacao.xlsx` traz 69 casos (empresas, PF, sócios, reforma, Simples na reforma, autônomo × CNPJ, recuperação de tributos e avisos de fator R) com os
+`validacao/casos_validacao.xlsx` traz 85 casos (empresas, PF, sócios, reforma, Simples na reforma de 2027 a 2033, enquadramento do Anexo V ao III, autônomo × CNPJ, recuperação de tributos e avisos de fator R) com os
 valores do motor, a memória de cálculo e os alertas. O contador preenche a coluna
 amarela "Valor correto" e a planilha mostra a diferença. Para regenerar:
 

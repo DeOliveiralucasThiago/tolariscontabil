@@ -384,7 +384,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Percentuais de partilha do DAS (tabela em `simples_nacional.json`, campo `partilha`), inclusive as vigências de 2027 a 2033.
 - [ ] Modelo da decisão do Simples na Reforma (preços ajustados para o mesmo custo líquido do cliente).
 - [ ] Carnê-leão: livro-caixa × desconto simplificado (o motor usa o maior dos dois).
-- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (69 casos, incluindo SR*, AU*, REC* e AV*).
+- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (85 casos, incluindo ENQ*, SR* de 2027 a 2033, AU*, REC* e AV*).
 - [ ] Importação: quais CFOPs excluir da receita (remessas, devoluções, transferências).
 - [ ] **Tabela de NCM monofásicos** (`src/tolaris_motor/tabelas/monofasico.json`): conferir cada prefixo e as
       exceções por subitem na tabela oficial da Receita; hoje é uma lista inicial montada sem acesso à fonte oficial.
