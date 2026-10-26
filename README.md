@@ -5,7 +5,8 @@ simulação da Reforma Tributária e relatórios para clientes.
 
 Este repositório está na **Fase 3**: aplicação web multi-escritório sobre o motor de
 cálculo, com Reforma Tributária, pessoa física, equipe, envio de relatórios por e-mail,
-portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofásico e ST), central de avisos e proposta de honorários com aceite pelo portal.
+portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofásico e ST), central de avisos, proposta de honorários com aceite pelo portal,
+receitas do exterior, enquadramento do Simples (Anexo V ao III) com busca de CNAEs e as tabelas do Simples de 2027 a 2033.
 
 ## Estrutura
 
@@ -17,6 +18,11 @@ portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofá
 | `web/` | Site em Next.js (React + TypeScript + Tailwind) |
 | `e2e/` | Teste ponta a ponta no navegador (Playwright) |
 | `tests/` | Testes do motor e da API (pytest) |
+| `docs/` | Premissas e pontos para o contador validar, fontes da legislação, publicação na nuvem e teste na rede local |
+| `scripts/` | Geradores: tabela de CNAEs, tabelas do Simples de 2027 a 2033, kit de teste e planilha de validação |
+| `kit-de-teste/` | Arquivos fictícios para os testadores (clientes, dados contábeis, notas XML, SPED e apoio ao Enquadramento) |
+| `validacao/` | Planilha de casos para o contador conferir os números do motor |
+| `portatil/` | Versão portátil para Windows, montada e testada pelo GitHub Actions |
 
 ## O que a aplicação faz (Fase 1)
 
@@ -36,8 +42,9 @@ portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofá
 - **Reforma Tributária — transição 2025–2033:** carga sobre o consumo ano a ano (PIS/Cofins,
   IPI e ICMS/ISS dando lugar a CBS e IBS), com créditos sobre compras, redução setorial
   (30%, 60%, alíquota zero) e alíquotas de referência ajustáveis.
-- **Simples na Reforma:** recolher IBS/CBS dentro do DAS ou por fora (regime regular), em 2027 e
-  2033, com o peso das vendas a empresas (B2B), ponto de equilíbrio e créditos nas compras.
+- **Simples na Reforma:** recolher IBS/CBS dentro do DAS ou por fora (regime regular), nos anos de 2027 a 2033
+  (o contador escolhe quais comparar), com o peso das vendas a empresas (B2B), ponto de equilíbrio e créditos nas compras.
+  O DAS e a fatia de IBS/CBS de cada ano vêm das tabelas da Resolução CGSN 190/2026.
 - **Pessoa física:** "vale abrir CNPJ?" (autônomo × MEI × Simples × Presumido, com honorários
   contábeis), pró-labore × dividendos (Lei 15.270/2025) e salário líquido.
 - Tudo pode ser **salvo no cliente** e vira **relatório em PDF** com a marca do escritório.
@@ -101,6 +108,11 @@ portal do cliente, importação de NF-e/SPED, recuperação de tributos (monofá
   explica para que serve cada área; o botão **? Ajuda**, no canto de qualquer tela, refaz o tour e explica os botões e as
   áreas da página aberta. Funciona no celular (abre o menu sozinho). O conteúdo está em `web/src/lib/tour.ts`; os alvos são
   achados por seletor ou pelo texto do botão, então um passo cujo botão sumiu aparece no centro da tela em vez de quebrar.
+- **Enquadramento e CNAEs:** para empresa de serviços no Anexo V do Simples, a tela *Enquadramento* compara o caminho do pró-labore
+  (fator R de 28%) com o de exercer, de fato, atividade do Anexo III (25%, 50%, 100% ou um percentual do contador). O cliente é
+  escolhido na lista ou o CNPJ é digitado na própria tela: os CNAEs principal e secundários vêm da Receita, ficam guardados no cadastro
+  e aparecem com o Anexo provável e a confiança de cada um. Há busca em todos os CNAEs, com as vedações do Simples, e PDF salvo no cliente.
+  É um comparativo para o contador decidir; o Anexo vale pela atividade exercida (detalhes abaixo e em `docs/premissas.md`).
 
 ## Rodando localmente
 
@@ -192,29 +204,46 @@ verificação em duas etapas guardados no banco não podem ser lidos (o usuário
 
 | Módulo | Conteúdo |
 |---|---|
-| `simples` | Simples Nacional: anexos I a V, 6 faixas, alíquota efetiva, fator R (com FGTS), CPP fora do DAS no Anexo IV, pró-labore mínimo para atingir 28%; **receita do exterior** (exportação) sem ISS/ICMS/IPI e PIS/Cofins, com limites próprios |
+| `simples` | Simples Nacional: anexos I a V, 6 faixas, alíquota efetiva, fator R (com FGTS, ou a folha informada pelo contador), CPP fora do DAS no Anexo IV, pró-labore mínimo para atingir 28%; parte da receita em atividade do Anexo III; **receita do exterior** (exportação) com a alíquota de cada mercado pelo seu próprio RBT12, sem ISS/ICMS/IPI e PIS/Cofins (de 2027, sem CBS/IBS/ICMS/ISS/IPI); tabelas de 2018 a 2026 e de **2027 a 2033** (CBS e IBS na partilha, teto de ISS decrescente) |
+| `enquadramento` | Caminhos do Anexo V ao III: pró-labore até o fator R de 28% (com o INSS do sócio) e parte da receita no Anexo III, cada um comparado nos três regimes |
+| `cnae` | Catálogo de 1.334 subclasses do IBGE com vedações do Simples (Resolução CGSN 140/2018) e Anexo provável de cada CNAE, com o nível de confiança |
+| `recuperacao` | Imposto pago a mais no Simples por produtos monofásicos e ICMS-ST, mês a mês, a partir dos itens das notas |
+| `projecao` | Projeção do RBT12 pela tendência da receita, para avisar quando um limite será atingido |
+| `avisos` | Fator R, limites do MEI, do Simples e do Presumido e simulações que deixaram de valer por mudança de regra |
 | `presumido` | Lucro Presumido trimestral: presunções por atividade, adicional de IRPJ, PIS/Cofins cumulativos, ISS/ICMS, INSS patronal, acréscimo da LC 224/2025; exportação fora de PIS/Cofins/ISS/ICMS e **variação cambial** ativa na base |
 | `real` | Lucro Real anual (estimativa gerencial): PIS/Cofins não cumulativos com créditos, IRPJ + adicional, CSLL, prejuízo fiscal; exportação e variação cambial (ganho soma, perda deduz) |
 | `comparativo` | Comparação entre os três regimes e **simulação expressa** com 3 entradas (faturamento, folha, atividade) |
-| `reforma_simples` | Simples na Reforma: partilha do DAS, IBS/CBS no DAS × por fora, ponto de equilíbrio B2B |
+| `reforma_simples` | Simples na Reforma: partilha do DAS de cada ano (2027 a 2033), IBS/CBS no DAS × por fora, ponto de equilíbrio B2B |
 | `autonomo` | Autônomo (carnê-leão) × MEI × Simples × Presumido, valores mensais |
 | `pessoa_fisica` | INSS 2025/2026, IRPF mensal com a redução da Lei 15.270/2025, retenção de 10% sobre dividendos, alíquota do IRPFM, pró-labore × dividendos |
 | `reforma` | Transição IBS/CBS ano a ano (2025–2033) com créditos, redução setorial e alíquotas de referência configuráveis |
 
 **Receitas do exterior:** o planejamento completo, a simulação expressa e a planilha de dados contábeis aceitam a parte da receita
 que vem do exterior e a variação cambial; a tela traz um conversor de moeda pela PTAX do Banco Central, com todas as moedas que ele cota (a taxa pode ser trocada à mão).
-As premissas e o que o contador precisa validar estão em `docs/premissas.md` (itens 60 a 68).
+A partir de 2027 o DAS da receita exportada deixa de contar CBS e IBS (e ICMS, ISS e IPI), conforme a LC 123, art. 18, §§ 14 e 14-A.
+As premissas e o que o contador precisa validar estão em `docs/premissas.md` (itens 60 a 68 e 75).
 
 **Enquadramento (Anexo V → III):** a tela *Enquadramento* compara, para empresa de serviços do fator R, a situação de hoje com
 o pró-labore que leva o fator R a 28% e com parte da receita em atividade do Anexo III, mostra os CNAEs do cliente (principal e
 secundários da Receita) e gera o PDF. Há também uma busca em todos os CNAEs do IBGE (1.334 subclasses) com o Anexo provável, as
 vedações do Simples (Anexos VI e VII da Resolução CGSN 140/2018) e a fonte de cada informação; a tabela fica em
 `src/tolaris_motor/tabelas/cnae.json` e é refeita por `scripts/gerar_tabela_cnae.py`. Só vale se a atividade for exercida de
-fato; veja os itens 69 e 70 de `docs/premissas.md`.
+fato; veja os itens 69 a 71 de `docs/premissas.md`. O Anexo de cada CNAE é uma referência (tabela comercial, com selo de confiança
+na tela): a Resolução CGSN 140/2018 define o Anexo pela descrição da atividade, não pelo código.
 
 **Simples de 2027 a 2033:** `simples_nacional.json` traz as tabelas da Resolução CGSN 190/2026 (CBS e IBS na partilha do DAS, teto de ISS
-decrescente), geradas por `scripts/gerar_simples_2027.py`; o Simples na Reforma usa a tabela de cada ano. Veja o item 75 de
-`docs/premissas.md`.
+decrescente de 5% a 3% até 2032 e fim do ISS em 2033), geradas por `scripts/gerar_simples_2027.py`; o Simples na Reforma e o cálculo do
+Simples usam a tabela da data. A simulação completa e o comparativo entre regimes seguem limitados a 2025 e 2026, porque Lucro Presumido e
+Lucro Real ainda calculam PIS/Cofins (a transição desses regimes está na calculadora da Reforma). Veja o item 75 de `docs/premissas.md`.
+
+**Legislação lida:** LC 123/2006 (texto completo), LC 214/2025 (pontos do Simples), LC 227/2026 e LC 238/2026 (MEI de R$ 110 mil em 2027 e
+R$ 140 mil em 2028) e as Resoluções CGSN 190, 191, 194 e 195 (itens 71 a 75 de `docs/premissas.md`). `docs/fontes-da-legislacao.md` diz onde
+cada texto foi lido e o que cada fonte entrega. O feed de mudanças (`tabelas/mudancas.json`) marca o que ainda não entrou no cálculo
+(por exemplo, os limites do MEI de 2027 em diante). Leis e instruções normativas que não foram lidas no texto original (Leis 9.249 e 9.430,
+Decreto 9.580/2018, INs da Receita) constam só por resumos e precisam de conferência.
+
+**Fora do escopo (decisão do produto):** folha de pagamento dos clientes e split payment não serão implementados no Tolaris. A "folha" que o
+motor usa é só o dado de entrada do cálculo (salários e encargos, para o fator R e o INSS patronal).
 
 Todo resultado traz uma **memória de cálculo** (descrição, fórmula, valor e base legal
 de cada passo) e **alertas** (premissas e limitações). As tabelas legais ficam em
@@ -266,13 +295,21 @@ amarela "Valor correto" e a planilha mostra a diferença. Para regenerar:
 
 Premissas, fontes e pontos em aberto: [`docs/premissas.md`](docs/premissas.md).
 
+## Teste com contadores
+
+Para uma rodada de testes com usuários, publique o ambiente conforme [`docs/publicar-na-nuvem.md`](docs/publicar-na-nuvem.md) e entregue o
+roteiro de teste junto com o `kit-de-teste/Kit de teste Tolaris.zip` (clientes, dados contábeis, notas XML e SPED do Mercadinho Estrela, a
+Consultoria Aurora e o arquivo de apoio do Enquadramento). Tudo é fictício. Para refazer o kit: `python scripts/gerar_kit_teste.py`; o teste
+`tests/api/test_kit_teste.py` confere que ele continua entrando no sistema e que a ferramenta cumpre o que o arquivo de apoio promete.
+As capturas de tela da apresentação saem de `e2e/capturas_apresentacao.mjs` (veja `e2e/README.md`).
+
 ## Roteiro
 
 - **Fase 0 (concluída):** motor de cálculo testado; validação com contador em andamento.
 - **Fase 1 (concluída):** login, cadastro de clientes, prospecção com CNPJ, proposta em PDF com a marca do escritório.
 - **Fase 2 (concluída):** simulador da reforma, Simples na reforma e módulo de pessoa física, com relatórios em PDF.
-- **Fase 3 (atual):** equipe, recuperação de senha, envio por e-mail, portal do cliente, importação de XML/SPED, recuperação de tributos (monofásico e ST), central de avisos, recálculo por mudança de regra, honorários na proposta, leitura e aceite no portal.
-- **Próximos:** cobrança da assinatura, NFS-e, resumo semanal dos avisos por e-mail, envio recorrente.
+- **Fase 3 (atual):** equipe, recuperação de senha, envio por e-mail, portal do cliente, importação de XML/SPED, recuperação de tributos (monofásico e ST), central de avisos, recálculo por mudança de regra, honorários na proposta, leitura e aceite no portal, receitas do exterior, enquadramento do Simples com busca de CNAEs e tabelas do Simples de 2027 a 2033.
+- **Próximos:** cobrança da assinatura, NFS-e, resumo semanal dos avisos por e-mail, envio recorrente, limites do MEI de 2027 em diante nos avisos.
 - **Fase 4:** integrações (Serpro Integra Contador, ERPs), WhatsApp, assistente de IA.
 
 > As estimativas não substituem a análise do contador responsável.
