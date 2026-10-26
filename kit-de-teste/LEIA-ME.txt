@@ -45,4 +45,8 @@ ARQUIVOS
    o valor calculado pelo Tolaris, a memória de cálculo com a base legal e os avisos. Na aba "Casos", preencha a coluna
    amarela "Valor correto" com o que você apuraria: a diferença aparece sozinha. O ENQ1 é o mesmo caso do arquivo 5.
 
+8) 7-reforma-e-pessoa-fisica-apoio.txt
+   Para as tarefas L (Reforma Tributária e Simples de 2027 a 2033) e M (Pessoa física): os dados para preencher e os
+   valores que a tela deve mostrar, ano a ano no caso do Simples na Reforma.
+
 DICA: se algo for importado duas vezes, o sistema avisa e não soma de novo. Isso também é parte do teste.

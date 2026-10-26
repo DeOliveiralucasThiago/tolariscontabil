@@ -57,6 +57,7 @@ Os limites e as exigências dos planos gratuitos mudam: confira nas páginas de 
 `kit-de-teste/` traz arquivos fictícios que entram no sistema do jeito que o roteiro descreve: clientes para importar,
 12 meses de dados contábeis, notas XML (com 3 arquivos que devem ser recusados de propósito), um SPED e um arquivo de apoio
 ao Enquadramento (cliente de serviços, números para preencher e seis CNAEs para procurar) e a planilha de validação com 85 casos
-(opcional, para quem for conferir os números). O pacote
+(opcional, para quem for conferir os números). Um segundo arquivo de apoio traz os valores de referência da Reforma Tributária,
+do Simples na Reforma de 2027 a 2033 e da Pessoa física. O pacote
 pronto para enviar é `kit-de-teste/Kit de teste Tolaris.zip`. Para refazê-lo: `python scripts/gerar_kit_teste.py`
 (o teste `tests/api/test_kit_teste.py` confere que o kit continua importando).

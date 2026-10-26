@@ -122,3 +122,49 @@ def test_planilha_de_validacao_vai_no_kit(kit: Path):
     assert "85 casos" in wb["Instruções"]["A2"].value
     leia_me = (kit / "LEIA-ME.txt").read_text(encoding="utf-8")
     assert "6-casos-de-validacao.xlsx" in leia_me and "ENQ1" in leia_me
+
+
+def test_apoio_da_reforma_e_da_pessoa_fisica(logado: TestClient, kit: Path):
+    """O arquivo 7-reforma-e-pessoa-fisica-apoio.txt promete valores; a ferramenta tem de entregá-los."""
+    def br(v: float, casas: int = 0) -> str:
+        return f"{v:,.{casas}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+    texto = (kit / "7-reforma-e-pessoa-fisica-apoio.txt").read_text(encoding="utf-8")
+
+    # Reforma: transição de um comércio de R$ 1 mi
+    d = logado.post("/api/calculadoras/reforma", json={"receita_bruta_anual": 1000000, "vende_mercadoria": True, "compras_anual": 600000}).json()
+    total = {a["ano"]: round(a["total"]) for a in d["anos"]}
+    for ano, valor in {2025: 108500, 2027: 102536, 2029: 101478, 2030: 100420, 2031: 99362, 2032: 98304, 2033: 91955}.items():
+        assert total[ano] == valor and f"R$ {br(valor)}" in texto
+    assert total[2026] == 108500 and total[2028] == 102536 and "11,74%" in texto and d["melhor"] == "Carga em 2033: 11,74%"
+
+    # Simples na Reforma: comércio, R$ 2 mi, 80% B2B, compras de R$ 1,2 mi; padrão = sete anos
+    sr = logado.post("/api/calculadoras/simples-reforma", json={
+        "atividade": "comercio", "receita_bruta_anual": 2000000, "percentual_b2b": 0.8, "compras_creditaveis_anual": 1200000}).json()
+    assert [c["ano"] for c in sr["cenarios"]] == list(range(2027, 2034))
+    assert {round(c["dentro_do_das"]) for c in sr["cenarios"]} == {1801300} and "R$ 1.801.300" in texto
+    esperado = {2027: (10, 84191), 2028: (10, 84191), 2029: (8, 101591), 2030: (6, 119088), 2031: (5, 136675), 2032: (3, 154347)}
+    for c in sr["cenarios"]:
+        if c["ano"] in esperado:
+            pct, dif = esperado[c["ano"]]
+            assert c["equilibrio_texto"] == f"a partir de {pct}% de vendas B2B" and round(c["diferenca"]) == dif and f"R$ {br(dif)}" in texto
+    ultimo = sr["cenarios"][-1]
+    assert ultimo["equilibrio_texto"] == "com qualquer % de vendas B2B" and round(ultimo["diferenca"]) == 261870 and "R$ 261.870" in texto
+
+    # Pessoa física
+    au = logado.post("/api/calculadoras/autonomo", json={"receita_mensal": 15000, "despesas_mensais": 1000, "contabilidade_mensal": 400}).json()
+    opcoes = {o["nome"]: o for o in au["opcoes"]}
+    assert au["melhor"] == "Simples Nacional" and round(opcoes["Simples Nacional"]["liquido_mensal"]) == 12238
+    assert opcoes["Lucro Presumido"]["liquido_mensal"] == 10647.99 and opcoes["Autônomo (pessoa física)"]["liquido_mensal"] == 9829.78
+    assert not opcoes["MEI"]["aplicavel"] and au["ganho_vs_autonomo_anual"] == 28898.64
+    for trecho in ("R$ 12.238", "R$ 10.647,99", "R$ 9.829,78", "R$ 28.898,64"):
+        assert trecho in texto
+    pl = logado.post("/api/calculadoras/pro-labore", json={"retirada_mensal": 20000, "regime": "presumido"}).json()
+    assert pl["melhor"] == "Pró-labore de R$ 1.621,00 + dividendos" and pl["economia_mensal"] == 8764.68
+    assert {round(c["liquido_mensal"], 2) for c in pl["cenarios"]} == {14732.81, 19821.69}
+    for trecho in ("R$ 1.621,00", "R$ 19.821,69", "R$ 14.732,81", "R$ 8.764,68"):
+        assert trecho in texto
+    sl = logado.post("/api/calculadoras/salario-liquido", json={"salario_bruto": 5900}).json()
+    assert sl["liquido"] == 4924.35 and [t["valor"] for t in sl["tributos"]] == [627.51, 348.14]
+    for trecho in ("R$ 4.924,35", "R$ 627,51", "R$ 348,14"):
+        assert trecho in texto

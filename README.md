@@ -299,7 +299,7 @@ Premissas, fontes e pontos em aberto: [`docs/premissas.md`](docs/premissas.md).
 
 Para uma rodada de testes com usuários, publique o ambiente conforme [`docs/publicar-na-nuvem.md`](docs/publicar-na-nuvem.md) e entregue o
 roteiro de teste junto com o `kit-de-teste/Kit de teste Tolaris.zip` (clientes, dados contábeis, notas XML e SPED do Mercadinho Estrela, a
-Consultoria Aurora e o arquivo de apoio do Enquadramento). Tudo é fictício. Para refazer o kit: `python scripts/gerar_kit_teste.py`; o teste
+Consultoria Aurora, o apoio do Enquadramento, o apoio da Reforma Tributária e da Pessoa física, e a planilha de validação). Tudo é fictício. Para refazer o kit: `python scripts/gerar_kit_teste.py`; o teste
 `tests/api/test_kit_teste.py` confere que ele continua entrando no sistema e que a ferramenta cumpre o que o arquivo de apoio promete.
 As capturas de tela da apresentação saem de `e2e/capturas_apresentacao.mjs` (veja `e2e/README.md`).
 

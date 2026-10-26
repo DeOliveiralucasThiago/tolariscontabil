@@ -257,6 +257,10 @@ ARQUIVOS
    o valor calculado pelo Tolaris, a memória de cálculo com a base legal e os avisos. Na aba "Casos", preencha a coluna
    amarela "Valor correto" com o que você apuraria: a diferença aparece sozinha. O ENQ1 é o mesmo caso do arquivo 5.
 
+8) 7-reforma-e-pessoa-fisica-apoio.txt
+   Para as tarefas L (Reforma Tributária e Simples de 2027 a 2033) e M (Pessoa física): os dados para preencher e os
+   valores que a tela deve mostrar, ano a ano no caso do Simples na Reforma.
+
 DICA: se algo for importado duas vezes, o sistema avisa e não soma de novo. Isso também é parte do teste.
 """
 
@@ -295,6 +299,45 @@ Tolaris não troca o enquadramento de ninguém, só mostra o efeito de cada cami
 """
 
 
+APOIO_REFORMA_PF = """APOIO ÀS TAREFAS L E M: REFORMA TRIBUTÁRIA, SIMPLES DE 2027 A 2033 E PESSOA FÍSICA
+=============================================================================
+
+Tudo aqui é inventado. Os valores abaixo são os que o Tolaris calcula hoje, com as alíquotas de referência estimadas de
+CBS e IBS (a Reforma ainda não tem alíquotas oficiais). Se você mudar as alíquotas de referência, os números mudam.
+Confira se a lógica faz sentido; quem decide é o contador.
+
+TAREFA L (menu Reforma Tributária)
+
+Aba "Transição 2025-2033": receita bruta anual R$ 1.000.000, vende mercadoria, compras de R$ 600.000.
+- Tributos sobre o consumo: R$ 108.500 em 2025 e 2026, R$ 102.536 em 2027 e 2028, R$ 101.478 em 2029, R$ 100.420 em 2030,
+  R$ 99.362 em 2031, R$ 98.304 em 2032 e R$ 91.955 em 2033 (carga de 11,74% em 2033).
+
+Aba "Simples: IBS/CBS no DAS ou por fora": comércio, receita R$ 2.000.000, vendas a empresas (B2B) em 80%, compras de
+fornecedores do regime regular de R$ 1.200.000. Por padrão a tela compara os sete anos, de 2027 a 2033. O "no DAS" é de
+R$ 1.801.300 em todos os anos; o que muda é o "por fora" e a diferença a favor dele:
+
+Ano       | Por fora compensa a partir de | Diferença a favor do "por fora" (por ano)
+2027-2028 | 10% de vendas B2B             | R$ 84.191
+2029      | 8%                            | R$ 101.591
+2030      | 6%                            | R$ 119.088
+2031      | 5%                            | R$ 136.675
+2032      | 3%                            | R$ 154.347
+2033      | qualquer % de vendas B2B      | R$ 261.870
+
+Use o seletor "Anos a comparar": clique em "Limpar", tente comparar sem escolher nenhum ano (a tela avisa) e depois escolha só
+2027 e 2030. O resultado deve trazer só esses dois anos.
+
+TAREFA M (menu Pessoa física)
+
+- Autônomo ou CNPJ: receita de R$ 15.000 por mês, despesas de R$ 1.000 e contabilidade de R$ 400. Sobra por mês: R$ 12.238 no
+  Simples Nacional (melhor), R$ 10.647,99 no Lucro Presumido e R$ 9.829,78 como autônomo. O MEI não se aplica (a receita passa
+  do limite). O ganho frente ao autônomo é de R$ 28.898,64 por ano.
+- Pró-labore x dividendos: retirada mensal de R$ 20.000 no Lucro Presumido. O melhor caminho é pró-labore de R$ 1.621,00 mais
+  dividendos: sobram R$ 19.821,69 por mês, contra R$ 14.732,81 com tudo como pró-labore (R$ 8.764,68 a mais por mês).
+- Salário líquido: salário bruto de R$ 5.900,00. Líquido de R$ 4.924,35, com INSS de R$ 627,51 e IRRF de R$ 348,14.
+"""
+
+
 def main() -> None:
     SAIDA.mkdir(exist_ok=True)
     arquivos, receita, sped = gerar_notas()
@@ -309,6 +352,7 @@ def main() -> None:
     validacao = RAIZ / "validacao" / "casos_validacao.xlsx"
     shutil.copyfile(validacao, SAIDA / "6-casos-de-validacao.xlsx")
     (SAIDA / "5-enquadramento-apoio.txt").write_bytes(("﻿" + APOIO_ENQUADRAMENTO.replace("\n", "\r\n")).encode("utf-8"))
+    (SAIDA / "7-reforma-e-pessoa-fisica-apoio.txt").write_bytes(("﻿" + APOIO_REFORMA_PF.replace("\n", "\r\n")).encode("utf-8"))
     (SAIDA / "LEIA-ME.txt").write_bytes(("﻿" + LEIA_ME.replace("\n", "\r\n")).encode("utf-8"))
 
     pacote = SAIDA / "Kit de teste Tolaris.zip"
