@@ -55,7 +55,7 @@ await page.click("button[type=submit]");
 await page.waitForURL("**/configuracoes?bemvindo=1");
 await api("PATCH", "/escritorio", { data: {
   nome: "Contabilidade Horizonte", cnpj: "11222333000181", crc: "SP-123456/O-7", email: "contato@horizonte.example", telefone: "(11) 3000-1234",
-  honorarios: { base: { mei: 180, simples: 650, presumido: 1200, real: 2400 }, por_funcionario: 60, adesao: 300, servicos: "Escrituração contábil e fiscal, folha de pagamento, obrigações acessórias, planejamento tributário.", validade_dias: 15 },
+  honorarios: { base: { mei: 180, simples: 650, presumido: 1200, real: 2400 }, por_funcionario: 60, adesao: 300, servicos: "Escrituração contábil e fiscal, obrigações acessórias, planejamento tributário.", validade_dias: 15 },
 } });
 await api("PUT", "/escritorio/logo", { multipart: { arquivo: { name: "logo.png", mimeType: "image/png", buffer: fs.readFileSync(path.resolve("../web/public/icone-tolaris.png")) } } });
 
@@ -208,6 +208,25 @@ await tenta("14-reforma", async () => {
   await foto("14-reforma");
   await page.evaluate(() => window.scrollTo(0, 560));
   await foto("14b-reforma-resultado");
+});
+
+await tenta("16-enquadramento", async () => {
+  // Empresa de serviços no Anexo V (fator R de 6%): CNPJ traz os CNAEs e a análise compara os caminhos até o Anexo III
+  await page.goto(`${BASE}/enquadramento`);
+  await page.getByRole("heading", { name: "Enquadramento" }).waitFor();
+  await page.fill("#enq_cnpj", "11222333000181");
+  await page.getByRole("button", { name: "Buscar" }).click();
+  await page.getByTestId("cnaes-do-cliente").waitFor();
+  await page.fill("#receita", "60000000");
+  await page.fill("#prolabore_anual", "3600000");
+  await page.fill("#outras", "6000000");
+  await page.fill("#percentual_iii", "30");
+  await page.getByRole("button", { name: "Analisar enquadramento" }).click();
+  const res = page.getByTestId("resultado-enquadramento");
+  await res.waitFor();
+  await quieto();
+  await page.waitForTimeout(600);
+  await faixa("16-enquadramento", res, { altura: 835, acima: 12 });
 });
 
 await tenta("15-tour", async () => {

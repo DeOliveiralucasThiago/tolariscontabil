@@ -87,7 +87,7 @@ export function TabelaHonorarios() {
               rows={4}
               maxLength={2000}
               className={`${classeCampo} h-auto py-2`}
-              placeholder={"Escrituração fiscal e contábil\nFolha de pagamento\nPlanejamento tributário anual"}
+              placeholder={"Escrituração fiscal e contábil\nObrigações acessórias\nPlanejamento tributário anual"}
               value={servicos}
               onChange={(e) => setServicos(e.target.value)}
             />
