@@ -3,63 +3,65 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
-import { BuscaCnae, SeloConfianca } from "@/components/BuscaCnae";
+import { BuscaCnae } from "@/components/BuscaCnae";
+import { BuscaCnpj } from "@/components/BuscaCnpj";
+import { CnaesDaEmpresa } from "@/components/CnaesDaEmpresa";
 import { FormCompleta } from "@/components/FormCompleta";
 import { ResultadoEnquadramento } from "@/components/ResultadosFase2";
 import { SalvarNoCliente } from "@/components/SalvarNoCliente";
-import { Cartao, Titulo } from "@/components/ui";
+import { Cartao, Selecao, Titulo } from "@/components/ui";
 import { api } from "@/lib/api";
-import { type Cliente, type CnaesDoCliente, type CompletaEntrada, type ResultadoEnquadramento as TEnquadramento } from "@/lib/tipos";
+import { soDigitos } from "@/lib/formato";
+import {
+  type Atividade,
+  type Cliente,
+  type CnaesDoCliente,
+  type CompletaEntrada,
+  type DadosCnpj,
+  type ResultadoEnquadramento as TEnquadramento,
+} from "@/lib/tipos";
 import { useCalculo } from "@/lib/useCalculo";
-
-function CnaesDoClienteCartao({ clienteId }: { clienteId: number }) {
-  const [dados, setDados] = useState<CnaesDoCliente | null>(null);
-  const [cliente, setCliente] = useState<Cliente | null>(null);
-  useEffect(() => {
-    api<CnaesDoCliente>(`/clientes/${clienteId}/cnaes`).then(setDados).catch(() => setDados(null));
-    api<Cliente>(`/clientes/${clienteId}`).then(setCliente).catch(() => setCliente(null));
-  }, [clienteId]);
-  if (!dados || !dados.cnaes.length) return null;
-  return (
-    <div data-testid="cnaes-do-cliente">
-    <Cartao titulo={`CNAEs de ${cliente?.razao_social ?? "o cliente"}`}>
-      <ul className="divide-y divide-borda text-sm">
-        {dados.cnaes.map((c) => (
-          <li key={c.codigo} className="flex flex-wrap items-baseline justify-between gap-2 py-2">
-            <span>
-              <span className="num font-medium">{c.codigo.replace(/^(\d{4})(\d)(\d{2})$/, "$1-$2/$3")}</span>{" "}
-              {c.principal && <span className="rounded bg-fundo px-1.5 py-0.5 text-xs">principal</span>} {c.descricao}
-            </span>
-            <span className="flex items-center gap-1.5 text-xs text-tinta-2">
-              <span className={c.vedacao === "impeditivo" ? "font-medium text-red-700" : ""}>{c.anexo}</span>
-              <SeloConfianca confianca={c.confianca} />
-            </span>
-          </li>
-        ))}
-      </ul>
-      {dados.atividade_fator_r && dados.anexo_iii_no_cadastro.length > 0 && (
-        <p className="mt-3 rounded-lg bg-fundo p-3 text-sm" data-testid="candidatos-anexo-iii">
-          <strong className="font-medium">Já no cadastro:</strong>{" "}
-          {dados.anexo_iii_no_cadastro.map((c) => c.descricao || c.codigo).join("; ")} — {dados.anexo_iii_no_cadastro.length === 1 ? "tende a ser atividade" : "tendem a ser atividades"} do
-          Anexo III. Se a empresa realmente presta esse serviço, vale simular abaixo quanto da receita ele representa.
-        </p>
-      )}
-      {dados.vedados.length > 0 && (
-        <p role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-800" data-testid="cnaes-vedados">
-          <strong className="font-medium">Atenção:</strong> {dados.vedados.map((c) => c.descricao || c.codigo).join("; ")} —{" "}
-          {dados.vedados.some((c) => c.vedacao === "impeditivo") ? "CNAE impeditivo ao Simples Nacional (Resolução CGSN 140/2018, Anexo VI)." : "CNAE ambíguo no Simples (Anexo VII): confirme se a atividade exercida permite a opção."}
-        </p>
-      )}
-      <p className="mt-3 text-xs text-tinta-2">{dados.aviso}</p>
-    </Cartao>
-    </div>
-  );
-}
 
 function PaginaEnquadramento() {
   const params = useSearchParams();
-  const clienteInicial = params.get("cliente") ? Number(params.get("cliente")) : undefined;
+  const clienteDaUrl = params.get("cliente") ? Number(params.get("cliente")) : undefined;
   const calc = useCalculo<CompletaEntrada, TEnquadramento>("enquadramento");
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [clienteId, setClienteId] = useState<number | "">("");
+  const [cnpj, setCnpj] = useState("");
+  const [cnaes, setCnaes] = useState<CnaesDoCliente | null>(null);
+  const [empresa, setEmpresa] = useState("");
+  const [atividade, setAtividade] = useState<Atividade | null>(null);
+  const [formKey, setFormKey] = useState(0);
+
+  async function escolherCliente(id: number | "", lista: Cliente[] = clientes) {
+    setClienteId(id);
+    const c = lista.find((x) => x.id === id);
+    if (!c) return;
+    setEmpresa(c.razao_social);
+    setAtividade(c.atividade);
+    setFormKey((k) => k + 1);
+    api<CnaesDoCliente>(`/clientes/${c.id}/cnaes`).then(setCnaes).catch(() => setCnaes(null));
+  }
+
+  useEffect(() => {
+    api<Cliente[]>("/clientes")
+      .then((lista) => {
+        setClientes(lista);
+        if (clienteDaUrl) escolherCliente(clienteDaUrl, lista);
+      })
+      .catch(() => setClientes([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function aoEncontrarCnpj(d: DadosCnpj) {
+    setCnaes(d.cnaes_classificados);
+    setEmpresa(d.razao_social);
+    setAtividade(d.atividade_sugerida);
+    setFormKey((k) => k + 1);
+    setClienteId(clientes.find((c) => c.cnpj === soDigitos(d.cnpj))?.id ?? "");
+  }
+
   const [percentual, setPercentual] = useState("");
   const p = Number(percentual.replace(",", "."));
   const personalizado = percentual && p > 0 && p <= 100 ? { percentual_anexo_iii: p / 100 } : {};
@@ -74,10 +76,27 @@ function PaginaEnquadramento() {
         verdade, e uma atividade do Anexo III precisa ser exercida de fato, com o CNAE no cadastro e nota fiscal desse serviço. A Receita enquadra
         pela atividade realmente exercida; incluir um CNAE sem a atividade pode ser desconsiderado, com cobrança e multa. Decida com o contador.
       </div>
-      {clienteInicial && <div className="mb-4"><CnaesDoClienteCartao clienteId={clienteInicial} /></div>}
+      <div className="mb-4">
+        <Cartao titulo="Empresa">
+          <p className="mb-3 text-sm text-tinta-2">
+            Escolha um cliente ou digite o CNPJ: o Tolaris traz os CNAEs da Receita (principal e secundários) e a atividade provável.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Selecao rotulo="Cliente cadastrado" name="enq_cliente" value={clienteId} onChange={(e) => escolherCliente(e.target.value ? Number(e.target.value) : "")}>
+              <option value="">Nenhum (usar o CNPJ)</option>
+              {clientes.map((c) => (
+                <option key={c.id} value={c.id}>{c.razao_social}</option>
+              ))}
+            </Selecao>
+            <BuscaCnpj id="enq_cnpj" valor={cnpj} onChange={setCnpj} onEncontrado={aoEncontrarCnpj} />
+          </div>
+        </Cartao>
+      </div>
+      {cnaes && <div className="mb-4"><CnaesDaEmpresa titulo={`CNAEs de ${empresa || "a empresa"}`} dados={cnaes} /></div>}
       <Cartao titulo="Dados da empresa como ela é hoje">
         <FormCompleta
-          atividadeInicial="servico_fator_r"
+          key={formKey}
+          atividadeInicial={atividade ?? "servico_fator_r"}
           onCalcular={(e) => calc.calcular({ ...e, ...personalizado } as CompletaEntrada)}
           carregando={calc.calculando}
           rotuloBotao="Analisar enquadramento"
@@ -104,7 +123,7 @@ function PaginaEnquadramento() {
         <div className="mt-6">
           <ResultadoEnquadramento
             r={calc.resultado}
-            acoes={<SalvarNoCliente rota="enquadramento" entrada={calc.entradaUsada} clienteInicial={clienteInicial} />}
+            acoes={<SalvarNoCliente key={String(clienteId)} rota="enquadramento" entrada={calc.entradaUsada} clienteInicial={clienteId || undefined} />}
           />
         </div>
       )}

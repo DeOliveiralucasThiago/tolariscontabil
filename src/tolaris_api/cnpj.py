@@ -123,6 +123,10 @@ class DadosCnpj:
             "regime_sugerido": regime,
             "atividade_sugerida": atividade,
             "atividade_justificativa": motivo,
+            "cnaes_classificados": classificar_cnaes(
+                self.cnae_principal, self.cnae_descricao, self.cnaes_secundarios,
+                atividade.value if atividade else None,
+            ),
         }
 
 

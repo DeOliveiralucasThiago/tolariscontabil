@@ -84,3 +84,27 @@ def test_cnaes_do_cliente_marcam_os_vedados(logado: TestClient):
     r = logado.get(f"/api/clientes/{cid}/cnaes").json()
     assert [v["codigo"] for v in r["vedados"]] == ["6421200"] and r["cnaes"][1]["anexo"] == "Vedado ao Simples"
     assert r["anexo_iii_no_cadastro"] == []
+
+
+def test_consulta_de_cnpj_ja_traz_os_cnaes_classificados():
+    d = cnpj.interpretar_brasilapi(BRASILAPI).como_dict()
+    c = d["cnaes_classificados"]
+    assert [i["codigo"] for i in c["cnaes"]] == ["6201501", "8599604", "6911701"]
+    assert c["atividade_fator_r"] is True and [i["codigo"] for i in c["anexo_iii_no_cadastro"]] == ["8599604"]
+    assert c["cnaes"][2]["atividade"] == "servico_anexo_iv"
+
+
+def test_prospeccao_guarda_os_cnaes_secundarios(logado: TestClient):
+    corpo = {
+        "cliente": {"razao_social": "Tech Ltda", "cnpj": "11222333000181", "cnae_principal": "6201501",
+                    "cnaes_secundarios": [{"codigo": "8599604", "descricao": "Treinamento"}]},
+        "simulacao": {"faturamento_mensal": 50000, "folha_mensal": 0, "atividade": "servico_fator_r"},
+    }
+    r = logado.post("/api/prospeccao", json=corpo).json()
+    assert r["cliente"]["cnaes_secundarios"] == [{"codigo": "8599604", "descricao": "Treinamento"}]
+    cnaes = logado.get(f"/api/clientes/{r['cliente']['id']}/cnaes").json()
+    assert [c["codigo"] for c in cnaes["anexo_iii_no_cadastro"]] == ["8599604"]
+    # prospectar de novo o mesmo CNPJ sem secundários não apaga os que já existem
+    sem = {**corpo, "cliente": {"razao_social": "Tech Ltda", "cnpj": "11222333000181"}}
+    again = logado.post("/api/prospeccao", json=sem).json()
+    assert again["cliente"]["id"] == r["cliente"]["id"] and len(again["cliente"]["cnaes_secundarios"]) == 1

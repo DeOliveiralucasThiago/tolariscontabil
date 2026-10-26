@@ -76,7 +76,52 @@ await page.waitForFunction(() => /6209-1\/00/.test(document.querySelector('[data
 await page.screenshot({ path: `${OUT}/enquadramento_1_cnaes.png`, fullPage: true });
 passo("busca de CNAEs: Anexo III direto, texto, vedados e área do CNAE");
 
+// 2a. Sem escolher o cliente na URL: digitar o CNPJ na própria tela traz os CNAEs e a atividade
+await page.goto(`${BASE}/enquadramento`);
+await page.getByRole("heading", { name: "Enquadramento" }).waitFor();
+if ((await page.getByTestId("cnaes-do-cliente").count()) !== 0) throw new Error("sem cliente nem CNPJ não deveria mostrar CNAEs");
+await page.fill("#enq_cnpj", "11222333000181");
+await page.getByRole("button", { name: "Buscar" }).click();
+const porCnpj = page.getByTestId("cnaes-do-cliente");
+await porCnpj.waitFor();
+const textoPorCnpj = await porCnpj.innerText();
+for (const trecho of ["TECH SOLUCOES EM SOFTWARE LTDA", "6201-5/01", "8599-6/04"]) {
+  if (!textoPorCnpj.includes(trecho)) throw new Error(`CNAEs pelo CNPJ sem “${trecho}”: ${textoPorCnpj}`);
+}
+await page.getByTestId("candidatos-anexo-iii").waitFor();
+if ((await page.locator("#enq_cliente").inputValue()) !== String(clienteId)) throw new Error("o cliente com o mesmo CNPJ deveria ser selecionado");
+passo("CNPJ digitado na tela de enquadramento: CNAEs, candidato ao Anexo III e cliente reconhecido");
+
+// 2b. Escolher o cliente na lista
+await page.goto(`${BASE}/enquadramento`);
+await page.locator("#enq_cliente").selectOption(String(clienteId));
+await page.getByTestId("cnaes-do-cliente").waitFor();
+passo("cliente escolhido na lista mostra os CNAEs");
+
+// 2c. Botão no cadastro do cliente
+await page.goto(`${BASE}/clientes/${clienteId}`);
+await page.getByRole("link", { name: "Analisar enquadramento" }).click();
+await page.waitForURL(`**/enquadramento?cliente=${clienteId}`);
+await page.getByTestId("cnaes-do-cliente").waitFor();
+passo("botão 'Analisar enquadramento' no cadastro do cliente abre a tela com os CNAEs");
+
+// 2d. Prospecção rápida guarda os secundários
+await page.goto(`${BASE}/prospeccao`);
+await page.fill("#cnpj", "11222333000181");
+await page.getByRole("button", { name: "Buscar" }).click();
+await page.getByText("TECH SOLUCOES EM SOFTWARE LTDA").first().waitFor();
+await page.fill("#faturamento", "5000000");
+await page.click("text=Calcular previsão");
+await page.getByText("Regime recomendado").waitFor();
+await page.getByRole("button", { name: /Salvar/ }).first().click();
+await page.waitForTimeout(1500);
+const depois = await api("GET", `/clientes/${clienteId}`);
+if (depois.cnaes_secundarios?.length !== 2) throw new Error(`prospecção apagou ou não guardou os secundários: ${JSON.stringify(depois.cnaes_secundarios)}`);
+passo("prospecção rápida mantém os CNAEs secundários do cliente");
+
 // 3. Análise dos caminhos (fator R de 6%: Anexo V hoje)
+await page.goto(`${BASE}/enquadramento?cliente=${clienteId}`);
+await page.getByTestId("cnaes-do-cliente").waitFor();
 await page.fill("#receita", "60000000");       // máscara: dígitos são centavos
 await page.fill("#prolabore_anual", "3600000");
 await page.fill("#outras", "6000000");

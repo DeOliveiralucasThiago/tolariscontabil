@@ -240,6 +240,7 @@ export interface DadosCnpj {
   regime_sugerido: Regime | null;
   atividade_sugerida: Atividade | null;
   atividade_justificativa: string;
+  cnaes_classificados: CnaesDoCliente;
 }
 
 export interface PassoMemoria {

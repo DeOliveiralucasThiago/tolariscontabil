@@ -297,7 +297,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     Resolução define o Anexo III, IV ou V pela **descrição da atividade** (art. 25, § 1º), e não existe tabela oficial por
     CNAE. A tabela comercial é, portanto, uma interpretação e cada resposta traz a confiança: `oficial` (vedação), `tabela`
     (Contabilizei) ou `divisao` (regra aproximada, para os CNAEs que a tabela não cobre; ela errava 112 dos 389 códigos da
-    tabela, por isso só vale como último recurso). Os CNAEs secundários do cliente vêm da consulta de CNPJ. A tela Enquadramento
+    tabela, por isso só vale como último recurso). Os CNAEs secundários do cliente vêm da consulta de CNPJ (cadastro, prospecção rápida, importação em lote e a própria tela Enquadramento, que também aceita o CNPJ ou um cliente da lista). A tela Enquadramento
     lista os CNAEs de Anexo III direto, sem fator R, que o contador pode avaliar, sempre com o aviso de que só vale para atividade
     exercida de fato. Para atualizar, baixe as fontes de novo e rode `scripts/gerar_tabela_cnae.py`.
 

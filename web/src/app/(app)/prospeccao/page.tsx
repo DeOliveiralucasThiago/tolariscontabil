@@ -41,6 +41,7 @@ export default function Prospeccao() {
       nome_fantasia: d.nome_fantasia,
       cnae_principal: d.cnae_principal,
       cnae_descricao: d.cnae_descricao,
+      cnaes_secundarios: d.cnaes_secundarios,
       municipio: d.municipio,
       uf: d.uf,
       email: d.email,

@@ -192,6 +192,7 @@ class CnpjSaida(BaseModel):
     regime_sugerido: Regime | None
     atividade_sugerida: Atividade | None
     atividade_justificativa: str
+    cnaes_classificados: dict[str, Any] = Field(default_factory=dict)
 
 
 # --- Simulações -------------------------------------------------------------

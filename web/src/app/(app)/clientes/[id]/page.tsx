@@ -177,6 +177,7 @@ function DetalheClienteConteudo() {
       <Titulo
         acoes={
           <>
+            <BotaoLink variante="secundario" href={`/enquadramento?cliente=${cliente.id}`}>Analisar enquadramento</BotaoLink>
             <BotaoLink variante="secundario" href={`/reforma?cliente=${cliente.id}`}>Reforma Tributária</BotaoLink>
             <BotaoLink variante="secundario" href={`/pessoa-fisica?cliente=${cliente.id}&aba=prolabore`}>Pró-labore</BotaoLink>
           </>
