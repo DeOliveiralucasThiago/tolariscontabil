@@ -10,6 +10,7 @@ Os arquivos são conferidos com os mesmos leitores do sistema, então o que sai 
 from __future__ import annotations
 
 import random
+import shutil
 import zipfile
 from datetime import date
 from decimal import Decimal
@@ -250,6 +251,12 @@ ARQUIVOS
    Para a tarefa K (Enquadramento): os números para preencher no cliente de serviços (Consultoria Aurora), o que a tela
    deve mostrar e seis CNAEs para procurar na busca, com o Anexo esperado de cada um.
 
+7) 6-casos-de-validacao.xlsx
+   Opcional, para quem for conferir os números do cálculo com a própria conta. São 85 casos (empresas nos três regimes,
+   pessoa física, Reforma Tributária, Simples na Reforma de 2027 a 2033 e Enquadramento, casos ENQ1 a ENQ6). Cada caso traz
+   o valor calculado pelo Tolaris, a memória de cálculo com a base legal e os avisos. Na aba "Casos", preencha a coluna
+   amarela "Valor correto" com o que você apuraria: a diferença aparece sozinha. O ENQ1 é o mesmo caso do arquivo 5.
+
 DICA: se algo for importado duas vezes, o sistema avisa e não soma de novo. Isso também é parte do teste.
 """
 
@@ -299,6 +306,8 @@ def main() -> None:
     (SAIDA / "4-sped-fiscal-2026-09.txt").write_bytes("\r\n".join(sped).encode("latin-1"))
     (SAIDA / "2-dados-contabeis-12-meses.xlsx").write_bytes(gerar_planilha_contabil(receita))
     (SAIDA / "1-clientes-para-importar.xlsx").write_bytes(gerar_planilha_clientes())
+    validacao = RAIZ / "validacao" / "casos_validacao.xlsx"
+    shutil.copyfile(validacao, SAIDA / "6-casos-de-validacao.xlsx")
     (SAIDA / "5-enquadramento-apoio.txt").write_bytes(("﻿" + APOIO_ENQUADRAMENTO.replace("\n", "\r\n")).encode("utf-8"))
     (SAIDA / "LEIA-ME.txt").write_bytes(("﻿" + LEIA_ME.replace("\n", "\r\n")).encode("utf-8"))
 

@@ -72,7 +72,7 @@ def _resultado_enquadramento(p: PerfilEmpresa, percentual: str | None = None) ->
         simples_res = next(x for x in c.comparativo.resultados if x.titulo.startswith("Simples"))
         r.tributos[f"DAS - {c.descricao}"] = simples_res.tributos["DAS"] if simples_res.aplicavel else Decimal(0)
         if c.custo_extra_anual:
-            r.tributos[f"INSS do sócio sobre o pró-labore adicional ({c.chave})"] = c.custo_extra_anual
+            r.tributos["INSS do sócio sobre o pró-labore adicional (caminho do fator R)"] = c.custo_extra_anual
         for passo in simples_res.memoria:
             r.passo(f"{c.chave}: {passo.descricao}", passo.formula, passo.valor, passo.base_legal)
     r.alerta("Os caminhos são alternativas: o DAS de cada um é calculado como se a empresa seguisse só aquele caminho.")
