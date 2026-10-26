@@ -200,5 +200,5 @@ def test_feed_traz_as_mudancas_publicadas_em_2026(logado: TestClient):
     ids = {m["id"]: m for m in logado.get("/api/mudancas").json()}
     assert {"mei-lc238", "simples-anexos-2027", "simples-regime-regular-ibs-cbs-prazo", "nfse-nacional-simples"} <= set(ids)
     assert "R$ 110" in ids["mei-lc238"]["titulo"] and "LC 238/2026" in ids["mei-lc238"]["base_legal"]
-    assert "Ainda não incorporado" in ids["mei-lc238"]["observacao"]
+    assert ids["mei-lc238"]["observacao"].startswith("Incorporado") and "R$ 110.000 em 2027" in ids["mei-lc238"]["observacao"]
     assert ids["simples-regime-regular-ibs-cbs-prazo"]["data"] == "2026-10-30"
