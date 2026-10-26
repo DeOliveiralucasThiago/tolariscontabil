@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 import { brl, numero, pct } from "@/lib/formato";
 import type {
   ResultadoAutonomo as TResultadoAutonomo,
+  ResultadoEnquadramento as TResultadoEnquadramento,
   ResultadoProLabore as TResultadoProLabore,
   ResultadoReforma as TResultadoReforma,
   ResultadoSalario as TResultadoSalario,
@@ -272,6 +273,70 @@ export function ResultadoSalario({ r }: { r: TResultadoSalario }) {
       />
       <Indicadores itens={r.tributos.map((t) => ({ rotulo: t.nome, valor: brl(t.valor) }))} />
       <MemoriaCalculo blocos={[{ titulo: "Holerite", total: brl(r.liquido), passos: r.memoria }]} />
+    </div>
+  );
+}
+
+export function ResultadoEnquadramento({ r, acoes }: { r: TResultadoEnquadramento; acoes?: ReactNode }) {
+  const atual = r.cenarios[0];
+  const melhor = r.cenarios.find((c) => c.chave === r.recomendado) ?? atual;
+  const mudou = melhor.chave !== atual.chave && r.economia_vs_pior > 0;
+  return (
+    <div className="flex flex-col gap-4" data-testid="resultado-enquadramento">
+      <Destaque
+        rotulo={mudou ? "Caminho que mais reduz o imposto" : "Situação atual"}
+        titulo={mudou ? melhor.descricao : "Manter como está"}
+        sub={`Fator R hoje: ${pct(r.fator_r_atual)} (o Anexo III exige 28% ou mais)`}
+        numeroRotulo="Economia por ano"
+        numero={brl(mudou ? r.economia_vs_pior : 0)}
+        numeroSub={mudou ? `${melhor.melhor_regime}, já com os custos extras` : "Nenhum caminho analisado reduz o imposto"}
+        acoes={acoes}
+      />
+      <Cartao titulo="Quanto a empresa paga em cada caminho">
+        <GraficoBarras
+          descricao="Total anual de tributos no melhor regime de cada caminho"
+          itens={r.cenarios.map((c) => ({
+            rotulo: c.chave === "atual" ? "Hoje" : c.chave === "fator_r" ? "Pró-labore" : c.descricao.split(" da receita")[0] + " no III",
+            valor: c.total_com_custo_extra,
+            destaque: c.chave === melhor.chave,
+            detalhe: `${c.descricao} — ${c.melhor_regime}`,
+          }))}
+        />
+        <div className="mt-4 overflow-x-auto">
+          <table className="num w-full min-w-[720px] text-sm">
+            <thead>
+              <tr className="border-b border-borda text-xs text-tinta-2">
+                <th className="py-2 pr-2 text-left font-medium">Caminho</th>
+                <th className="px-2 py-2 text-left font-medium">Anexo(s)</th>
+                <th className={th}>Simples</th>
+                <th className="px-2 py-2 text-left font-medium">Melhor regime</th>
+                <th className={th}>Custo extra</th>
+                <th className={th}>Total/ano</th>
+                <th className={th}>Economia</th>
+              </tr>
+            </thead>
+            <tbody>
+              {r.cenarios.map((c) => (
+                <tr key={c.chave} className={`border-b border-borda/70 ${c.chave === melhor.chave ? "bg-fundo font-semibold" : ""}`}>
+                  <td className="py-1.5 pr-2">{c.descricao}</td>
+                  <td className="px-2 py-1.5 text-left">{c.anexos_simples.length ? c.anexos_simples.join(" + ") : "—"}</td>
+                  <td className={td}>{c.simples.total === null ? "não se aplica" : brl(c.simples.total)}</td>
+                  <td className="px-2 py-1.5 text-left">{c.melhor_regime}</td>
+                  <td className={td}>{c.custo_extra_anual ? brl(c.custo_extra_anual) : "—"}</td>
+                  <td className={td}>{brl(c.total_com_custo_extra)}</td>
+                  <td className={td}>{c.chave === "atual" ? "—" : brl(c.economia_vs_atual)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <ul className="mt-3 list-disc pl-5 text-xs text-tinta-2">
+          {r.cenarios.filter((c) => c.observacao).map((c) => (
+            <li key={c.chave}><strong>{c.descricao}:</strong> {c.observacao}</li>
+          ))}
+        </ul>
+      </Cartao>
+      <ListaAlertas alertas={[...r.alertas, ...r.cenarios.flatMap((c) => c.alertas).filter((a, i, v) => v.indexOf(a) === i)]} />
     </div>
   );
 }

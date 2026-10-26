@@ -15,11 +15,16 @@ export function FormCompleta({
   inicial,
   onCalcular,
   carregando,
+  rotuloBotao = "Calcular e salvar planejamento",
+  mostrarAnexoIII = true,
 }: {
   atividadeInicial: Atividade | null;
   inicial?: Partial<CompletaEntrada>;
   onCalcular: (e: CompletaEntrada) => void;
   carregando: boolean;
+  rotuloBotao?: string;
+  /** Campo da receita que já tributa no Anexo III (atividade exercida de fato); a análise de enquadramento o dispensa. */
+  mostrarAnexoIII?: boolean;
 }) {
   const [f, setF] = useState<CompletaEntrada>({
     atividade: atividadeInicial ?? "servico_fator_r",
@@ -33,6 +38,7 @@ export function FormCompleta({
     aliquota_icms: 0.18,
     receita_exterior_anual: 0,
     variacao_cambial_anual: 0,
+    receita_anexo_iii_anual: 0,
     ...inicial,
   });
   const [erro, setErro] = useState("");
@@ -48,6 +54,9 @@ export function FormCompleta({
         if (f.receita_bruta_anual <= 0) return setErro("Informe a receita bruta anual.");
         if ((f.receita_exterior_anual ?? 0) > f.receita_bruta_anual) {
           return setErro("A receita do exterior não pode passar da receita bruta anual (ela é uma parte dela).");
+        }
+        if ((f.receita_anexo_iii_anual ?? 0) > f.receita_bruta_anual) {
+          return setErro("A receita do Anexo III não pode passar da receita bruta anual (ela é uma parte dela).");
         }
         onCalcular(f);
       }}
@@ -123,9 +132,26 @@ export function FormCompleta({
           <ConversorDeMoeda onUsar={(reais) => set("receita_exterior_anual")(reais)} />
         </div>
       </details>
+      {mostrarAnexoIII && f.atividade === "servico_fator_r" && (
+        <details className="rounded-lg border border-borda p-3" open={(f.receita_anexo_iii_anual ?? 0) > 0} data-testid="bloco-anexo-iii">
+          <summary className="cursor-pointer text-sm font-medium">
+            Parte da receita em atividade do Anexo III
+            <span className="ml-2 text-xs font-normal text-tinta-2">Opcional: empresa que exerce, de fato, mais de uma atividade</span>
+          </summary>
+          <div className="mt-3 flex flex-col gap-3">
+            <p className="text-xs text-tinta-2">
+              Se parte do faturamento vem de um serviço que tributa direto no Anexo III (e a empresa tem o CNAE dele e emite a nota com ele),
+              informe aqui o valor anual. Ele é <strong>uma parte</strong> da receita bruta e só muda o Simples Nacional.
+            </p>
+            <div className="max-w-xs">
+              <CampoMoeda id="receita_anexo_iii" rotulo="Receita anual do Anexo III" valor={f.receita_anexo_iii_anual ?? 0} onChange={set("receita_anexo_iii_anual")} />
+            </div>
+          </div>
+        </details>
+      )}
       <MensagemErro>{erro}</MensagemErro>
       <div>
-        <Botao type="submit" carregando={carregando}>Calcular e salvar planejamento</Botao>
+        <Botao type="submit" carregando={carregando}>{rotuloBotao}</Botao>
       </div>
     </form>
   );

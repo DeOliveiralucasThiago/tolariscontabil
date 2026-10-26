@@ -28,7 +28,7 @@ await page.waitForURL("**/configuracoes?bemvindo=1");
 
 // 1. O tour de primeiro acesso abre sozinho
 await dialogo.getByRole("heading", { name: "Bem-vindo ao Tolaris Contábil" }).waitFor();
-await dialogo.getByText("1 de 11").waitFor();
+await dialogo.getByText("1 de 12").waitFor();
 await page.screenshot({ path: `${OUT}/tour-1-boas-vindas.png` });
 await page.keyboard.press("ArrowRight");
 await dialogo.getByRole("heading", { name: "Painel", exact: true }).waitFor();
@@ -41,11 +41,11 @@ await dialogo.getByRole("heading", { name: "Bem-vindo ao Tolaris Contábil" }).w
 passo("tour abre sozinho no primeiro acesso, o balão fica ao lado do menu e as setas do teclado navegam");
 
 const titulos = [];
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < 11; i++) {
   await dialogo.getByRole("button", { name: "Próximo" }).click();
   titulos.push(await dialogo.getByRole("heading").first().innerText());
 }
-if (titulos.join("|") !== "Painel|Prospecção|Clientes|Funil comercial|Avisos|Reforma Tributária|Pessoa física|Equipe|Configurações|Pronto para começar") throw new Error(`passos inesperados: ${titulos}`);
+if (titulos.join("|") !== "Painel|Prospecção|Clientes|Funil comercial|Avisos|Enquadramento|Reforma Tributária|Pessoa física|Equipe|Configurações|Pronto para começar") throw new Error(`passos inesperados: ${titulos}`);
 await page.screenshot({ path: `${OUT}/tour-3-fim.png` });
 await dialogo.getByRole("button", { name: "Concluir" }).click();
 await dialogo.waitFor({ state: "detached" });
@@ -53,7 +53,7 @@ await page.reload();
 await page.getByRole("heading", { name: "Configurações do escritório" }).waitFor();
 await page.waitForTimeout(1500);
 if (await dialogo.count()) throw new Error("o tour não deveria reabrir depois de concluído");
-passo("11 passos (um por menu) e, concluído, não volta a abrir");
+passo("12 passos (um por menu) e, concluído, não volta a abrir");
 
 // 2. Ajuda de cada tela
 await page.getByRole("button", { name: "Ajuda" }).click();
@@ -73,7 +73,7 @@ const cliente = await api("POST", "/clientes", { data: { razao_social: "Padaria 
 
 for (const [rota, primeiro, total] of [
   ["/painel", "Painel", 4], ["/prospeccao", "Dados da empresa", 3], ["/clientes", "Importar planilha", 5], ["/clientes/importar", "Planilha da carteira", 3],
-  [`/clientes/${cliente.id}`, "Simulações", 5], ["/funil", "Período", 3], ["/avisos", "Avisos", 3], ["/reforma", "Duas simulações", 2],
+  [`/clientes/${cliente.id}`, "Simulações", 5], ["/funil", "Período", 3], ["/avisos", "Avisos", 3], ["/enquadramento", "Dados de hoje", 2], ["/reforma", "Duas simulações", 2],
   ["/pessoa-fisica", "Calculadoras", 1], ["/equipe", "Convidar", 2],
 ]) {
   await page.goto(`${BASE}${rota}`);

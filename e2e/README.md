@@ -112,3 +112,10 @@ Suba a API com `TOLARIS_PTAX_URL`:
 export TOLARIS_PTAX_URL=http://127.0.0.1:8099/ptax
 node fluxo_exterior.mjs saida
 ```
+
+O fluxo do enquadramento (CNAEs secundários vindos da Receita, classificação, comparação dos caminhos para o Anexo III e PDF)
+usa o `mock_brasilapi.py` e um e-mail novo a cada execução:
+
+```bash
+node fluxo_enquadramento.mjs saida
+```

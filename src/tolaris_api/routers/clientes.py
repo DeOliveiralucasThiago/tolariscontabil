@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..auditoria import auditar
+from ..cnpj import classificar_cnaes
 from ..db import get_db
 from ..models import Cliente, RegistroAuditoria, Simulacao, Usuario
 from ..schemas import ClienteAtualizar, ClienteEntrada, ClienteSaida
@@ -51,6 +52,12 @@ def listar(
         )
     clientes = db.scalars(consulta.order_by(Cliente.atualizado_em.desc()).limit(2000)).all()
     return [cliente_saida(db, c) for c in clientes]
+
+
+@router.get("/{cliente_id}/cnaes")
+def cnaes_do_cliente(cliente_id: int, usuario: Usuario = Depends(usuario_atual), db: Session = Depends(get_db)) -> dict:
+    c = obter_cliente(db, usuario, cliente_id)
+    return classificar_cnaes(c.cnae_principal, c.cnae_descricao, c.cnaes_secundarios, c.atividade)
 
 
 @router.post("", response_model=ClienteSaida, status_code=status.HTTP_201_CREATED)

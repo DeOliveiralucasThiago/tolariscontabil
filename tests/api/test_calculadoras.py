@@ -11,6 +11,8 @@ ENTRADAS = {
                         "compras_creditaveis_anual": 1200000},
     "autonomo": {"receita_mensal": 15000, "contabilidade_mensal": 400},
     "pro-labore": {"retirada_mensal": 20000, "regime": "presumido"},
+    "enquadramento": {"atividade": "servico_fator_r", "receita_bruta_anual": 600000, "pro_labore_anual": 36000,
+                      "outras_despesas_anual": 60000},
 }
 
 
@@ -79,3 +81,31 @@ def test_texto_do_ponto_de_equilibrio(logado: TestClient):
         "atividade": "servico_anexo_iii", "receita_bruta_anual": 120000, "percentual_b2b": 1,
         "compras_creditaveis_anual": 20000}).json()
     assert d["cenarios"][1]["equilibrio_texto"].startswith("a partir de")
+
+
+def test_enquadramento_compara_os_caminhos_para_o_anexo_iii(logado: TestClient):
+    d = logado.post("/api/calculadoras/enquadramento", json={**ENTRADAS["enquadramento"], "percentual_anexo_iii": 0.3}).json()
+    assert d["fator_r_atual"] == 0.06
+    assert [c["chave"] for c in d["cenarios"]] == ["atual", "fator_r", "anexo_iii_25", "anexo_iii_30", "anexo_iii_50", "anexo_iii_100"]
+    atual, fator_r = d["cenarios"][0], d["cenarios"][1]
+    assert atual["anexos_simples"] == ["V"] and fator_r["anexos_simples"] == ["III"] and fator_r["custo_extra_anual"] > 0
+    assert fator_r["pro_labore_anual"] == 168000 and fator_r["total_com_custo_extra"] < atual["total_com_custo_extra"]
+    assert d["recomendado"] == "anexo_iii_100" and d["economia_vs_pior"] > 0
+    assert "exercida de fato" in d["alertas"][0]
+
+
+def test_enquadramento_fora_do_fator_r_so_traz_o_cenario_atual(logado: TestClient):
+    d = logado.post("/api/calculadoras/enquadramento", json={**ENTRADAS["enquadramento"], "atividade": "comercio"}).json()
+    assert [c["chave"] for c in d["cenarios"]] == ["atual"] and "serviços do fator R" in d["alertas"][1]
+    assert d["economia_vs_pior"] == 0
+
+
+def test_completa_com_receita_do_anexo_iii_e_validacoes(logado: TestClient):
+    base = ENTRADAS["enquadramento"]
+    cid = logado.post("/api/clientes", json={"razao_social": "Consultoria Maple Ltda", "atividade": "servico_fator_r"}).json()["id"]
+    todos_v = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json=base).json()
+    separada = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "receita_anexo_iii_anual": 300000}).json()
+    simples = lambda s: next(r for r in s["resultado"]["regimes"] if r["titulo"] == "Simples Nacional")["total"]  # noqa: E731
+    assert simples(separada) < simples(todos_v)
+    assert logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "receita_anexo_iii_anual": 700000}).status_code == 422
+    assert logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "atividade": "comercio", "receita_anexo_iii_anual": 1000}).status_code == 422

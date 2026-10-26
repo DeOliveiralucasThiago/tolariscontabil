@@ -218,6 +218,7 @@ TITULOS = {
     "simples_reforma": "Simples Nacional na Reforma",
     "autonomo": "Vale abrir CNPJ?",
     "pro_labore": "Pró-labore × distribuição de lucros",
+    "enquadramento": "Enquadramento no Simples Nacional",
     "recuperacao": "Recuperação de tributos no Simples Nacional",
 }
 
@@ -538,10 +539,63 @@ def _rel_recuperacao(sim: Simulacao, cor: str) -> dict[str, Any]:
     }
 
 
+def _rel_enquadramento(sim: Simulacao, cor: str) -> dict[str, Any]:
+    res, e = sim.resultado, sim.entrada
+    cen = res["cenarios"]
+    atual = cen[0]
+    def curto(c: dict[str, Any]) -> str:
+        if c["chave"] == "atual":
+            return "Hoje"
+        return "Pró-labore até 28%" if c["chave"] == "fator_r" else f"{c['chave'].rsplit('_', 1)[1]}% no Anexo III"
+
+    barras = [{"titulo": curto(c), "total": c["total_com_custo_extra"], "aplicavel": True} for c in cen]
+    melhor_cen = next(c for c in cen if c["chave"] == res["recomendado"])
+    mudou = melhor_cen["chave"] != "atual" and res["economia_vs_pior"] > 0
+    return {
+        "titulo": "Enquadramento no Simples Nacional",
+        "subtitulo": "Caminhos para sair do Anexo V e o que cada um muda no imposto",
+        "destaque": {
+            "rotulo": "Caminho que mais reduz o imposto" if mudou else "Situação atual",
+            "valor": melhor_cen["descricao"] if mudou else "Manter como está",
+            "detalhe": (f"Economia estimada de {brl(res['economia_vs_pior'])} por ano em {melhor_cen['melhor_regime']}, "
+                        "já com os custos extras." if mudou else "Nenhum caminho analisado reduz o imposto."),
+        },
+        "cartoes": [
+            {"rotulo": "Receita anual", "valor": brl(res["receita_anual"])},
+            {"rotulo": "Fator R hoje", "valor": pct(res["fator_r_atual"])},
+            {"rotulo": "Imposto hoje (melhor regime)", "valor": brl(atual["total_com_custo_extra"])},
+        ],
+        "grafico_titulo": "Tributos por ano em cada caminho (R$)",
+        "grafico": grafico_barras(barras, curto(melhor_cen), cor),
+        "grafico_nota": "Destacado, o caminho de menor custo. Inclui o INSS do sócio sobre o pró-labore adicional.",
+        "tabelas": [{
+            "titulo": "Caminhos comparados",
+            "colunas": ["Caminho", "Anexo(s)", "Simples", "Melhor regime", "Custo extra", "Total/ano", "Economia"],
+            "linhas": [{"valores": [
+                c["descricao"], " + ".join(c["anexos_simples"]) or "—",
+                brl(c["simples"]["total"]) if c["simples"]["total"] is not None else "não se aplica",
+                c["melhor_regime"], brl(c["custo_extra_anual"]) if c["custo_extra_anual"] else "—",
+                brl(c["total_com_custo_extra"]), "—" if c["chave"] == "atual" else brl(c["economia_vs_atual"]),
+            ]} for c in cen],
+        }],
+        "entradas": [
+            ("Atividade", ROTULOS_ATIVIDADE.get(e["atividade"], e["atividade"])),
+            ("Receita bruta anual", brl(e["receita_bruta_anual"])),
+            ("Folha CLT anual", brl(e.get("folha_clt_anual", 0))),
+            ("Pró-labore anual", brl(e.get("pro_labore_anual", 0))),
+        ],
+        "alertas": res["alertas"],
+        "memorias": [],
+        "aviso_extra": "Estimativa para discussão com o contador: cada caminho só vale se for real (pró-labore pago; atividade do "
+                       "Anexo III exercida de fato, com CNAE no cadastro e nota do serviço).",
+    }
+
+
 RELATORIOS = {
     "recuperacao": _rel_recuperacao,
     "reforma": _rel_reforma,
     "simples_reforma": _rel_simples_reforma,
     "autonomo": _rel_autonomo,
     "pro_labore": _rel_pro_labore,
+    "enquadramento": _rel_enquadramento,
 }

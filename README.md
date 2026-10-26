@@ -205,6 +205,10 @@ verificação em duas etapas guardados no banco não podem ser lidos (o usuário
 que vem do exterior e a variação cambial; a tela traz um conversor de moeda pela PTAX do Banco Central, com todas as moedas que ele cota (a taxa pode ser trocada à mão).
 As premissas e o que o contador precisa validar estão em `docs/premissas.md` (itens 60 a 68).
 
+**Enquadramento (Anexo V → III):** a tela *Enquadramento* compara, para empresa de serviços do fator R, a situação de hoje com
+o pró-labore que leva o fator R a 28% e com parte da receita em atividade do Anexo III, mostra os CNAEs do cliente (principal e
+secundários da Receita) e gera o PDF. Só vale se a atividade for exercida de fato; veja os itens 69 e 70 de `docs/premissas.md`.
+
 Todo resultado traz uma **memória de cálculo** (descrição, fórmula, valor e base legal
 de cada passo) e **alertas** (premissas e limitações). As tabelas legais ficam em
 `src/tolaris_motor/tabelas/*.json`, versionadas por vigência: quando a lei muda,

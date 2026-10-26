@@ -143,6 +143,25 @@ export interface Sessao {
   escritorio: Escritorio;
 }
 
+export interface CnaeSecundario {
+  codigo: string;
+  descricao: string;
+}
+
+export interface CnaeClassificado extends CnaeSecundario {
+  principal: boolean;
+  atividade: Atividade | null;
+  anexo: string;
+  motivo: string;
+}
+
+export interface CnaesDoCliente {
+  cnaes: CnaeClassificado[];
+  atividade_fator_r: boolean;
+  anexo_iii_no_cadastro: CnaeClassificado[];
+  aviso: string;
+}
+
 export interface Cliente {
   id: number;
   razao_social: string;
@@ -150,6 +169,7 @@ export interface Cliente {
   cnpj: string | null;
   cnae_principal: string | null;
   cnae_descricao: string | null;
+  cnaes_secundarios: CnaeSecundario[] | null;
   municipio: string | null;
   uf: string | null;
   atividade: Atividade | null;
@@ -177,6 +197,7 @@ export interface DadosCnpj {
   situacao: string | null;
   cnae_principal: string | null;
   cnae_descricao: string | null;
+  cnaes_secundarios: CnaeSecundario[];
   municipio: string | null;
   uf: string | null;
   email: string | null;
@@ -219,7 +240,7 @@ export interface Comparativo {
   alertas: string[];
 }
 
-export type TipoSimulacao = "expressa" | "completa" | "reforma" | "simples_reforma" | "autonomo" | "pro_labore" | "recuperacao";
+export type TipoSimulacao = "expressa" | "completa" | "reforma" | "simples_reforma" | "autonomo" | "pro_labore" | "enquadramento" | "recuperacao";
 
 export const ROTULO_TIPO: Record<TipoSimulacao, string> = {
   expressa: "Expressa",
@@ -228,6 +249,7 @@ export const ROTULO_TIPO: Record<TipoSimulacao, string> = {
   simples_reforma: "Simples na Reforma",
   autonomo: "Autônomo × CNPJ",
   pro_labore: "Pró-labore",
+  enquadramento: "Enquadramento",
   recuperacao: "Recuperação de tributos",
 };
 
@@ -272,6 +294,7 @@ export interface CompletaEntrada {
   aliquota_icms: number;
   receita_exterior_anual?: number;
   variacao_cambial_anual?: number;
+  receita_anexo_iii_anual?: number;
   ano?: number;
 }
 
@@ -369,6 +392,35 @@ export interface ResultadoProLabore {
   economia_mensal: number;
   economia_anual: number;
   melhor: string;
+}
+
+export interface CenarioEnquadramento {
+  chave: string;
+  descricao: string;
+  observacao: string;
+  anexos_simples: string[];
+  simples: { aplicavel: boolean; total: number | null };
+  regimes: { titulo: string; aplicavel: boolean; total: number }[];
+  melhor_regime: string;
+  total_melhor: number;
+  custo_extra_anual: number;
+  total_com_custo_extra: number;
+  economia_vs_atual: number;
+  alertas: string[];
+  pro_labore_anual: number;
+  receita_anexo_iii: number;
+}
+
+export interface ResultadoEnquadramento {
+  receita_anual: number;
+  atividade: Atividade;
+  ano: number;
+  fator_r_atual: number;
+  cenarios: CenarioEnquadramento[];
+  recomendado: string;
+  melhor: string;
+  economia_vs_pior: number;
+  alertas: string[];
 }
 
 export interface ResultadoSalario extends BlocoCalculo {

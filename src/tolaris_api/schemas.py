@@ -122,12 +122,18 @@ def _validar_cnpj_opcional(v: str | None) -> str | None:
 
 
 # --- Clientes ---------------------------------------------------------------
+class CnaeItem(BaseModel):
+    codigo: str = Field(min_length=7, max_length=7, pattern=r"^\d{7}$")
+    descricao: str = Field(default="", max_length=300)
+
+
 class ClienteBase(BaseModel):
     razao_social: str = Field(min_length=2, max_length=250)
     nome_fantasia: str | None = Field(default=None, max_length=250)
     cnpj: str | None = None
     cnae_principal: str | None = Field(default=None, max_length=7)
     cnae_descricao: str | None = Field(default=None, max_length=300)
+    cnaes_secundarios: list[CnaeItem] | None = Field(default=None, max_length=200)
     municipio: str | None = Field(default=None, max_length=120)
     uf: str | None = Field(default=None, max_length=2)
     atividade: Atividade | None = None
@@ -176,6 +182,7 @@ class CnpjSaida(BaseModel):
     situacao: str | None
     cnae_principal: str | None
     cnae_descricao: str | None
+    cnaes_secundarios: list[CnaeItem] = Field(default_factory=list)
     municipio: str | None
     uf: str | None
     email: str | None
@@ -222,13 +229,26 @@ class CompletaEntrada(BaseModel):
     """Parte da receita bruta que é exportação (de serviços ou de mercadorias), em reais."""
     variacao_cambial_anual: Dinheiro = Field(default=Decimal(0), ge=-Decimal("100000000000"), le=Decimal("100000000000"))
     """Variação cambial líquida do ano, em reais: positiva é ganho, negativa é perda."""
+    receita_anexo_iii_anual: Dinheiro = Field(default=Decimal(0), ge=0)
+    """Parte da receita de serviços em atividade que tributa direto no Anexo III (só para a atividade do fator R)."""
     ano: int = Field(default=2026, ge=2025, le=2026)
 
     @model_validator(mode="after")
     def _exterior_cabe_na_receita(self) -> "CompletaEntrada":
         if self.receita_exterior_anual > self.receita_bruta_anual:
             raise ValueError("A receita do exterior não pode passar da receita bruta anual")
+        if self.receita_anexo_iii_anual > self.receita_bruta_anual:
+            raise ValueError("A receita do Anexo III não pode passar da receita bruta anual")
+        if self.receita_anexo_iii_anual and self.atividade is not Atividade.SERVICO_FATOR_R:
+            raise ValueError("A receita separada do Anexo III só vale para a atividade \"serviços do fator R\"")
         return self
+
+
+class EnquadramentoEntrada(CompletaEntrada):
+    """Os dados da empresa como ela é hoje; o Tolaris compara os caminhos para o Anexo III."""
+
+    percentual_anexo_iii: Decimal | None = Field(default=None, gt=0, le=1)
+    """Parcela da receita que viria de atividade do Anexo III, para um cenário próprio além dos de 25%, 50% e 100%."""
 
 
 class ProspeccaoEntrada(BaseModel):

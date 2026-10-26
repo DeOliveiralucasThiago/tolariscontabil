@@ -13,6 +13,7 @@ const MENU = [
   { href: "/clientes", rotulo: "Clientes", icone: "☰" },
   { href: "/funil", rotulo: "Funil comercial", icone: "▽" },
   { href: "/avisos", rotulo: "Avisos", icone: "⚑" },
+  { href: "/enquadramento", rotulo: "Enquadramento", icone: "⌥" },
   { href: "/reforma", rotulo: "Reforma Tributária", icone: "⇄" },
   { href: "/pessoa-fisica", rotulo: "Pessoa física", icone: "◉" },
   { href: "/equipe", rotulo: "Equipe", icone: "☺" },

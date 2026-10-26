@@ -8,11 +8,14 @@ from typing import Any
 
 import tolaris_motor
 from tolaris_motor import Comparativo, PerfilEmpresa, Resultado, comparar, simulacao_expressa
-from tolaris_motor import autonomo, pessoa_fisica, reforma, reforma_simples
+from tolaris_motor import autonomo, enquadramento, pessoa_fisica, reforma, reforma_simples, simples
+
+from tolaris_motor.empresa import Atividade
 
 from .schemas import (
     AutonomoEntrada,
     CompletaEntrada,
+    EnquadramentoEntrada,
     ExpressaEntrada,
     ProLaboreEntrada,
     ReformaEntrada,
@@ -76,6 +79,59 @@ def executar_expressa(e: ExpressaEntrada) -> dict[str, Any]:
         receita_exterior_mensal=e.receita_exterior_mensal,
     )
     return serializar_comparativo(c)
+
+
+def executar_enquadramento(e: EnquadramentoEntrada) -> dict[str, Any]:
+    dados = e.model_dump(exclude={"percentual_anexo_iii", "receita_anexo_iii_anual"})
+    perfil = PerfilEmpresa(**dados)
+    cenarios = enquadramento.analisar(perfil, e.percentual_anexo_iii)
+    atual = cenarios[0]
+    melhor = enquadramento.recomendado(cenarios)
+    receita = perfil.receita_bruta_anual
+    folha = simples.folha_fator_r(perfil)
+    saida = []
+    for c in cenarios:
+        simples_res = next(r for r in c.comparativo.resultados if r.titulo.startswith("Simples"))
+        saida.append(
+            {
+                "chave": c.chave,
+                "descricao": c.descricao,
+                "observacao": c.observacao,
+                "anexos_simples": c.anexos_simples,
+                "simples": {"aplicavel": simples_res.aplicavel, "total": _num(simples_res.total) if simples_res.aplicavel else None},
+                "regimes": [{"titulo": r.titulo, "aplicavel": r.aplicavel, "total": _num(r.total)} for r in c.comparativo.resultados],
+                "melhor_regime": c.comparativo.melhor.titulo,
+                "total_melhor": _num(c.comparativo.melhor.total),
+                "custo_extra_anual": _num(c.custo_extra_anual),
+                "total_com_custo_extra": _num(c.melhor_total),
+                "economia_vs_atual": _num(atual.melhor_total - c.melhor_total),
+                "alertas": [a for a in simples_res.alertas if "separada como atividade do Anexo III" not in a],
+                "pro_labore_anual": _num(c.perfil.pro_labore_anual),
+                "receita_anexo_iii": _num(c.perfil.receita_anexo_iii_anual),
+            }
+        )
+    economia = atual.melhor_total - melhor.melhor_total
+    alertas = [
+        "Os dois caminhos só valem na vida real: o pró-labore precisa ser pago de verdade, e a atividade do Anexo III precisa "
+        "ser exercida de fato, com o CNAE no cadastro e nota fiscal do serviço. A Receita enquadra pela atividade realmente "
+        "exercida; incluir um CNAE sem a atividade pode ser desconsiderado e gerar cobrança com multa. Valide com o contador.",
+    ]
+    if perfil.atividade is not Atividade.SERVICO_FATOR_R:
+        alertas.append(
+            "Esta análise é para empresas de serviços do fator R (Anexo III ou V conforme a folha). Para as demais "
+            "atividades o Anexo já é definido pela atividade."
+        )
+    return {
+        "receita_anual": _num(receita),
+        "atividade": perfil.atividade.value,
+        "ano": perfil.ano,
+        "fator_r_atual": _num(simples.fator_r(folha, receita), 6),
+        "cenarios": saida,
+        "recomendado": melhor.chave,
+        "melhor": melhor.descricao,
+        "economia_vs_pior": _num(max(Decimal(0), economia)),
+        "alertas": alertas,
+    }
 
 
 def executar_completa(e: CompletaEntrada) -> dict[str, Any]:
@@ -238,6 +294,7 @@ TIPOS_FASE2: dict[str, tuple[type, Any, str]] = {
     "simples_reforma": (SimplesReformaEntrada, executar_simples_reforma, "Simples na Reforma (IBS/CBS no DAS ou por fora)"),
     "autonomo": (AutonomoEntrada, executar_autonomo, "Autônomo × CNPJ"),
     "pro_labore": (ProLaboreEntrada, executar_pro_labore, "Pró-labore × dividendos"),
+    "enquadramento": (EnquadramentoEntrada, executar_enquadramento, "Enquadramento: caminhos para o Anexo III"),
 }
 
 

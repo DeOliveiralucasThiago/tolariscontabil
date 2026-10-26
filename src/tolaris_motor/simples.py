@@ -100,6 +100,15 @@ def anexo_da_atividade(perfil: PerfilEmpresa, res: Resultado | None = None) -> s
     return anexo
 
 
+def _partes_por_anexo(perfil: PerfilEmpresa, anexo_principal: str) -> list[tuple[str, Decimal]]:
+    """Receita por Anexo: a atividade principal e, se houver, a parte que tributa direto no Anexo III."""
+    separada = perfil.receita_anexo_iii_anual
+    if not separada or anexo_principal == "III":
+        return [(anexo_principal, perfil.receita_bruta_anual)]
+    principal = perfil.receita_bruta_anual - separada
+    return [(anexo_principal, principal), ("III", separada)] if principal > 0 else [("III", separada)]
+
+
 BASE_LEGAL_EXPORTACAO = "Res. CGSN 140/2018, art. 25, §§ 3º, 4º e 4º-A; LC 116/2003, art. 2º, I; LC 123/2006, art. 18"
 TRIBUTOS_DESCONSIDERADOS_EXPORTACAO = {
     "servicos": ("pis", "cofins", "iss"),
@@ -152,39 +161,67 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
 
     extrapolar = receita > limite
     anexo = anexo_da_atividade(perfil, res)
-    n, f = faixa(anexo, receita, data, extrapolar)
-    aliq = aliquota_efetiva(anexo, receita, data, extrapolar)
-    res.passo(
-        f"Alíquota efetiva - Anexo {anexo}, {n}ª faixa",
-        f"({brl(receita)} x {pct(D(f['aliquota']))} - {brl(f['deduzir'])}) / {brl(receita)} = {pct(aliq, 4)}",
-        aliq,
-        BASE_LEGAL_ALIQUOTA,
-    )
-    if exterior == 0:
-        res.tributos["DAS"] = res.passo(
-            "DAS anual", f"{brl(receita)} x {pct(aliq, 4)}", receita * aliq, "LC 123/2006, art. 13"
+    partes = _partes_por_anexo(perfil, anexo)
+    multiplas = len(partes) > 1
+    tipo = "mercadorias" if perfil.atividade.vende_mercadoria else "servicos"
+    desconsiderados = TRIBUTOS_DESCONSIDERADOS_EXPORTACAO[tipo]
+    das_total = ZERO
+    passos_das: list[Decimal] = []
+    for anx, parte in partes:
+        n, f = faixa(anx, receita, data, extrapolar)
+        aliq = aliquota_efetiva(anx, receita, data, extrapolar)
+        res.passo(
+            f"Alíquota efetiva - Anexo {anx}, {n}ª faixa",
+            f"({brl(receita)} x {pct(D(f['aliquota']))} - {brl(f['deduzir'])}) / {brl(receita)} = {pct(aliq, 4)}",
+            aliq,
+            BASE_LEGAL_ALIQUOTA,
         )
-    else:
-        fracoes = partilha(anexo, receita, data, extrapolar)
-        tipo = "mercadorias" if perfil.atividade.vende_mercadoria else "servicos"
-        desconsiderados = TRIBUTOS_DESCONSIDERADOS_EXPORTACAO[tipo]
-        fracao_excluida = sum((fracoes.get(k, ZERO) for k in desconsiderados), ZERO)
-        das_interno = res.passo(
-            "DAS - mercado interno", f"{brl(interna)} x {pct(aliq, 4)}", interna * aliq, "LC 123/2006, art. 13"
-        )
-        das_exterior = res.passo(
-            "DAS - exportação",
-            f"{brl(exterior)} x {pct(aliq, 4)} x (1 - {pct(fracao_excluida, 2)} de {'/'.join(t.upper() for t in desconsiderados)} "
-            "na partilha da faixa)",
-            exterior * aliq * (1 - fracao_excluida),
-            BASE_LEGAL_EXPORTACAO,
-        )
-        res.tributos["DAS"] = res.passo("DAS anual", f"{brl(das_interno)} + {brl(das_exterior)}", das_interno + das_exterior)
-        if extrapolar:
-            res.alerta(
-                f"Receita total de {brl(receita)} passa de {brl(limite)} por causa da exportação: usada a última faixa "
-                "do Anexo (aproximação). Confira a apuração no PGDAS-D."
+        sufixo = f" (Anexo {anx}, {brl(parte)})" if multiplas else ""
+        proporcao = parte / receita if receita else D(1)
+        interna_parte, exterior_parte = interna * proporcao, exterior * proporcao
+        if exterior == 0:
+            das_parte = res.passo(
+                "DAS anual" if not multiplas else f"DAS{sufixo}",
+                f"{brl(parte)} x {pct(aliq, 4)}",
+                parte * aliq,
+                "LC 123/2006, art. 13",
             )
+        else:
+            fracoes = partilha(anx, receita, data, extrapolar)
+            fracao_excluida = sum((fracoes.get(k, ZERO) for k in desconsiderados), ZERO)
+            das_interno = res.passo(
+                f"DAS - mercado interno{sufixo}",
+                f"{brl(interna_parte)} x {pct(aliq, 4)}",
+                interna_parte * aliq,
+                "LC 123/2006, art. 13",
+            )
+            das_exterior = res.passo(
+                f"DAS - exportação{sufixo}",
+                f"{brl(exterior_parte)} x {pct(aliq, 4)} x (1 - {pct(fracao_excluida, 2)} de "
+                f"{'/'.join(t.upper() for t in desconsiderados)} na partilha da faixa)",
+                exterior_parte * aliq * (1 - fracao_excluida),
+                BASE_LEGAL_EXPORTACAO,
+            )
+            das_parte = das_interno + das_exterior
+        das_total += das_parte
+        passos_das.append(das_parte)
+    if exterior == 0 and not multiplas:
+        res.tributos["DAS"] = das_total
+    else:
+        res.tributos["DAS"] = res.passo(
+            "DAS anual", " + ".join(brl(v) for v in passos_das), das_total, "LC 123/2006, art. 13 e art. 18, §§ 1º e 4º"
+        )
+    if exterior and extrapolar:
+        res.alerta(
+            f"Receita total de {brl(receita)} passa de {brl(limite)} por causa da exportação: usada a última faixa "
+            "do Anexo (aproximação). Confira a apuração no PGDAS-D."
+        )
+    if multiplas:
+        res.alerta(
+            f"Receita de {brl(perfil.receita_anexo_iii_anual)} separada como atividade do Anexo III: o Simples só aceita "
+            "isso se a empresa exerce de fato essa atividade, tem o CNAE no cadastro e emite a nota com o serviço "
+            "correspondente. Não basta incluir o CNAE: a Receita enquadra pela atividade realmente exercida."
+        )
 
     if anexo == "IV":
         aliq_folha = ALIQUOTA_CPP + perfil.rat

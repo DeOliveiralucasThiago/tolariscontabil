@@ -45,6 +45,12 @@ export const TOUR_GERAL: Passo[] = [
       "mudanças na lei que alteram planejamentos já feitos e propostas paradas.",
   },
   {
+    alvo: menu("/enquadramento"), menu: true, titulo: "Enquadramento",
+    texto:
+      "Para empresa de serviços no Anexo V do Simples: compare os caminhos até o Anexo III (mais pró-labore ou parte da receita em atividade do Anexo III) " +
+      "e veja os CNAEs do cliente. Só vale se a atividade for exercida de fato.",
+  },
+  {
     alvo: menu("/reforma"), menu: true, titulo: "Reforma Tributária",
     texto: "Simule a transição de 2026 a 2033 (CBS e IBS) para um cliente e veja se, no Simples, compensa recolher IBS e CBS por dentro ou por fora do DAS.",
   },
@@ -130,6 +136,13 @@ const PAGINAS: { rota: RegExp; passos: Passo[] }[] = [
       { alvo: '[data-tour="titulo"]', titulo: "Avisos", texto: "Reúne o que o Tolaris encontrou na carteira inteira: fator R, limites, imposto pago a mais, mudanças na lei e propostas paradas." },
       { alvo: '[role="tablist"]', titulo: "Filtros", texto: "Filtre por urgência: crítico, atenção, oportunidade ou informativo. Oportunidades são dinheiro a ganhar." },
       { titulo: "Ações", texto: "Cada aviso traz o valor em jogo e um botão: abrir o cliente, ver a análise ou recalcular uma simulação que mudou com a lei (a versão anterior fica no histórico)." },
+    ],
+  },
+  {
+    rota: /^\/enquadramento$/,
+    passos: [
+      { alvo: "form", titulo: "Dados de hoje", texto: "Informe a empresa como ela é hoje. O Tolaris compara: pró-labore até o fator R chegar a 28% e 25%, 50% ou 100% da receita em atividade do Anexo III, com o custo extra de cada caminho. Abrindo a tela a partir de um cliente, aparecem os CNAEs dele com o Anexo provável de cada um." },
+      { titulo: "Cuidado", texto: "Pró-labore precisa ser pago de verdade, e a atividade do Anexo III precisa ser exercida, com CNAE no cadastro e nota fiscal. A Receita enquadra pela atividade real." },
     ],
   },
   {

@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { brl, dataHora } from "@/lib/formato";
 import type {
   ResultadoAutonomo as TAutonomo,
+  ResultadoEnquadramento as TEnquadramento,
   ResultadoProLabore as TProLabore,
   ResultadoRecuperacao as TRecuperacao,
   InfoRecalculo,
@@ -15,7 +16,7 @@ import type {
 
 import { ResultadoComparativo } from "./ResultadoComparativo";
 import { ResultadoRecuperacao } from "./ResultadoRecuperacao";
-import { ResultadoAutonomo, ResultadoProLabore, ResultadoReforma, ResultadoSimplesReforma } from "./ResultadosFase2";
+import { ResultadoAutonomo, ResultadoEnquadramento, ResultadoProLabore, ResultadoReforma, ResultadoSimplesReforma } from "./ResultadosFase2";
 
 /** Aviso no topo de uma simulação que foi refeita com as regras atuais. */
 function FaixaRecalculo({ info, melhor, economia }: { info: InfoRecalculo; melhor: string | null; economia: number | null }) {
@@ -62,6 +63,8 @@ function ConteudoSimulacao({ sim, acoes }: { sim: Simulacao; acoes?: ReactNode }
       return <ResultadoAutonomo r={r as TAutonomo} acoes={acoes} />;
     case "pro_labore":
       return <ResultadoProLabore r={r as TProLabore} acoes={acoes} />;
+    case "enquadramento":
+      return <ResultadoEnquadramento r={r as TEnquadramento} acoes={acoes} />;
     case "recuperacao":
       return <ResultadoRecuperacao r={r as TRecuperacao} acoes={acoes} />;
     default:

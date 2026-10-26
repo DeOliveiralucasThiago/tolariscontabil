@@ -72,6 +72,9 @@ class PerfilEmpresa:
     """Parte de ``receita_bruta_anual`` que é exportação (de serviços ou de mercadorias), já em reais."""
     variacao_cambial_anual: Numero = 0
     """Variação cambial líquida do ano (ativa - passiva), em reais; negativa quando houve perda."""
+    receita_anexo_iii_anual: Numero = 0
+    """Parte de ``receita_bruta_anual`` de uma atividade que tributa direto no Anexo III (CNAE realmente exercido),
+    para empresa cuja atividade principal é do fator R. Só afeta o Simples Nacional."""
     ano: int = 2026
 
     def __post_init__(self) -> None:
@@ -103,6 +106,13 @@ class PerfilEmpresa:
             raise ValueError("receita_exterior_anual não pode ser negativo")
         if self.receita_exterior_anual > self.receita_bruta_anual:
             raise ValueError("receita_exterior_anual não pode passar da receita bruta anual")
+        self.receita_anexo_iii_anual = D(self.receita_anexo_iii_anual)
+        if self.receita_anexo_iii_anual < 0:
+            raise ValueError("receita_anexo_iii_anual não pode ser negativo")
+        if self.receita_anexo_iii_anual > self.receita_bruta_anual:
+            raise ValueError("receita_anexo_iii_anual não pode passar da receita bruta anual")
+        if self.receita_anexo_iii_anual and self.atividade is not Atividade.SERVICO_FATOR_R:
+            raise ValueError("A receita separada do Anexo III só se aplica a quem tem atividade principal do fator R")
         if self.presuncao is None:
             self.presuncao = PRESUNCAO_PADRAO[self.atividade]
 

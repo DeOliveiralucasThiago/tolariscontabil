@@ -185,6 +185,7 @@ def completar(
             ("nome_fantasia", dados.nome_fantasia), ("cnae_principal", dados.cnae_principal), ("cnae_descricao", dados.cnae_descricao),
             ("municipio", dados.municipio), ("uf", dados.uf), ("email", dados.email), ("telefone", dados.telefone),
             ("atividade", sugerida.value if sugerida else None), ("regime_atual", regime),
+            ("cnaes_secundarios", dados.cnaes_secundarios or None),
         ):
             if valor and not getattr(c, campo):
                 setattr(c, campo, valor)

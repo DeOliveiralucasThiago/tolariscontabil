@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import httpx
@@ -84,6 +84,53 @@ def sugerir_atividade(cnae: str | None) -> tuple[Atividade | None, str]:
     return None, "CNAE sem regra de sugestão" + _AVISO
 
 
+_ROTULO_ATIVIDADE = {
+    Atividade.COMERCIO: "Anexo I (comércio)",
+    Atividade.INDUSTRIA: "Anexo II (indústria)",
+    Atividade.SERVICO_ANEXO_III: "Anexo III",
+    Atividade.SERVICO_ANEXO_IV: "Anexo IV",
+    Atividade.SERVICO_FATOR_R: "Anexo III ou V (fator R)",
+}
+
+
+def _item_cnae(codigo: str, descricao: str | None, principal: bool) -> dict[str, Any]:
+    atividade, motivo = sugerir_atividade(codigo)
+    return {
+        "codigo": codigo,
+        "descricao": descricao or "",
+        "principal": principal,
+        "atividade": atividade.value if atividade else None,
+        "anexo": _ROTULO_ATIVIDADE[atividade] if atividade else "Sem enquadramento automático",
+        "motivo": motivo,
+    }
+
+
+def classificar_cnaes(
+    principal: str | None, descricao: str | None, secundarios: list[dict[str, str]] | None, atividade_cliente: str | None
+) -> dict[str, Any]:
+    """CNAEs do cadastro do cliente com o Anexo provável de cada um (regra orientativa por divisão do CNAE).
+
+    ``anexo_iii_no_cadastro`` lista os secundários que a regra põe no Anexo III quando a atividade do cliente é do
+    fator R: já estão no cadastro, então bastam ser exercidos de fato para segregar a receita. Sugerir CNAEs que o
+    cliente ainda não tem exigiria a tabela oficial (Res. CGSN 140/2018, Anexo VI), que o Tolaris não carrega.
+    """
+    itens = []
+    if principal:
+        itens.append(_item_cnae(so_digitos(principal).zfill(7), descricao, True))
+    itens += [_item_cnae(c["codigo"], c.get("descricao"), False) for c in (secundarios or []) if c.get("codigo")]
+    fator_r = atividade_cliente == Atividade.SERVICO_FATOR_R.value or (
+        bool(itens) and itens[0]["principal"] and itens[0]["atividade"] == Atividade.SERVICO_FATOR_R.value
+    )
+    candidatos = [i for i in itens if not i["principal"] and i["atividade"] == Atividade.SERVICO_ANEXO_III.value] if fator_r else []
+    return {
+        "cnaes": itens,
+        "atividade_fator_r": fator_r,
+        "anexo_iii_no_cadastro": candidatos,
+        "aviso": "Classificação orientativa por divisão do CNAE; confirme cada código no Anexo VI da Resolução CGSN 140/2018. "
+        "O Anexo vale pela atividade realmente exercida, não só pelo CNAE cadastrado.",
+    }
+
+
 # --- Consulta externa ---------------------------------------------------------
 class CnpjNaoEncontrado(Exception):
     pass
@@ -107,6 +154,7 @@ class DadosCnpj:
     telefone: str | None
     opcao_simples: bool | None
     opcao_mei: bool | None
+    cnaes_secundarios: list[dict[str, str]] = field(default_factory=list)
 
     def como_dict(self) -> dict[str, Any]:
         atividade, motivo = sugerir_atividade(self.cnae_principal)
@@ -126,6 +174,19 @@ def _texto(v: Any) -> str | None:
     return s or None
 
 
+def _cnaes_secundarios(bruto: Any) -> list[dict[str, str]]:
+    """CNAEs secundários da BrasilAPI (``[{"codigo": 6209100, "descricao": "..."}]``); o código 0 é o "sem secundário"."""
+    achados: dict[str, str] = {}
+    for item in bruto if isinstance(bruto, list) else []:
+        try:
+            codigo = str(int(item["codigo"])).zfill(7)
+        except (KeyError, TypeError, ValueError):
+            continue
+        if len(codigo) == 7 and codigo != "0000000":
+            achados.setdefault(codigo, (_texto(item.get("descricao")) or "")[:300])
+    return [{"codigo": c, "descricao": d} for c, d in achados.items()]
+
+
 def interpretar_brasilapi(dados: dict[str, Any]) -> DadosCnpj:
     cnae = dados.get("cnae_fiscal")
     cnae_txt = str(cnae).zfill(7) if cnae not in (None, "", 0) else None
@@ -143,6 +204,7 @@ def interpretar_brasilapi(dados: dict[str, Any]) -> DadosCnpj:
         telefone=telefone,
         opcao_simples=dados.get("opcao_pelo_simples"),
         opcao_mei=dados.get("opcao_pelo_mei"),
+        cnaes_secundarios=_cnaes_secundarios(dados.get("cnaes_secundarios")),
     )
 
 

@@ -8,6 +8,7 @@ import {
   ROTULO_STATUS,
   type Atividade,
   type Cliente,
+  type CnaeSecundario,
   type ClienteForm,
   type DadosCnpj,
   type Regime,
@@ -45,6 +46,7 @@ export function FormCliente({
     telefone: inicial?.telefone ?? "",
     observacoes: inicial?.observacoes ?? "",
   });
+  const [secundarios, setSecundarios] = useState<CnaeSecundario[] | null>(inicial?.cnaes_secundarios ?? null);
   const [dica, setDica] = useState("");
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
@@ -65,6 +67,7 @@ export function FormCliente({
       atividade: d.atividade_sugerida ?? x.atividade,
       regime_atual: d.regime_sugerido ?? x.regime_atual,
     }));
+    setSecundarios(d.cnaes_secundarios);
     setDica(d.atividade_justificativa);
   }
 
@@ -80,6 +83,7 @@ export function FormCliente({
         cnpj: cnpj ? soDigitos(cnpj) : null,
         cnae_principal: vazio(f.cnae_principal),
         cnae_descricao: vazio(f.cnae_descricao),
+        cnaes_secundarios: secundarios,
         municipio: vazio(f.municipio),
         uf: vazio(f.uf)?.toUpperCase() ?? null,
         atividade: f.atividade || null,
@@ -122,7 +126,7 @@ export function FormCliente({
             <option key={v} value={v}>{r}</option>
           ))}
         </Selecao>
-        <Campo rotulo="CNAE principal" name="cnae_principal" maxLength={7} value={f.cnae_principal} onChange={muda("cnae_principal")} ajuda={f.cnae_descricao || undefined} />
+        <Campo rotulo="CNAE principal" name="cnae_principal" maxLength={7} value={f.cnae_principal} onChange={muda("cnae_principal")} ajuda={[f.cnae_descricao, secundarios?.length ? `${secundarios.length} CNAE(s) secundário(s) da Receita guardados` : ""].filter(Boolean).join(" · ") || undefined} />
         <div className="grid grid-cols-[1fr_80px] gap-2">
           <Campo rotulo="Município" name="municipio" value={f.municipio} onChange={muda("municipio")} />
           <Campo rotulo="UF" name="uf" maxLength={2} value={f.uf} onChange={muda("uf")} />
