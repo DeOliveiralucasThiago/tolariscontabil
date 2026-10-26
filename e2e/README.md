@@ -119,3 +119,6 @@ usa o `mock_brasilapi.py` e um e-mail novo a cada execução:
 ```bash
 node fluxo_enquadramento.mjs saida
 ```
+
+As capturas da apresentação saem de `capturas_apresentacao.mjs` (escritório fictício completo) e de `capturas_apresentacao_extra.mjs`
+(Simples na Reforma de 2027 a 2033, Pessoa física e Mudanças na legislação). Ambas pedem o site sem `TOLARIS_AMBIENTE_TESTE` e um banco novo.
