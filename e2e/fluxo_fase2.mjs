@@ -65,9 +65,18 @@ await page.getByRole("tab", { name: "Simples: IBS/CBS no DAS ou por fora" }).cli
 await moeda("#receita_sr", 200000000);
 await page.locator("#b2b").fill("80");
 await moeda("#compras_sr", 120000000);
+// Seletor de anos: começa com os sete; limpa e escolhe só 2027 e 2030
+const seletor = page.getByTestId("seletor-anos");
+await seletor.getByRole("button", { name: "Limpar" }).click();
 await page.getByRole("button", { name: "Comparar opções" }).click();
-await page.getByText("Recomendação para 2033").waitFor();
-await page.getByRole("button", { name: "2027", exact: true }).click();
+await page.getByText("Escolha ao menos um ano para comparar.").waitFor();
+await seletor.getByRole("button", { name: "2027", exact: true }).click();
+await seletor.getByRole("button", { name: "2030", exact: true }).click();
+await page.getByRole("button", { name: "Comparar opções" }).click();
+await page.getByText("Recomendação para 2030").waitFor();
+const curva = page.getByRole("group", { name: "Ano da curva" });
+if ((await curva.getByRole("button").count()) !== 2) throw new Error("A curva deveria ter só 2027 e 2030");
+await curva.getByRole("button", { name: "2027", exact: true }).click();
 await page.screenshot({ path: `${OUT}/f2-2-simples-reforma.png`, fullPage: true });
 await salvarNoCliente("simples-reforma");
 passo("reforma: Simples B2B calculado, curva por ano, salvo e PDF");

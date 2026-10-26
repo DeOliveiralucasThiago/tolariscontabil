@@ -146,8 +146,35 @@ function Transicao({ clienteInicial }: { clienteInicial?: number }) {
   );
 }
 
+const ANOS_SIMPLES = [2027, 2028, 2029, 2030, 2031, 2032, 2033];
+
+/** Anos do Simples a comparar: cada ano usa a tabela da Res. CGSN 190/2026 (teto de ISS e partilha de IBS/CBS mudam a cada ano). */
+function SeletorDeAnos({ anos, onChange }: { anos: number[]; onChange: (a: number[]) => void }) {
+  const todos = anos.length === ANOS_SIMPLES.length;
+  const alternar = (ano: number) => onChange(ANOS_SIMPLES.filter((a) => (a === ano ? !anos.includes(a) : anos.includes(a))));
+  const classe = (ativo: boolean) =>
+    `h-8 rounded-lg border px-3 text-xs font-medium ${ativo ? "border-marca bg-marca text-white" : "border-borda text-tinta-2 hover:bg-fundo"}`;
+  return (
+    <div data-testid="seletor-anos">
+      <p className="mb-1 text-sm font-medium">Anos a comparar</p>
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Anos a comparar">
+        {ANOS_SIMPLES.map((a) => (
+          <button key={a} type="button" onClick={() => alternar(a)} aria-pressed={anos.includes(a)} className={classe(anos.includes(a))}>
+            {a}
+          </button>
+        ))}
+        <button type="button" onClick={() => onChange(todos ? [] : ANOS_SIMPLES)} className={classe(false)}>
+          {todos ? "Limpar" : "Todos"}
+        </button>
+      </div>
+      <p className="mt-1 text-xs text-tinta-2">A decisão de agora vale para o primeiro semestre de 2027; os demais anos mostram como a conta muda na transição.</p>
+    </div>
+  );
+}
+
 function SimplesNaReforma({ clienteInicial }: { clienteInicial?: number }) {
   const [f, setF] = useState({
+    anos: ANOS_SIMPLES,
     atividade: "comercio" as Atividade,
     receita_bruta_anual: 0,
     percentual_b2b: 0.5,
@@ -167,6 +194,7 @@ function SimplesNaReforma({ clienteInicial }: { clienteInicial?: number }) {
           e.preventDefault();
           if (f.receita_bruta_anual <= 0) return calc.setErro("Informe a receita bruta anual.");
           if (f.receita_bruta_anual > 4_800_000) return calc.setErro("Receita acima do limite do Simples (R$ 4,8 milhões).");
+          if (f.anos.length === 0) return calc.setErro("Escolha ao menos um ano para comparar.");
           calc.calcular(entrada());
         }}
       >
@@ -208,6 +236,7 @@ function SimplesNaReforma({ clienteInicial }: { clienteInicial?: number }) {
               ajuda="Recolhendo por fora, a empresa passa a se creditar do IBS/CBS dessas compras."
             />
             <SelecaoReducao id="reducao_sr" valor={f.reducao_setorial} onChange={set("reducao_setorial")} />
+            <SeletorDeAnos anos={f.anos} onChange={set("anos")} />
           </div>
         </Cartao>
         <MensagemErro>{calc.erro}</MensagemErro>
