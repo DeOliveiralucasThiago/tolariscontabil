@@ -37,11 +37,13 @@ def test_clientes_para_importar(logado: TestClient, kit: Path):
     mapa = previa["sugestao"]
     assert mapa["cnpj"] == 0 and mapa["razao_social"] == 1 and mapa["atividade"] == 2 and mapa["regime_atual"] == 3
     analise = _lote(logado, "analisar", kit, "1-clientes-para-importar.xlsx", mapa).json()
-    assert (analise["novos"], analise["invalidos"], analise["repetidos"]) == (8, 1, 1)
+    assert (analise["novos"], analise["invalidos"], analise["repetidos"]) == (9, 1, 1)
     assert _lote(logado, "importar", kit, "1-clientes-para-importar.xlsx", mapa).status_code == 201
     clientes = {c["cnpj"]: c for c in logado.get("/api/clientes").json()}
     mercadinho = clientes["12345678000195"]
     assert (mercadinho["razao_social"], mercadinho["atividade"], mercadinho["regime_atual"]) == ("Mercadinho Estrela Ltda", "comercio", "simples")
+    aurora = clientes["98765432000198"]
+    assert (aurora["razao_social"], aurora["atividade"], aurora["regime_atual"]) == ("Consultoria Aurora Ltda", "servico_fator_r", "simples")
     assert logado.get("/api/clientes-lote/pendentes").json() == {"pendentes": 7}
 
 
@@ -82,3 +84,30 @@ def test_notas_sped_e_imposto_pago_a_mais(logado: TestClient, kit: Path):
 
     rec = logado.get(f"/api/clientes/{cid}/recuperacao").json()
     assert rec["disponivel"] and rec["totais"]["provavel"] > 0
+
+
+def test_apoio_do_enquadramento(logado: TestClient, kit: Path):
+    """O arquivo 5-enquadramento-apoio.txt promete números e CNAEs; a ferramenta tem de entregá-los."""
+    texto = (kit / "5-enquadramento-apoio.txt").read_text(encoding="utf-8")
+    for trecho in ("R$ 600.000,00", "R$ 36.000,00", "R$ 60.000,00", "6,00%", "11.000,00"):
+        assert trecho in texto
+    d = logado.post("/api/calculadoras/enquadramento", json={
+        "atividade": "servico_fator_r", "receita_bruta_anual": 600000, "pro_labore_anual": 36000, "outras_despesas_anual": 60000,
+        "percentual_anexo_iii": 0.3}).json()
+    assert d["fator_r_atual"] == 0.06
+    assert d["cenarios"][0]["anexos_simples"] == ["V"]
+    assert "R$ 11.000,00/mês" in d["cenarios"][1]["descricao"]
+    assert "anexo_iii_30" in [c["chave"] for c in d["cenarios"]]
+
+    esperado = {  # código: (trecho do Anexo, selo, vedação)
+        "6201501": ("Anexo III ou V (fator R)", "tabela", None),
+        "7020400": ("Anexo III ou V (fator R)", "tabela", None),
+        "6911701": ("Anexo IV", "tabela", None),
+        "6421200": ("Vedado ao Simples", "oficial", "impeditivo"),
+        "4781400": ("Anexo I (comércio)", "tabela", None),
+        "6920601": ("Anexo III", "divisao", None),
+    }
+    for codigo, (anexo, selo, vedacao) in esperado.items():
+        assert f"{codigo[:4]}-{codigo[4]}/{codigo[5:]}" in texto
+        item = logado.get(f"/api/cnae/{codigo}").json()
+        assert (item["anexo"], item["confianca"], item["vedacao"]) == (anexo, selo, vedacao), codigo

@@ -24,6 +24,8 @@ SAIDA = RAIZ / "kit-de-teste"
 
 CLIENTE = "12345678000195"
 CLIENTE_NOME = "Mercadinho Estrela Ltda"
+CLIENTE_SERVICOS = "98765432000198"
+CLIENTE_SERVICOS_NOME = "Consultoria Aurora Ltda"
 FORNECEDORES = {"11444777000161": "Distribuidora Boa Compra Ltda", "11222333000181": "Atacado Preço Justo Ltda"}
 CLIENTES_FINAIS = ["45997418000153", "11444777000161", "11222333000181"]
 
@@ -182,6 +184,7 @@ def gerar_planilha_clientes() -> bytes:
     ws.append(cab)
     linhas = [
         ["12.345.678/0001-95", CLIENTE_NOME, "Comércio", "Simples Nacional", "contato@mercadinhoestrela.example", "(11) 98888-7777", "Dona Estrela"],
+        ["98.765.432/0001-98", CLIENTE_SERVICOS_NOME, "Serviços fator R", "Simples Nacional", "contato@consultoriaaurora.example", "(11) 97777-6666", "Seu Álvaro"],
         # só o CNPJ: o sistema completa pela consulta (precisa de internet)
         ["00.000.000/0001-91", "", "", "", "", "", ""],
         ["33.000.167/0001-01", "", "", "", "", "", ""],
@@ -211,15 +214,16 @@ LEIA_ME = f"""KIT DE TESTE DO TOLARIS CONTÁBIL
 
 Tudo aqui é inventado. Use só estes arquivos no teste: não coloque dados de clientes reais.
 
-O cliente fictício deste kit é o {CLIENTE_NOME} (CNPJ 12.345.678/0001-95, comércio no Simples Nacional).
-O CNPJ é válido, mas não existe na Receita Federal; por isso a consulta pelo CNPJ não encontra esse cliente
-(os dados dele já vêm preenchidos na planilha).
+Os clientes fictícios deste kit são o {CLIENTE_NOME} (CNPJ 12.345.678/0001-95, comércio no Simples Nacional) e a
+{CLIENTE_SERVICOS_NOME} (CNPJ 98.765.432/0001-98, serviços no Simples Nacional). Os CNPJ são válidos, mas não existem na
+Receita Federal; por isso a consulta pelo CNPJ não encontra esses clientes (os dados deles já vêm preenchidos na planilha).
 
 ARQUIVOS
 
 1) 1-clientes-para-importar.xlsx
-   Para a tarefa C (Clientes > Importar planilha). Traz 10 linhas:
-   - o Mercadinho Estrela, com todos os dados;
+   Para a tarefa C (Clientes > Importar planilha). Traz 11 linhas:
+   - o Mercadinho Estrela (comércio), com todos os dados;
+   - a Consultoria Aurora (serviços), com todos os dados, para a tarefa K (Enquadramento);
    - 7 CNPJ de grandes empresas públicas, só com o CNPJ, para testar "Completar pelo CNPJ" (precisa de internet);
    - 1 CNPJ errado e 1 repetido, de propósito: o sistema deve avisar.
    Depois de importar, abra o Mercadinho Estrela e mude a situação para Ativo.
@@ -242,7 +246,45 @@ ARQUIVOS
 5) Para a tarefa D: use a aba Novo planejamento do Mercadinho Estrela. Os números de faturamento anual podem ser
    os de qualquer simulação sua; o regime atual é Simples Nacional.
 
+6) 5-enquadramento-apoio.txt
+   Para a tarefa K (Enquadramento): os números para preencher no cliente de serviços (Consultoria Aurora), o que a tela
+   deve mostrar e seis CNAEs para procurar na busca, com o Anexo esperado de cada um.
+
 DICA: se algo for importado duas vezes, o sistema avisa e não soma de novo. Isso também é parte do teste.
+"""
+
+
+APOIO_ENQUADRAMENTO = f"""APOIO À TAREFA K: ENQUADRAMENTO (ANEXO V OU III) E BUSCA DE CNAEs
+==============================================================
+
+Tudo aqui é inventado. A {CLIENTE_SERVICOS_NOME} (CNPJ 98.765.432/0001-98) é um cliente de serviços que vem na planilha
+1-clientes-para-importar.xlsx; ela não existe na Receita Federal, então a consulta pelo CNPJ não a encontra. Depois de
+importar a planilha, escolha-a na lista "Cliente cadastrado" da tela Enquadramento.
+
+DADOS PARA PREENCHER (campos da tela Enquadramento)
+- Atividade: serviço com fator R (o padrão da tela)
+- Receita bruta anual: R$ 600.000,00
+- Folha CLT anual: R$ 0,00 (sem empregados)
+- Pró-labore anual: R$ 36.000,00 (R$ 3.000,00 por mês)
+- Outras despesas dedutíveis: R$ 60.000,00
+
+O QUE DEVE APARECER (valores de referência; confira se a lógica faz sentido para você)
+- Fator R de 6,00%: a empresa tributa hoje no Anexo V do Simples.
+- Cenário "Pró-labore a mais até o fator R de 28%": cerca de R$ 11.000,00 a mais por mês, com o INSS de 11% somado como custo.
+- Cenários de 25%, 50% e 100% da receita no Anexo III, com o aviso de que só valem se a empresa exerce de fato a atividade.
+- Campo "Cenário próprio": digite 30 para ver o cenário de 30% da receita no Anexo III.
+
+BUSCA DE CNAEs (use o campo de busca da própria tela e os filtros de Anexo)
+Código       | Atividade                         | O que a tela deve mostrar
+6201-5/01    | Desenvolvimento de software       | Anexo III ou V (fator R), selo "Tabela comercial"
+7020-4/00    | Consultoria em gestão empresarial | Anexo III ou V (fator R), selo "Tabela comercial"
+6911-7/01    | Serviços advocatícios             | Anexo IV
+6421-2/00    | Bancos comerciais                 | Vedado ao Simples, selo "Resolução CGSN"
+4781-4/00    | Comércio de roupas e acessórios   | Anexo I (comércio)
+6920-6/01    | Atividades de contabilidade       | Anexo III, selo "Aproximado" (regra pela divisão, fora da tabela)
+
+LEMBRETE: o Anexo de cada CNAE é uma referência. Quem decide é a descrição da atividade realmente exercida; o
+Tolaris não troca o enquadramento de ninguém, só mostra o efeito de cada caminho no imposto.
 """
 
 
@@ -257,6 +299,7 @@ def main() -> None:
     (SAIDA / "4-sped-fiscal-2026-09.txt").write_bytes("\r\n".join(sped).encode("latin-1"))
     (SAIDA / "2-dados-contabeis-12-meses.xlsx").write_bytes(gerar_planilha_contabil(receita))
     (SAIDA / "1-clientes-para-importar.xlsx").write_bytes(gerar_planilha_clientes())
+    (SAIDA / "5-enquadramento-apoio.txt").write_bytes(("﻿" + APOIO_ENQUADRAMENTO.replace("\n", "\r\n")).encode("utf-8"))
     (SAIDA / "LEIA-ME.txt").write_bytes(("﻿" + LEIA_ME.replace("\n", "\r\n")).encode("utf-8"))
 
     pacote = SAIDA / "Kit de teste Tolaris.zip"

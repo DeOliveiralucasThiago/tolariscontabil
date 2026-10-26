@@ -1,0 +1,31 @@
+﻿APOIO À TAREFA K: ENQUADRAMENTO (ANEXO V OU III) E BUSCA DE CNAEs
+==============================================================
+
+Tudo aqui é inventado. A Consultoria Aurora Ltda (CNPJ 98.765.432/0001-98) é um cliente de serviços que vem na planilha
+1-clientes-para-importar.xlsx; ela não existe na Receita Federal, então a consulta pelo CNPJ não a encontra. Depois de
+importar a planilha, escolha-a na lista "Cliente cadastrado" da tela Enquadramento.
+
+DADOS PARA PREENCHER (campos da tela Enquadramento)
+- Atividade: serviço com fator R (o padrão da tela)
+- Receita bruta anual: R$ 600.000,00
+- Folha CLT anual: R$ 0,00 (sem empregados)
+- Pró-labore anual: R$ 36.000,00 (R$ 3.000,00 por mês)
+- Outras despesas dedutíveis: R$ 60.000,00
+
+O QUE DEVE APARECER (valores de referência; confira se a lógica faz sentido para você)
+- Fator R de 6,00%: a empresa tributa hoje no Anexo V do Simples.
+- Cenário "Pró-labore a mais até o fator R de 28%": cerca de R$ 11.000,00 a mais por mês, com o INSS de 11% somado como custo.
+- Cenários de 25%, 50% e 100% da receita no Anexo III, com o aviso de que só valem se a empresa exerce de fato a atividade.
+- Campo "Cenário próprio": digite 30 para ver o cenário de 30% da receita no Anexo III.
+
+BUSCA DE CNAEs (use o campo de busca da própria tela e os filtros de Anexo)
+Código       | Atividade                         | O que a tela deve mostrar
+6201-5/01    | Desenvolvimento de software       | Anexo III ou V (fator R), selo "Tabela comercial"
+7020-4/00    | Consultoria em gestão empresarial | Anexo III ou V (fator R), selo "Tabela comercial"
+6911-7/01    | Serviços advocatícios             | Anexo IV
+6421-2/00    | Bancos comerciais                 | Vedado ao Simples, selo "Resolução CGSN"
+4781-4/00    | Comércio de roupas e acessórios   | Anexo I (comércio)
+6920-6/01    | Atividades de contabilidade       | Anexo III, selo "Aproximado" (regra pela divisão, fora da tabela)
+
+LEMBRETE: o Anexo de cada CNAE é uma referência. Quem decide é a descrição da atividade realmente exercida; o
+Tolaris não troca o enquadramento de ninguém, só mostra o efeito de cada caminho no imposto.

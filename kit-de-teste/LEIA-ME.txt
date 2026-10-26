@@ -3,15 +3,16 @@
 
 Tudo aqui é inventado. Use só estes arquivos no teste: não coloque dados de clientes reais.
 
-O cliente fictício deste kit é o Mercadinho Estrela Ltda (CNPJ 12.345.678/0001-95, comércio no Simples Nacional).
-O CNPJ é válido, mas não existe na Receita Federal; por isso a consulta pelo CNPJ não encontra esse cliente
-(os dados dele já vêm preenchidos na planilha).
+Os clientes fictícios deste kit são o Mercadinho Estrela Ltda (CNPJ 12.345.678/0001-95, comércio no Simples Nacional) e a
+Consultoria Aurora Ltda (CNPJ 98.765.432/0001-98, serviços no Simples Nacional). Os CNPJ são válidos, mas não existem na
+Receita Federal; por isso a consulta pelo CNPJ não encontra esses clientes (os dados deles já vêm preenchidos na planilha).
 
 ARQUIVOS
 
 1) 1-clientes-para-importar.xlsx
-   Para a tarefa C (Clientes > Importar planilha). Traz 10 linhas:
-   - o Mercadinho Estrela, com todos os dados;
+   Para a tarefa C (Clientes > Importar planilha). Traz 11 linhas:
+   - o Mercadinho Estrela (comércio), com todos os dados;
+   - a Consultoria Aurora (serviços), com todos os dados, para a tarefa K (Enquadramento);
    - 7 CNPJ de grandes empresas públicas, só com o CNPJ, para testar "Completar pelo CNPJ" (precisa de internet);
    - 1 CNPJ errado e 1 repetido, de propósito: o sistema deve avisar.
    Depois de importar, abra o Mercadinho Estrela e mude a situação para Ativo.
@@ -33,5 +34,9 @@ ARQUIVOS
 
 5) Para a tarefa D: use a aba Novo planejamento do Mercadinho Estrela. Os números de faturamento anual podem ser
    os de qualquer simulação sua; o regime atual é Simples Nacional.
+
+6) 5-enquadramento-apoio.txt
+   Para a tarefa K (Enquadramento): os números para preencher no cliente de serviços (Consultoria Aurora), o que a tela
+   deve mostrar e seis CNAEs para procurar na busca, com o Anexo esperado de cada um.
 
 DICA: se algo for importado duas vezes, o sistema avisa e não soma de novo. Isso também é parte do teste.
