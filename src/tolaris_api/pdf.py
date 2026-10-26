@@ -72,7 +72,7 @@ def grafico_barras(regimes: list[dict[str, Any]], melhor: str | set[str], cor: s
     """Barras horizontais do total por item; o(s) destacado(s) na cor do escritório."""
     destaques = {melhor} if isinstance(melhor, str) else set(melhor)
     largura, rotulo_w, valor_w = 620, 190, 150
-    barra_h, passo, topo = 22, 40, 8
+    barra_h, passo, topo = (22, 40, 8) if len(regimes) <= 8 else (13, 22, 6)  # muitos itens (ex.: sete anos): barras mais finas
     area = largura - rotulo_w - valor_w
     aplicaveis = [r for r in regimes if r["aplicavel"]]
     maximo = max((r["total"] for r in aplicaveis), default=0) or 1
@@ -385,7 +385,7 @@ def _rel_simples_reforma(sim: Simulacao, cor: str) -> dict[str, Any]:
             ("Compras com crédito", brl(e.get("compras_creditaveis_anual", 0))),
             ("Redução setorial", pct(e.get("reducao_setorial", 0), 0)),
         ],
-        "alertas": [x for c in cen for x in c["alertas"]],
+        "alertas": list(dict.fromkeys(x for c in cen for x in c["alertas"])),
         "memorias": [{"titulo": str(c["ano"]), "passos": c["memoria"]} for c in cen],
         "aviso_extra": "Fatia de IBS/CBS conferida com os Anexos da Res. CGSN 190/2026. Prazo da opção pelo regime regular de IBS/CBS para "
                        "jan-jun/2027: 01/09 a 30/10/2026 (cancelamento de 03/11 a 20/12/2026), Res. CGSN 186 e 194/2026.",

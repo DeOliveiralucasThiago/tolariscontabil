@@ -149,7 +149,7 @@ export function ResultadoSimplesReforma({ r, acoes }: { r: TResultadoSimplesRefo
           Acima da linha tracejada, recolher IBS/CBS por fora rende mais; abaixo, manter no DAS. O ponto marca a situação atual.
         </p>
       </Cartao>
-      <ListaAlertas alertas={r.cenarios.flatMap((c) => c.alertas)} />
+      <ListaAlertas alertas={[...new Set(r.cenarios.flatMap((c) => c.alertas))]} />
       <MemoriaCalculo blocos={r.cenarios.map((c) => ({ titulo: String(c.ano), total: brl(c.diferenca), passos: c.memoria }))} />
     </div>
   );
@@ -254,7 +254,7 @@ export function ResultadoProLabore({ r, acoes }: { r: TResultadoProLabore; acoes
           </table>
         </div>
       </Cartao>
-      <ListaAlertas alertas={r.cenarios.flatMap((c) => c.alertas)} />
+      <ListaAlertas alertas={[...new Set(r.cenarios.flatMap((c) => c.alertas))]} />
       <MemoriaCalculo blocos={r.cenarios.map((c) => ({ titulo: c.descricao, total: `${brl(c.custo_mensal)}/mês`, passos: c.memoria }))} />
     </div>
   );

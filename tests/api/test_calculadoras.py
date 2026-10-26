@@ -31,9 +31,12 @@ def test_reforma(logado: TestClient):
 
 def test_simples_reforma(logado: TestClient):
     d = logado.post("/api/calculadoras/simples-reforma", json=ENTRADAS["simples-reforma"]).json()
-    assert [c["ano"] for c in d["cenarios"]] == [2027, 2033]
+    assert [c["ano"] for c in d["cenarios"]] == list(range(2027, 2034))
     assert d["melhor"].startswith("Recolher")
-    assert len(d["curvas"]["2033"]) == 11
+    assert len(d["curvas"]["2033"]) == 11 and len(d["curvas"]["2030"]) == 11
+    so_dois = logado.post("/api/calculadoras/simples-reforma", json={**ENTRADAS["simples-reforma"], "anos": [2033, 2027, 2033]}).json()
+    assert [c["ano"] for c in so_dois["cenarios"]] == [2027, 2033]
+    assert logado.post("/api/calculadoras/simples-reforma", json={**ENTRADAS["simples-reforma"], "anos": [2026]}).status_code == 422
     corpo = {**ENTRADAS["simples-reforma"], "receita_bruta_anual": 5000000}
     assert logado.post("/api/calculadoras/simples-reforma", json=corpo).status_code == 422
 
@@ -76,11 +79,11 @@ def test_opcao_nao_aplicavel_sai_como_nao_aplicavel(logado: TestClient):
 
 def test_texto_do_ponto_de_equilibrio(logado: TestClient):
     d = logado.post("/api/calculadoras/simples-reforma", json=ENTRADAS["simples-reforma"]).json()
-    assert d["cenarios"][1]["equilibrio_texto"] == "com qualquer % de vendas B2B"
+    assert d["cenarios"][-1]["equilibrio_texto"] == "com qualquer % de vendas B2B"
     d = logado.post("/api/calculadoras/simples-reforma", json={
         "atividade": "servico_anexo_iii", "receita_bruta_anual": 120000, "percentual_b2b": 1,
         "compras_creditaveis_anual": 20000}).json()
-    assert d["cenarios"][1]["equilibrio_texto"].startswith("a partir de")
+    assert d["cenarios"][-1]["equilibrio_texto"].startswith("a partir de")
 
 
 def test_enquadramento_compara_os_caminhos_para_o_anexo_iii(logado: TestClient):

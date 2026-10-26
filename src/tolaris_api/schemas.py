@@ -320,6 +320,15 @@ class SimplesReformaEntrada(BaseModel):
     reducao_setorial: Fracao = Field(default=Decimal(0), ge=0, le=1)
     cbs_referencia: Fracao | None = Field(default=None, ge=0, le=Decimal("0.2"))
     ibs_referencia: Fracao | None = Field(default=None, ge=0, le=Decimal("0.3"))
+    anos: list[int] = Field(default_factory=lambda: list(range(2027, 2034)), min_length=1, max_length=7)
+    """Anos comparados (de 2027 a 2033); sem informar, todos."""
+
+    @field_validator("anos")
+    @classmethod
+    def _anos_validos(cls, anos: list[int]) -> list[int]:
+        if any(a < 2027 or a > 2033 for a in anos):
+            raise ValueError("Anos disponíveis: 2027 a 2033")
+        return sorted(set(anos))
 
 
 class AutonomoEntrada(BaseModel):

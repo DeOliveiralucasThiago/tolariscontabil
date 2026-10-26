@@ -362,8 +362,8 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     fatias de PIS, Cofins, ICMS e ISS de 2026 (teste automático). A alíquota efetiva de 2027 é a de 2026 nas cinco primeiras faixas; a
     6ª faixa muda (Anexo I: 18,90%; Anexo III: 32,90% em 2027-28 e 33,00% depois). O teto do ISS efetivo no DAS cai de 5% (2027-28)
     para 4,5% (2029), 4% (2030), 3,5% (2031) e 3% (2032), e o ISS sai do DAS em 2033; o excesso acima do teto vai para todos os demais
-    tributos da faixa, inclusive CBS e IBS (como na tabela da resolução). **Onde vale:** o Simples na Reforma usa a tabela do próprio
-    ano (2027 a 2033) para o DAS e para a fatia de CBS + IBS; o cálculo do Simples (`simples.calcular`) e a recuperação de PIS/Cofins
+    tributos da faixa, inclusive CBS e IBS (como na tabela da resolução). **Onde vale:** o Simples na Reforma compara por padrão os sete anos (2027 a 2033, ou os que
+    a chamada informar) e usa a tabela do próprio ano para o DAS e para a fatia de CBS + IBS; o cálculo do Simples (`simples.calcular`) e a recuperação de PIS/Cofins
     e ICMS-ST usam a tabela da data. **Onde não vale:** a simulação completa e o comparativo entre regimes seguem limitados a 2025 e
     2026, porque Lucro Presumido e Lucro Real ainda calculam PIS/Cofins; a transição desses regimes está na calculadora da Reforma.
     A RBT12 de 2027 (12 meses anteriores ao mês anterior) não muda o cálculo, que supõe faturamento constante. Conferir com a
