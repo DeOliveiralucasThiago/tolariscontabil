@@ -139,7 +139,7 @@
         "simples"
       ],
       "efeito": "Muda o DAS de 2027 em diante e a comparação do Simples na Reforma.",
-      "observacao": "Ainda não incorporado como tabela de cálculo: o Simples na Reforma já usa a fatia de CBS e IBS conferida com a Resolução."
+      "observacao": "Incorporado: as tabelas de 2027 a 2033 estão no motor. O Simples na Reforma e o cálculo do Simples usam a tabela do ano; a simulação completa e o comparativo entre regimes seguem em 2025 e 2026."
     },
     {
       "id": "simples-credito-ibs-cbs-adquirente",

@@ -1,5 +1,5 @@
 {
-  "fonte": "LC 123/2006, Anexos I a V (redação da LC 155/2016, vigente desde 01/2018); partilha por tributo: tabelas de repartição dos Anexos I a V",
+  "fonte": "LC 123/2006, Anexos I a V (redação da LC 155/2016, vigente desde 01/2018); partilha por tributo: tabelas de repartição dos Anexos I a V | Vigências de 2027 em diante: Res. CGSN 190/2026 (CBS e IBS na partilha do DAS)",
   "vigencias": [
     {
       "inicio": "2018-01-01",
@@ -424,6 +424,2471 @@
         }
       },
       "iss_efetivo_maximo": "0.05"
+    },
+    {
+      "inicio": "2027-01-01",
+      "limite_receita_anual": "4800000.00",
+      "sublimite_icms_iss": "3600000.00",
+      "fator_r_minimo": "0.28",
+      "iss_efetivo_maximo": "0.05",
+      "fonte": "Res. CGSN 190/2026 (Anexos I a V da Res. CGSN 140/2018, vigência a partir de 01/01/2027); mesmos valores dos Anexos XVIII a XXIII da LC 123/2006 (LC 214/2025, LC 227/2026). CBS e IBS substituem PIS, Cofins, ICMS e ISS na partilha, em transição até 2033.",
+      "anexos": {
+        "I": {
+          "descricao": "Comércio",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.04",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.1533",
+                "cpp": "0.415",
+                "icms": "0.34",
+                "ibs": "0.0017"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.073",
+              "deduzir": "5940.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.1533",
+                "cpp": "0.415",
+                "icms": "0.34",
+                "ibs": "0.0017"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.095",
+              "deduzir": "13860.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.1533",
+                "cpp": "0.42",
+                "icms": "0.335",
+                "ibs": "0.0017"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.107",
+              "deduzir": "22500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.1533",
+                "cpp": "0.42",
+                "icms": "0.335",
+                "ibs": "0.0017"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.143",
+              "deduzir": "87300.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.1533",
+                "cpp": "0.42",
+                "icms": "0.335",
+                "ibs": "0.0017"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.189",
+              "deduzir": "378000.00",
+              "partilha": {
+                "irpj": "0.1358",
+                "csll": "0.1006",
+                "cbs": "0.3402",
+                "cpp": "0.4234"
+              }
+            }
+          ]
+        },
+        "II": {
+          "descricao": "Indústria",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.045",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.1385",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.32",
+                "ibs": "0.0015"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.078",
+              "deduzir": "5940.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.1385",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.32",
+                "ibs": "0.0015"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.10",
+              "deduzir": "13860.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.1385",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.32",
+                "ibs": "0.0015"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.112",
+              "deduzir": "22500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.1385",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.32",
+                "ibs": "0.0015"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.147",
+              "deduzir": "85500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.1385",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.32",
+                "ibs": "0.0015"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.299",
+              "deduzir": "720000.00",
+              "partilha": {
+                "irpj": "0.0853",
+                "csll": "0.0753",
+                "cbs": "0.2522",
+                "cpp": "0.2359",
+                "ipi": "0.3513"
+              }
+            }
+          ]
+        },
+        "III": {
+          "descricao": "Serviços (locação de bens móveis e serviços do §5º-B/§5º-D)",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.06",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.1543",
+                "cpp": "0.434",
+                "iss": "0.335",
+                "ibs": "0.0017"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.112",
+              "deduzir": "9360.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.1691",
+                "cpp": "0.434",
+                "iss": "0.32",
+                "ibs": "0.0019"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.135",
+              "deduzir": "17640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.1641",
+                "cpp": "0.434",
+                "iss": "0.325",
+                "ibs": "0.0019"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.16",
+              "deduzir": "35640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.1641",
+                "cpp": "0.434",
+                "iss": "0.325",
+                "ibs": "0.0019"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.21",
+              "deduzir": "125640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.1543",
+                "cpp": "0.434",
+                "iss": "0.335",
+                "ibs": "0.0017"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.329",
+              "deduzir": "648000.00",
+              "partilha": {
+                "irpj": "0.3509",
+                "csll": "0.1504",
+                "cbs": "0.1929",
+                "cpp": "0.3058"
+              }
+            }
+          ]
+        },
+        "IV": {
+          "descricao": "Serviços do §5º-C (construção, vigilância, limpeza, advocacia) — CPP fora do DAS",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.045",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.188",
+                "csll": "0.152",
+                "cbs": "0.2126",
+                "iss": "0.445",
+                "ibs": "0.0024"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.09",
+              "deduzir": "8100.00",
+              "partilha": {
+                "irpj": "0.198",
+                "csll": "0.152",
+                "cbs": "0.2473",
+                "iss": "0.40",
+                "ibs": "0.0027"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.102",
+              "deduzir": "12420.00",
+              "partilha": {
+                "irpj": "0.208",
+                "csll": "0.152",
+                "cbs": "0.2374",
+                "iss": "0.40",
+                "ibs": "0.0026"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.14",
+              "deduzir": "39780.00",
+              "partilha": {
+                "irpj": "0.178",
+                "csll": "0.192",
+                "cbs": "0.2275",
+                "iss": "0.40",
+                "ibs": "0.0025"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.22",
+              "deduzir": "183780.00",
+              "partilha": {
+                "irpj": "0.188",
+                "csll": "0.192",
+                "cbs": "0.2176",
+                "iss": "0.40",
+                "ibs": "0.0024"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.329",
+              "deduzir": "828000.00",
+              "partilha": {
+                "irpj": "0.5371",
+                "csll": "0.2159",
+                "cbs": "0.247"
+              }
+            }
+          ]
+        },
+        "V": {
+          "descricao": "Serviços do §5º-I (intelectuais/técnicos) com fator R < 28%",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.155",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.25",
+                "csll": "0.15",
+                "cbs": "0.1696",
+                "cpp": "0.2885",
+                "iss": "0.14",
+                "ibs": "0.0019"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.18",
+              "deduzir": "4500.00",
+              "partilha": {
+                "irpj": "0.23",
+                "csll": "0.15",
+                "cbs": "0.1696",
+                "cpp": "0.2785",
+                "iss": "0.17",
+                "ibs": "0.0019"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.195",
+              "deduzir": "9900.00",
+              "partilha": {
+                "irpj": "0.24",
+                "csll": "0.15",
+                "cbs": "0.1795",
+                "cpp": "0.2385",
+                "iss": "0.19",
+                "ibs": "0.002"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.205",
+              "deduzir": "17100.00",
+              "partilha": {
+                "irpj": "0.21",
+                "csll": "0.15",
+                "cbs": "0.1894",
+                "cpp": "0.2385",
+                "iss": "0.21",
+                "ibs": "0.0021"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.23",
+              "deduzir": "62100.00",
+              "partilha": {
+                "irpj": "0.23",
+                "csll": "0.125",
+                "cbs": "0.1696",
+                "cpp": "0.2385",
+                "iss": "0.235",
+                "ibs": "0.0019"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.304",
+              "deduzir": "540000.00",
+              "partilha": {
+                "irpj": "0.351",
+                "csll": "0.1554",
+                "cbs": "0.1978",
+                "cpp": "0.2958"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "inicio": "2029-01-01",
+      "limite_receita_anual": "4800000.00",
+      "sublimite_icms_iss": "3600000.00",
+      "fator_r_minimo": "0.28",
+      "iss_efetivo_maximo": "0.045",
+      "fonte": "Res. CGSN 190/2026 (Anexos I a V da Res. CGSN 140/2018, vigência a partir de 01/01/2027); mesmos valores dos Anexos XVIII a XXIII da LC 123/2006 (LC 214/2025, LC 227/2026). CBS e IBS substituem PIS, Cofins, ICMS e ISS na partilha, em transição até 2033.",
+      "anexos": {
+        "I": {
+          "descricao": "Comércio",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.04",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.415",
+                "icms": "0.306",
+                "ibs": "0.034"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.073",
+              "deduzir": "5940.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.415",
+                "icms": "0.306",
+                "ibs": "0.034"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.095",
+              "deduzir": "13860.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "icms": "0.3015",
+                "ibs": "0.0335"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.107",
+              "deduzir": "22500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "icms": "0.3015",
+                "ibs": "0.0335"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.143",
+              "deduzir": "87300.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "icms": "0.3015",
+                "ibs": "0.0335"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.189",
+              "deduzir": "378000.00",
+              "partilha": {
+                "irpj": "0.135",
+                "csll": "0.10",
+                "cbs": "0.344",
+                "cpp": "0.421"
+              }
+            }
+          ]
+        },
+        "II": {
+          "descricao": "Indústria",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.045",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.288",
+                "ibs": "0.032"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.078",
+              "deduzir": "5940.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.288",
+                "ibs": "0.032"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.10",
+              "deduzir": "13860.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.288",
+                "ibs": "0.032"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.112",
+              "deduzir": "22500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.288",
+                "ibs": "0.032"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.147",
+              "deduzir": "85500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.288",
+                "ibs": "0.032"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.30",
+              "deduzir": "720000.00",
+              "partilha": {
+                "irpj": "0.085",
+                "csll": "0.075",
+                "cbs": "0.255",
+                "cpp": "0.235",
+                "ipi": "0.35"
+              }
+            }
+          ]
+        },
+        "III": {
+          "descricao": "Serviços (locação de bens móveis e serviços do §5º-B/§5º-D)",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.06",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.156",
+                "cpp": "0.434",
+                "iss": "0.3015",
+                "ibs": "0.0335"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.112",
+              "deduzir": "9360.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.171",
+                "cpp": "0.434",
+                "iss": "0.288",
+                "ibs": "0.032"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.135",
+              "deduzir": "17640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.166",
+                "cpp": "0.434",
+                "iss": "0.2925",
+                "ibs": "0.0325"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.16",
+              "deduzir": "35640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.166",
+                "cpp": "0.434",
+                "iss": "0.2925",
+                "ibs": "0.0325"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.21",
+              "deduzir": "125640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.156",
+                "cpp": "0.434",
+                "iss": "0.3015",
+                "ibs": "0.0335"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.33",
+              "deduzir": "648000.00",
+              "partilha": {
+                "irpj": "0.35",
+                "csll": "0.15",
+                "cbs": "0.195",
+                "cpp": "0.305"
+              }
+            }
+          ]
+        },
+        "IV": {
+          "descricao": "Serviços do §5º-C (construção, vigilância, limpeza, advocacia) — CPP fora do DAS",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.045",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.188",
+                "csll": "0.152",
+                "cbs": "0.215",
+                "iss": "0.4005",
+                "ibs": "0.0445"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.09",
+              "deduzir": "8100.00",
+              "partilha": {
+                "irpj": "0.198",
+                "csll": "0.152",
+                "cbs": "0.25",
+                "iss": "0.36",
+                "ibs": "0.04"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.102",
+              "deduzir": "12420.00",
+              "partilha": {
+                "irpj": "0.208",
+                "csll": "0.152",
+                "cbs": "0.24",
+                "iss": "0.36",
+                "ibs": "0.04"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.14",
+              "deduzir": "39780.00",
+              "partilha": {
+                "irpj": "0.178",
+                "csll": "0.192",
+                "cbs": "0.23",
+                "iss": "0.36",
+                "ibs": "0.04"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.22",
+              "deduzir": "183780.00",
+              "partilha": {
+                "irpj": "0.188",
+                "csll": "0.192",
+                "cbs": "0.22",
+                "iss": "0.36",
+                "ibs": "0.04"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.33",
+              "deduzir": "828000.00",
+              "partilha": {
+                "irpj": "0.535",
+                "csll": "0.215",
+                "cbs": "0.25"
+              }
+            }
+          ]
+        },
+        "V": {
+          "descricao": "Serviços do §5º-I (intelectuais/técnicos) com fator R < 28%",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.155",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.25",
+                "csll": "0.15",
+                "cbs": "0.1715",
+                "cpp": "0.2885",
+                "iss": "0.126",
+                "ibs": "0.014"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.18",
+              "deduzir": "4500.00",
+              "partilha": {
+                "irpj": "0.23",
+                "csll": "0.15",
+                "cbs": "0.1715",
+                "cpp": "0.2785",
+                "iss": "0.153",
+                "ibs": "0.017"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.195",
+              "deduzir": "9900.00",
+              "partilha": {
+                "irpj": "0.24",
+                "csll": "0.15",
+                "cbs": "0.1815",
+                "cpp": "0.2385",
+                "iss": "0.171",
+                "ibs": "0.019"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.205",
+              "deduzir": "17100.00",
+              "partilha": {
+                "irpj": "0.21",
+                "csll": "0.15",
+                "cbs": "0.1915",
+                "cpp": "0.2385",
+                "iss": "0.189",
+                "ibs": "0.021"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.23",
+              "deduzir": "62100.00",
+              "partilha": {
+                "irpj": "0.23",
+                "csll": "0.125",
+                "cbs": "0.1715",
+                "cpp": "0.2385",
+                "iss": "0.2115",
+                "ibs": "0.0235"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.305",
+              "deduzir": "540000.00",
+              "partilha": {
+                "irpj": "0.35",
+                "csll": "0.155",
+                "cbs": "0.20",
+                "cpp": "0.295"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "inicio": "2030-01-01",
+      "limite_receita_anual": "4800000.00",
+      "sublimite_icms_iss": "3600000.00",
+      "fator_r_minimo": "0.28",
+      "iss_efetivo_maximo": "0.04",
+      "fonte": "Res. CGSN 190/2026 (Anexos I a V da Res. CGSN 140/2018, vigência a partir de 01/01/2027); mesmos valores dos Anexos XVIII a XXIII da LC 123/2006 (LC 214/2025, LC 227/2026). CBS e IBS substituem PIS, Cofins, ICMS e ISS na partilha, em transição até 2033.",
+      "anexos": {
+        "I": {
+          "descricao": "Comércio",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.04",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.415",
+                "icms": "0.272",
+                "ibs": "0.068"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.073",
+              "deduzir": "5940.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.415",
+                "icms": "0.272",
+                "ibs": "0.068"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.095",
+              "deduzir": "13860.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "icms": "0.268",
+                "ibs": "0.067"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.107",
+              "deduzir": "22500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "icms": "0.268",
+                "ibs": "0.067"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.143",
+              "deduzir": "87300.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "icms": "0.268",
+                "ibs": "0.067"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.189",
+              "deduzir": "378000.00",
+              "partilha": {
+                "irpj": "0.135",
+                "csll": "0.10",
+                "cbs": "0.344",
+                "cpp": "0.421"
+              }
+            }
+          ]
+        },
+        "II": {
+          "descricao": "Indústria",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.045",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.256",
+                "ibs": "0.064"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.078",
+              "deduzir": "5940.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.256",
+                "ibs": "0.064"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.10",
+              "deduzir": "13860.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.256",
+                "ibs": "0.064"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.112",
+              "deduzir": "22500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.256",
+                "ibs": "0.064"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.147",
+              "deduzir": "85500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.256",
+                "ibs": "0.064"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.30",
+              "deduzir": "720000.00",
+              "partilha": {
+                "irpj": "0.085",
+                "csll": "0.075",
+                "cbs": "0.255",
+                "cpp": "0.235",
+                "ipi": "0.35"
+              }
+            }
+          ]
+        },
+        "III": {
+          "descricao": "Serviços (locação de bens móveis e serviços do §5º-B/§5º-D)",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.06",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.156",
+                "cpp": "0.434",
+                "iss": "0.268",
+                "ibs": "0.067"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.112",
+              "deduzir": "9360.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.171",
+                "cpp": "0.434",
+                "iss": "0.256",
+                "ibs": "0.064"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.135",
+              "deduzir": "17640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.166",
+                "cpp": "0.434",
+                "iss": "0.26",
+                "ibs": "0.065"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.16",
+              "deduzir": "35640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.166",
+                "cpp": "0.434",
+                "iss": "0.26",
+                "ibs": "0.065"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.21",
+              "deduzir": "125640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.156",
+                "cpp": "0.434",
+                "iss": "0.268",
+                "ibs": "0.067"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.33",
+              "deduzir": "648000.00",
+              "partilha": {
+                "irpj": "0.35",
+                "csll": "0.15",
+                "cbs": "0.195",
+                "cpp": "0.305"
+              }
+            }
+          ]
+        },
+        "IV": {
+          "descricao": "Serviços do §5º-C (construção, vigilância, limpeza, advocacia) — CPP fora do DAS",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.045",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.188",
+                "csll": "0.152",
+                "cbs": "0.215",
+                "iss": "0.356",
+                "ibs": "0.089"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.09",
+              "deduzir": "8100.00",
+              "partilha": {
+                "irpj": "0.198",
+                "csll": "0.152",
+                "cbs": "0.25",
+                "iss": "0.32",
+                "ibs": "0.08"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.102",
+              "deduzir": "12420.00",
+              "partilha": {
+                "irpj": "0.208",
+                "csll": "0.152",
+                "cbs": "0.24",
+                "iss": "0.32",
+                "ibs": "0.08"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.14",
+              "deduzir": "39780.00",
+              "partilha": {
+                "irpj": "0.178",
+                "csll": "0.192",
+                "cbs": "0.23",
+                "iss": "0.32",
+                "ibs": "0.08"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.22",
+              "deduzir": "183780.00",
+              "partilha": {
+                "irpj": "0.188",
+                "csll": "0.192",
+                "cbs": "0.22",
+                "iss": "0.32",
+                "ibs": "0.08"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.33",
+              "deduzir": "828000.00",
+              "partilha": {
+                "irpj": "0.535",
+                "csll": "0.215",
+                "cbs": "0.25"
+              }
+            }
+          ]
+        },
+        "V": {
+          "descricao": "Serviços do §5º-I (intelectuais/técnicos) com fator R < 28%",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.155",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.25",
+                "csll": "0.15",
+                "cbs": "0.1715",
+                "cpp": "0.2885",
+                "iss": "0.112",
+                "ibs": "0.028"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.18",
+              "deduzir": "4500.00",
+              "partilha": {
+                "irpj": "0.23",
+                "csll": "0.15",
+                "cbs": "0.1715",
+                "cpp": "0.2785",
+                "iss": "0.136",
+                "ibs": "0.034"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.195",
+              "deduzir": "9900.00",
+              "partilha": {
+                "irpj": "0.24",
+                "csll": "0.15",
+                "cbs": "0.1815",
+                "cpp": "0.2385",
+                "iss": "0.152",
+                "ibs": "0.038"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.205",
+              "deduzir": "17100.00",
+              "partilha": {
+                "irpj": "0.21",
+                "csll": "0.15",
+                "cbs": "0.1915",
+                "cpp": "0.2385",
+                "iss": "0.168",
+                "ibs": "0.042"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.23",
+              "deduzir": "62100.00",
+              "partilha": {
+                "irpj": "0.23",
+                "csll": "0.125",
+                "cbs": "0.1715",
+                "cpp": "0.2385",
+                "iss": "0.188",
+                "ibs": "0.047"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.305",
+              "deduzir": "540000.00",
+              "partilha": {
+                "irpj": "0.35",
+                "csll": "0.155",
+                "cbs": "0.20",
+                "cpp": "0.295"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "inicio": "2031-01-01",
+      "limite_receita_anual": "4800000.00",
+      "sublimite_icms_iss": "3600000.00",
+      "fator_r_minimo": "0.28",
+      "iss_efetivo_maximo": "0.035",
+      "fonte": "Res. CGSN 190/2026 (Anexos I a V da Res. CGSN 140/2018, vigência a partir de 01/01/2027); mesmos valores dos Anexos XVIII a XXIII da LC 123/2006 (LC 214/2025, LC 227/2026). CBS e IBS substituem PIS, Cofins, ICMS e ISS na partilha, em transição até 2033.",
+      "anexos": {
+        "I": {
+          "descricao": "Comércio",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.04",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.415",
+                "icms": "0.238",
+                "ibs": "0.102"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.073",
+              "deduzir": "5940.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.415",
+                "icms": "0.238",
+                "ibs": "0.102"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.095",
+              "deduzir": "13860.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "icms": "0.2345",
+                "ibs": "0.1005"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.107",
+              "deduzir": "22500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "icms": "0.2345",
+                "ibs": "0.1005"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.143",
+              "deduzir": "87300.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "icms": "0.2345",
+                "ibs": "0.1005"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.189",
+              "deduzir": "378000.00",
+              "partilha": {
+                "irpj": "0.135",
+                "csll": "0.10",
+                "cbs": "0.344",
+                "cpp": "0.421"
+              }
+            }
+          ]
+        },
+        "II": {
+          "descricao": "Indústria",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.045",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.224",
+                "ibs": "0.096"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.078",
+              "deduzir": "5940.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.224",
+                "ibs": "0.096"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.10",
+              "deduzir": "13860.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.224",
+                "ibs": "0.096"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.112",
+              "deduzir": "22500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.224",
+                "ibs": "0.096"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.147",
+              "deduzir": "85500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.224",
+                "ibs": "0.096"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.30",
+              "deduzir": "720000.00",
+              "partilha": {
+                "irpj": "0.085",
+                "csll": "0.075",
+                "cbs": "0.255",
+                "cpp": "0.235",
+                "ipi": "0.35"
+              }
+            }
+          ]
+        },
+        "III": {
+          "descricao": "Serviços (locação de bens móveis e serviços do §5º-B/§5º-D)",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.06",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.156",
+                "cpp": "0.434",
+                "iss": "0.2345",
+                "ibs": "0.1005"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.112",
+              "deduzir": "9360.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.171",
+                "cpp": "0.434",
+                "iss": "0.224",
+                "ibs": "0.096"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.135",
+              "deduzir": "17640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.166",
+                "cpp": "0.434",
+                "iss": "0.2275",
+                "ibs": "0.0975"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.16",
+              "deduzir": "35640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.166",
+                "cpp": "0.434",
+                "iss": "0.2275",
+                "ibs": "0.0975"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.21",
+              "deduzir": "125640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.156",
+                "cpp": "0.434",
+                "iss": "0.2345",
+                "ibs": "0.1005"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.33",
+              "deduzir": "648000.00",
+              "partilha": {
+                "irpj": "0.35",
+                "csll": "0.15",
+                "cbs": "0.195",
+                "cpp": "0.305"
+              }
+            }
+          ]
+        },
+        "IV": {
+          "descricao": "Serviços do §5º-C (construção, vigilância, limpeza, advocacia) — CPP fora do DAS",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.045",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.188",
+                "csll": "0.152",
+                "cbs": "0.215",
+                "iss": "0.3115",
+                "ibs": "0.1335"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.09",
+              "deduzir": "8100.00",
+              "partilha": {
+                "irpj": "0.198",
+                "csll": "0.152",
+                "cbs": "0.25",
+                "iss": "0.28",
+                "ibs": "0.12"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.102",
+              "deduzir": "12420.00",
+              "partilha": {
+                "irpj": "0.208",
+                "csll": "0.152",
+                "cbs": "0.24",
+                "iss": "0.28",
+                "ibs": "0.12"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.14",
+              "deduzir": "39780.00",
+              "partilha": {
+                "irpj": "0.178",
+                "csll": "0.192",
+                "cbs": "0.23",
+                "iss": "0.28",
+                "ibs": "0.12"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.22",
+              "deduzir": "183780.00",
+              "partilha": {
+                "irpj": "0.188",
+                "csll": "0.192",
+                "cbs": "0.22",
+                "iss": "0.28",
+                "ibs": "0.12"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.33",
+              "deduzir": "828000.00",
+              "partilha": {
+                "irpj": "0.535",
+                "csll": "0.215",
+                "cbs": "0.25"
+              }
+            }
+          ]
+        },
+        "V": {
+          "descricao": "Serviços do §5º-I (intelectuais/técnicos) com fator R < 28%",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.155",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.25",
+                "csll": "0.15",
+                "cbs": "0.1715",
+                "cpp": "0.2885",
+                "iss": "0.098",
+                "ibs": "0.042"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.18",
+              "deduzir": "4500.00",
+              "partilha": {
+                "irpj": "0.23",
+                "csll": "0.15",
+                "cbs": "0.1715",
+                "cpp": "0.2785",
+                "iss": "0.119",
+                "ibs": "0.051"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.195",
+              "deduzir": "9900.00",
+              "partilha": {
+                "irpj": "0.24",
+                "csll": "0.15",
+                "cbs": "0.1815",
+                "cpp": "0.2385",
+                "iss": "0.133",
+                "ibs": "0.057"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.205",
+              "deduzir": "17100.00",
+              "partilha": {
+                "irpj": "0.21",
+                "csll": "0.15",
+                "cbs": "0.1915",
+                "cpp": "0.2385",
+                "iss": "0.147",
+                "ibs": "0.063"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.23",
+              "deduzir": "62100.00",
+              "partilha": {
+                "irpj": "0.23",
+                "csll": "0.125",
+                "cbs": "0.1715",
+                "cpp": "0.2385",
+                "iss": "0.1645",
+                "ibs": "0.0705"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.305",
+              "deduzir": "540000.00",
+              "partilha": {
+                "irpj": "0.35",
+                "csll": "0.155",
+                "cbs": "0.20",
+                "cpp": "0.295"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "inicio": "2032-01-01",
+      "limite_receita_anual": "4800000.00",
+      "sublimite_icms_iss": "3600000.00",
+      "fator_r_minimo": "0.28",
+      "iss_efetivo_maximo": "0.03",
+      "fonte": "Res. CGSN 190/2026 (Anexos I a V da Res. CGSN 140/2018, vigência a partir de 01/01/2027); mesmos valores dos Anexos XVIII a XXIII da LC 123/2006 (LC 214/2025, LC 227/2026). CBS e IBS substituem PIS, Cofins, ICMS e ISS na partilha, em transição até 2033.",
+      "anexos": {
+        "I": {
+          "descricao": "Comércio",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.04",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.415",
+                "icms": "0.204",
+                "ibs": "0.136"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.073",
+              "deduzir": "5940.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.415",
+                "icms": "0.204",
+                "ibs": "0.136"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.095",
+              "deduzir": "13860.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "icms": "0.201",
+                "ibs": "0.134"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.107",
+              "deduzir": "22500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "icms": "0.201",
+                "ibs": "0.134"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.143",
+              "deduzir": "87300.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "icms": "0.201",
+                "ibs": "0.134"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.189",
+              "deduzir": "378000.00",
+              "partilha": {
+                "irpj": "0.135",
+                "csll": "0.10",
+                "cbs": "0.344",
+                "cpp": "0.421"
+              }
+            }
+          ]
+        },
+        "II": {
+          "descricao": "Indústria",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.045",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.192",
+                "ibs": "0.128"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.078",
+              "deduzir": "5940.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.192",
+                "ibs": "0.128"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.10",
+              "deduzir": "13860.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.192",
+                "ibs": "0.128"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.112",
+              "deduzir": "22500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.192",
+                "ibs": "0.128"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.147",
+              "deduzir": "85500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "icms": "0.192",
+                "ibs": "0.128"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.30",
+              "deduzir": "720000.00",
+              "partilha": {
+                "irpj": "0.085",
+                "csll": "0.075",
+                "cbs": "0.255",
+                "cpp": "0.235",
+                "ipi": "0.35"
+              }
+            }
+          ]
+        },
+        "III": {
+          "descricao": "Serviços (locação de bens móveis e serviços do §5º-B/§5º-D)",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.06",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.156",
+                "cpp": "0.434",
+                "iss": "0.201",
+                "ibs": "0.134"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.112",
+              "deduzir": "9360.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.171",
+                "cpp": "0.434",
+                "iss": "0.192",
+                "ibs": "0.128"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.135",
+              "deduzir": "17640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.166",
+                "cpp": "0.434",
+                "iss": "0.195",
+                "ibs": "0.13"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.16",
+              "deduzir": "35640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.166",
+                "cpp": "0.434",
+                "iss": "0.195",
+                "ibs": "0.13"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.21",
+              "deduzir": "125640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.156",
+                "cpp": "0.434",
+                "iss": "0.201",
+                "ibs": "0.134"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.33",
+              "deduzir": "648000.00",
+              "partilha": {
+                "irpj": "0.35",
+                "csll": "0.15",
+                "cbs": "0.195",
+                "cpp": "0.305"
+              }
+            }
+          ]
+        },
+        "IV": {
+          "descricao": "Serviços do §5º-C (construção, vigilância, limpeza, advocacia) — CPP fora do DAS",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.045",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.188",
+                "csll": "0.152",
+                "cbs": "0.215",
+                "iss": "0.267",
+                "ibs": "0.178"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.09",
+              "deduzir": "8100.00",
+              "partilha": {
+                "irpj": "0.198",
+                "csll": "0.152",
+                "cbs": "0.25",
+                "iss": "0.24",
+                "ibs": "0.16"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.102",
+              "deduzir": "12420.00",
+              "partilha": {
+                "irpj": "0.208",
+                "csll": "0.152",
+                "cbs": "0.24",
+                "iss": "0.24",
+                "ibs": "0.16"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.14",
+              "deduzir": "39780.00",
+              "partilha": {
+                "irpj": "0.178",
+                "csll": "0.192",
+                "cbs": "0.23",
+                "iss": "0.24",
+                "ibs": "0.16"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.22",
+              "deduzir": "183780.00",
+              "partilha": {
+                "irpj": "0.188",
+                "csll": "0.192",
+                "cbs": "0.22",
+                "iss": "0.24",
+                "ibs": "0.16"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.33",
+              "deduzir": "828000.00",
+              "partilha": {
+                "irpj": "0.535",
+                "csll": "0.215",
+                "cbs": "0.25"
+              }
+            }
+          ]
+        },
+        "V": {
+          "descricao": "Serviços do §5º-I (intelectuais/técnicos) com fator R < 28%",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.155",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.25",
+                "csll": "0.15",
+                "cbs": "0.1715",
+                "cpp": "0.2885",
+                "iss": "0.084",
+                "ibs": "0.056"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.18",
+              "deduzir": "4500.00",
+              "partilha": {
+                "irpj": "0.23",
+                "csll": "0.15",
+                "cbs": "0.1715",
+                "cpp": "0.2785",
+                "iss": "0.102",
+                "ibs": "0.068"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.195",
+              "deduzir": "9900.00",
+              "partilha": {
+                "irpj": "0.24",
+                "csll": "0.15",
+                "cbs": "0.1815",
+                "cpp": "0.2385",
+                "iss": "0.114",
+                "ibs": "0.076"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.205",
+              "deduzir": "17100.00",
+              "partilha": {
+                "irpj": "0.21",
+                "csll": "0.15",
+                "cbs": "0.1915",
+                "cpp": "0.2385",
+                "iss": "0.126",
+                "ibs": "0.084"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.23",
+              "deduzir": "62100.00",
+              "partilha": {
+                "irpj": "0.23",
+                "csll": "0.125",
+                "cbs": "0.1715",
+                "cpp": "0.2385",
+                "iss": "0.141",
+                "ibs": "0.094"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.305",
+              "deduzir": "540000.00",
+              "partilha": {
+                "irpj": "0.35",
+                "csll": "0.155",
+                "cbs": "0.20",
+                "cpp": "0.295"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "inicio": "2033-01-01",
+      "limite_receita_anual": "4800000.00",
+      "sublimite_icms_iss": "3600000.00",
+      "fator_r_minimo": "0.28",
+      "iss_efetivo_maximo": "0",
+      "fonte": "Res. CGSN 190/2026 (Anexos I a V da Res. CGSN 140/2018, vigência a partir de 01/01/2027); mesmos valores dos Anexos XVIII a XXIII da LC 123/2006 (LC 214/2025, LC 227/2026). CBS e IBS substituem PIS, Cofins, ICMS e ISS na partilha, em transição até 2033.",
+      "anexos": {
+        "I": {
+          "descricao": "Comércio",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.04",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.415",
+                "ibs": "0.34"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.073",
+              "deduzir": "5940.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.415",
+                "ibs": "0.34"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.095",
+              "deduzir": "13860.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "ibs": "0.335"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.107",
+              "deduzir": "22500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "ibs": "0.335"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.143",
+              "deduzir": "87300.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.155",
+                "cpp": "0.42",
+                "ibs": "0.335"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.189",
+              "deduzir": "378000.00",
+              "partilha": {
+                "irpj": "0.135",
+                "csll": "0.10",
+                "cbs": "0.344",
+                "cpp": "0.421"
+              }
+            }
+          ]
+        },
+        "II": {
+          "descricao": "Indústria",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.045",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "ibs": "0.32"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.078",
+              "deduzir": "5940.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "ibs": "0.32"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.10",
+              "deduzir": "13860.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "ibs": "0.32"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.112",
+              "deduzir": "22500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "ibs": "0.32"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.147",
+              "deduzir": "85500.00",
+              "partilha": {
+                "irpj": "0.055",
+                "csll": "0.035",
+                "cbs": "0.14",
+                "cpp": "0.375",
+                "ipi": "0.075",
+                "ibs": "0.32"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.30",
+              "deduzir": "720000.00",
+              "partilha": {
+                "irpj": "0.085",
+                "csll": "0.075",
+                "cbs": "0.255",
+                "cpp": "0.235",
+                "ipi": "0.35"
+              }
+            }
+          ]
+        },
+        "III": {
+          "descricao": "Serviços (locação de bens móveis e serviços do §5º-B/§5º-D)",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.06",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.156",
+                "cpp": "0.434",
+                "ibs": "0.335"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.112",
+              "deduzir": "9360.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.171",
+                "cpp": "0.434",
+                "ibs": "0.32"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.135",
+              "deduzir": "17640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.166",
+                "cpp": "0.434",
+                "ibs": "0.325"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.16",
+              "deduzir": "35640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.166",
+                "cpp": "0.434",
+                "ibs": "0.325"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.21",
+              "deduzir": "125640.00",
+              "partilha": {
+                "irpj": "0.04",
+                "csll": "0.035",
+                "cbs": "0.156",
+                "cpp": "0.434",
+                "ibs": "0.335"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.33",
+              "deduzir": "648000.00",
+              "partilha": {
+                "irpj": "0.35",
+                "csll": "0.15",
+                "cbs": "0.195",
+                "cpp": "0.305"
+              }
+            }
+          ]
+        },
+        "IV": {
+          "descricao": "Serviços do §5º-C (construção, vigilância, limpeza, advocacia) — CPP fora do DAS",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.045",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.188",
+                "csll": "0.152",
+                "cbs": "0.215",
+                "ibs": "0.445"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.09",
+              "deduzir": "8100.00",
+              "partilha": {
+                "irpj": "0.198",
+                "csll": "0.152",
+                "cbs": "0.25",
+                "ibs": "0.40"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.102",
+              "deduzir": "12420.00",
+              "partilha": {
+                "irpj": "0.208",
+                "csll": "0.152",
+                "cbs": "0.24",
+                "ibs": "0.40"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.14",
+              "deduzir": "39780.00",
+              "partilha": {
+                "irpj": "0.178",
+                "csll": "0.192",
+                "cbs": "0.23",
+                "ibs": "0.40"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.22",
+              "deduzir": "183780.00",
+              "partilha": {
+                "irpj": "0.188",
+                "csll": "0.192",
+                "cbs": "0.22",
+                "ibs": "0.40"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.33",
+              "deduzir": "828000.00",
+              "partilha": {
+                "irpj": "0.535",
+                "csll": "0.215",
+                "cbs": "0.25"
+              }
+            }
+          ]
+        },
+        "V": {
+          "descricao": "Serviços do §5º-I (intelectuais/técnicos) com fator R < 28%",
+          "faixas": [
+            {
+              "ate": "180000.00",
+              "aliquota": "0.155",
+              "deduzir": "0",
+              "partilha": {
+                "irpj": "0.25",
+                "csll": "0.15",
+                "cbs": "0.1715",
+                "cpp": "0.2885",
+                "ibs": "0.14"
+              }
+            },
+            {
+              "ate": "360000.00",
+              "aliquota": "0.18",
+              "deduzir": "4500.00",
+              "partilha": {
+                "irpj": "0.23",
+                "csll": "0.15",
+                "cbs": "0.1715",
+                "cpp": "0.2785",
+                "ibs": "0.17"
+              }
+            },
+            {
+              "ate": "720000.00",
+              "aliquota": "0.195",
+              "deduzir": "9900.00",
+              "partilha": {
+                "irpj": "0.24",
+                "csll": "0.15",
+                "cbs": "0.1815",
+                "cpp": "0.2385",
+                "ibs": "0.19"
+              }
+            },
+            {
+              "ate": "1800000.00",
+              "aliquota": "0.205",
+              "deduzir": "17100.00",
+              "partilha": {
+                "irpj": "0.21",
+                "csll": "0.15",
+                "cbs": "0.1915",
+                "cpp": "0.2385",
+                "ibs": "0.21"
+              }
+            },
+            {
+              "ate": "3600000.00",
+              "aliquota": "0.23",
+              "deduzir": "62100.00",
+              "partilha": {
+                "irpj": "0.23",
+                "csll": "0.125",
+                "cbs": "0.1715",
+                "cpp": "0.2385",
+                "ibs": "0.235"
+              }
+            },
+            {
+              "ate": "4800000.00",
+              "aliquota": "0.305",
+              "deduzir": "540000.00",
+              "partilha": {
+                "irpj": "0.35",
+                "csll": "0.155",
+                "cbs": "0.20",
+                "cpp": "0.295"
+              }
+            }
+          ]
+        }
+      }
     }
   ]
 }

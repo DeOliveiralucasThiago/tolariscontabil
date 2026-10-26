@@ -212,6 +212,10 @@ vedações do Simples (Anexos VI e VII da Resolução CGSN 140/2018) e a fonte d
 `src/tolaris_motor/tabelas/cnae.json` e é refeita por `scripts/gerar_tabela_cnae.py`. Só vale se a atividade for exercida de
 fato; veja os itens 69 e 70 de `docs/premissas.md`.
 
+**Simples de 2027 a 2033:** `simples_nacional.json` traz as tabelas da Resolução CGSN 190/2026 (CBS e IBS na partilha do DAS, teto de ISS
+decrescente), geradas por `scripts/gerar_simples_2027.py`; o Simples na Reforma usa a tabela de cada ano. Veja o item 75 de
+`docs/premissas.md`.
+
 Todo resultado traz uma **memória de cálculo** (descrição, fórmula, valor e base legal
 de cada passo) e **alertas** (premissas e limitações). As tabelas legais ficam em
 `src/tolaris_motor/tabelas/*.json`, versionadas por vigência: quando a lei muda,

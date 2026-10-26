@@ -66,12 +66,14 @@ def test_validacoes():
     with pytest.raises(ValueError):
         entrada(percentual_b2b=2)
     with pytest.raises(ValueError):
-        entrada(anos=[2030])
+        entrada(anos=[2026])
+    with pytest.raises(ValueError):
+        entrada(anos=[2034])
 
 
 def test_ipi_da_industria_nao_e_substituido_em_2033():
     # Res. CGSN 190/2026, Anexo II (2033): CBS 14% + IBS 32% da faixa; o IPI de 7,5% permanece
-    assert "ipi" not in rs.SUBSTITUIDOS[2033]
+    assert "ipi" not in rs.TRIBUTOS_IBS_CBS
     r = next(x for x in rs.simular(entrada(atividade="industria", receita_bruta_anual=120_000)) if x.ano == 2033)
     passos = [p for p in r.resultado.memoria if p.descricao.startswith("Alíquota da fatia")]
     assert passos and passos[0].valor == pytest.approx(D("0.1151") + D("0.0249") + D("0.32"))  # 46,0% do DAS

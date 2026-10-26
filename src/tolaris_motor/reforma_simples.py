@@ -19,8 +19,8 @@ líquido nos dois cenários):
   ``1 / (1 + a)`` (``a`` = IBS/CBS da venda).
 - Por fora, a empresa ainda se credita do IBS/CBS das compras.
 
-Em 2027 só a CBS substitui PIS/Cofins (``s`` = PIS + Cofins); em 2033 IBS + CBS substituem
-PIS, Cofins, ICMS, ISS e IPI.
+``e`` e ``s`` saem da tabela do Simples do próprio ano (Res. CGSN 190/2026, Anexos de 2027 a 2033): ``s`` = fatia de CBS + IBS
+na partilha da faixa. A CBS e o IBS ocupam a fatia que era de PIS, Cofins, ICMS e ISS (o IPI da indústria permanece).
 """
 
 from __future__ import annotations
@@ -34,12 +34,9 @@ from .base import ZERO, D, Numero, Resultado, brl, pct
 from .empresa import Atividade, PerfilEmpresa
 
 BASE_LEGAL = "LC 214/2025; LC 123/2006 (opção pelo regime regular de IBS/CBS)"
-SUBSTITUIDOS = {
-    2027: ("pis", "cofins"),
-    2033: ("pis", "cofins", "icms", "iss"),
-}
-"""Tributos que o IBS/CBS substituem dentro do DAS. Conferido com os Anexos I a V da Res. CGSN 190/2026: em cada faixa, CBS + IBS
-somam o que PIS, Cofins, ICMS e ISS somavam hoje. O IPI **não** sai: o Anexo II segue com 7,5% de IPI em 2033."""
+TRIBUTOS_IBS_CBS = ("cbs", "ibs")
+"""Tributos da partilha do DAS que o regime regular de IBS/CBS retira do DAS (Res. CGSN 190/2026, Anexos I a V, de 2027 em diante)."""
+ANOS_DISPONIVEIS = tuple(range(2027, 2034))
 
 PRAZOS_OPCAO_2027 = (
     "Prazos de 2026 (Res. CGSN 186/2026, alterada pela 194/2026): a opção pelo regime regular de IBS/CBS para janeiro a junho de "
@@ -79,8 +76,8 @@ class EntradaSimplesReforma:
         if self.receita_bruta_anual <= 0:
             raise ValueError("receita_bruta_anual deve ser positiva")
         for ano in self.anos:
-            if ano not in SUBSTITUIDOS:
-                raise ValueError("Anos disponíveis: 2027 e 2033")
+            if ano not in ANOS_DISPONIVEIS:
+                raise ValueError("Anos disponíveis: 2027 a 2033")
 
 
 @dataclass
@@ -130,29 +127,30 @@ def simular(e: EntradaSimplesReforma) -> list[CenarioAno]:
         folha_fator_r_anual=e.folha_fator_r_anual,
         ano=2026,
     )
-    data = date(2026, 1, 1)
     anexo = simples.anexo_da_atividade(perfil)
-    e_das = simples.aliquota_efetiva(anexo, e.receita_bruta_anual, data)
-    fracoes = simples.partilha(anexo, e.receita_bruta_anual, data)
     receita = e.receita_bruta_anual
     cenarios = []
 
     for ano in e.anos:
         res = Resultado(f"Simples na Reforma — {ano}")
-        s = sum((fracoes.get(t, ZERO) for t in SUBSTITUIDOS[ano]), ZERO)
+        data = date(ano, 1, 1)
+        n_faixa, _ = simples.faixa(anexo, receita, data)
+        e_das = simples.aliquota_efetiva(anexo, receita, data)
+        fracoes = simples.partilha(anexo, receita, data)
+        s = sum((fracoes.get(t, ZERO) for t in TRIBUTOS_IBS_CBS), ZERO)
         a, a_cheia = _aliquota_venda(e, ano)
         res.passo(
-            f"Anexo {anexo}: alíquota efetiva do DAS",
-            f"RBT12 {brl(receita)}",
+            f"Anexo {anexo}: alíquota efetiva do DAS ({ano})",
+            f"RBT12 {brl(receita)}, {n_faixa}ª faixa",
             e_das,
             simples.BASE_LEGAL_ALIQUOTA,
         )
         res.passo(
             "Alíquota da fatia do DAS substituída por IBS/CBS",
-            " + ".join(f"{t.upper()} {pct(fracoes.get(t, ZERO))}" for t in SUBSTITUIDOS[ano] if fracoes.get(t))
+            " + ".join(f"{t.upper()} {pct(fracoes.get(t, ZERO))}" for t in TRIBUTOS_IBS_CBS if fracoes.get(t))
             + f" = {pct(s)} do DAS",
             s,
-            "LC 123/2006, tabelas de partilha",
+            "Res. CGSN 190/2026, Anexos I a V (partilha)",
         )
         res.passo("Alíquota de IBS/CBS na venda (por fora)", f"com redução setorial de {pct(e.reducao_setorial, 0)}", a, BASE_LEGAL)
 
@@ -195,12 +193,13 @@ def simular(e: EntradaSimplesReforma) -> list[CenarioAno]:
             elif beta > 1:
                 res.alerta(f"{ano}: mesmo vendendo só para empresas, manter no DAS rende mais nestas premissas.")
 
-        if fracoes.get("icms", ZERO) == 0 and fracoes.get("iss", ZERO) == 0 and ano == 2033:
-            res.alerta("Receita na 6ª faixa: ICMS/ISS já são recolhidos fora do DAS; a fatia substituída fica subestimada.")
+        if n_faixa == 6:
+            res.alerta(f"{ano}: receita na 6ª faixa, em que ICMS e ISS já são recolhidos fora do DAS e o IBS não consta da partilha; "
+                       "a fatia de IBS/CBS vem só da CBS.")
         res.alerta(
-            "A fatia de IBS/CBS do DAS foi conferida com os Anexos da Res. CGSN 190/2026 (vigência a partir de 01/01/2027): CBS + IBS "
-            "somam o que PIS, Cofins, ICMS e ISS somam hoje, exceto o IPI da indústria, que permanece. A 6ª faixa tem alíquota nominal "
-            "um pouco menor em 2027 (Anexo I: 18,90%) e o teto de ISS cai a 4% em 2030; o cálculo usa a tabela de 2026."
+            "O DAS e a fatia de IBS/CBS vêm dos Anexos da Res. CGSN 190/2026 para o ano (vigência a partir de 01/01/2027): CBS + IBS "
+            "somam o que PIS, Cofins, ICMS e ISS somavam, exceto o IPI da indústria, que permanece; o teto de ISS cai de 5% (2027-28) a "
+            "3% (2032). O texto das tabelas foi lido nos autógrafos das leis e na Resolução; confirme na versão publicada."
         )
         res.alerta(PRAZOS_OPCAO_2027)
         cenarios.append(

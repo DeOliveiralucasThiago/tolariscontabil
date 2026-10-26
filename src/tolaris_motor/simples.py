@@ -121,6 +121,22 @@ TRIBUTOS_DESCONSIDERADOS_EXPORTACAO = {
     "servicos": ("pis", "cofins", "iss"),
     "mercadorias": ("pis", "cofins", "icms", "ipi"),
 }
+TRIBUTOS_DESCONSIDERADOS_EXPORTACAO_2027 = {
+    "servicos": ("cbs", "ibs", "iss"),
+    "mercadorias": ("cbs", "ibs", "icms", "ipi"),
+}
+"""A partir de 2027 as tabelas trazem CBS e IBS no lugar de PIS e Cofins (LC 123/2006, art. 18, §§ 14 e 14-A, redação da LC 214/2025)."""
+INICIO_CBS_IBS = date(2027, 1, 1)
+
+
+def tem_cbs_ibs(data: date) -> bool:
+    """Se a tabela do Simples vigente na data já traz CBS e IBS na partilha (Res. CGSN 190/2026)."""
+    return data >= INICIO_CBS_IBS
+
+
+def tributos_desconsiderados_exportacao(tipo: str, data: date) -> tuple[str, ...]:
+    tabela = TRIBUTOS_DESCONSIDERADOS_EXPORTACAO_2027 if tem_cbs_ibs(data) else TRIBUTOS_DESCONSIDERADOS_EXPORTACAO
+    return tabela[tipo]
 
 
 def alerta_exportacao(perfil: PerfilEmpresa, res: Resultado) -> None:
@@ -170,7 +186,7 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
     partes = _partes_por_anexo(perfil, anexo)
     multiplas = len(partes) > 1
     tipo = "mercadorias" if perfil.atividade.vende_mercadoria else "servicos"
-    desconsiderados = TRIBUTOS_DESCONSIDERADOS_EXPORTACAO[tipo]
+    desconsiderados = tributos_desconsiderados_exportacao(tipo, data)
     # A alíquota de cada mercado sai do RBT12 daquele mercado (LC 123/2006, art. 3º, § 15; Res. CGSN 140/2018, art. 23)
     mercados = [("mercado interno", interna), ("exportação", exterior)] if exterior else [("", receita)]
     das_total = ZERO
@@ -246,14 +262,29 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             "Simples: a variação cambial não entra neste cálculo do DAS. Confirme com o contador se ela integra a "
             "receita bruta (depende de ser variação ligada a receita de exportação ou receita financeira)."
         )
-    if exterior:
+    if tem_cbs_ibs(data):
         res.alerta(
-            "Cálculo pelas regras vigentes em 2026 (LC 123/2006, art. 3º, § 15 e art. 18, § 14; Res. CGSN 140/2018, arts. 23 e 25): "
-            "cada mercado usa o RBT12 do próprio mercado. A partir de 01/01/2027 (Res. CGSN 190/2026) a RBT12 passa a contar os 12 meses "
-            "anteriores ao mês anterior ao da apuração, a separação entre os mercados continua, e os §§ 4º e 4º-A do art. 25 são "
-            "revogados: a qualificação como exportação de serviços passa a seguir as regras de cada tributo (§ 4º-B). Este cálculo "
-            "é de 2025 e 2026. Confira a qualificação da operação como exportação antes de segregar a receita no PGDAS-D."
+            "Tabelas de 2027 em diante (Res. CGSN 190/2026): CBS e IBS ocupam, em cada faixa, a fatia que era de PIS, Cofins, ICMS e ISS "
+            "(IPI da indústria permanece), em transição até 2033; o teto do ISS no DAS cai de 5% (2027-28) a 3% (2032). A RBT12 passa a "
+            "contar os 12 meses anteriores ao mês anterior ao da apuração. A partir de 2027 a empresa pode recolher IBS e CBS pelo regime "
+            "regular (veja o Simples na Reforma). Texto lido nos autógrafos das leis; confirme na versão publicada."
         )
+    if exterior:
+        if tem_cbs_ibs(data):
+            res.alerta(
+                "Exportação em 2027 em diante: a redução do DAS corresponde às alíquotas efetivas de ICMS, ISS, IPI, IBS e CBS (LC 123/2006, "
+                "art. 18, §§ 14 e 14-A, redação da LC 214/2025); cada mercado usa o RBT12 do próprio mercado e os §§ 4º e 4º-A do art. 25 da "
+                "Res. CGSN 140/2018 foram revogados (a qualificação como exportação segue as regras de cada tributo, § 4º-B). Confira a "
+                "qualificação da operação antes de segregar a receita no PGDAS-D."
+            )
+        else:
+            res.alerta(
+                "Cálculo pelas regras vigentes em 2026 (LC 123/2006, art. 3º, § 15 e art. 18, § 14; Res. CGSN 140/2018, arts. 23 e 25): "
+                "cada mercado usa o RBT12 do próprio mercado. A partir de 01/01/2027 (Res. CGSN 190/2026) a RBT12 passa a contar os 12 meses "
+                "anteriores ao mês anterior ao da apuração, a separação entre os mercados continua, e os §§ 4º e 4º-A do art. 25 são "
+                "revogados: a qualificação como exportação de serviços passa a seguir as regras de cada tributo (§ 4º-B). Confira a "
+                "qualificação da operação como exportação antes de segregar a receita no PGDAS-D."
+            )
         res.alerta(
             "Vedações a conferir para quem exporta (LC 123/2006, art. 17, II e art. 3º, § 4º, XII): titular ou sócio domiciliado no "
             "exterior, ou filial, sucursal, agência ou representação no exterior, impedem o Simples Nacional."
@@ -262,14 +293,15 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
     return res
 
 
-TRIBUTOS_FEDERAIS = ("irpj", "csll", "cofins", "pis", "cpp", "ipi")
+TRIBUTOS_FORA_DO_TETO_ISS = ("iss", "icms")
+"""O excesso de ISS acima do teto vai, na proporção da faixa, para todos os demais tributos da partilha (federais, CBS e IBS)."""
 
 
 def partilha(anexo: str, rbt12: Numero, data: date | None = None, extrapolar: bool = False) -> dict[str, Decimal]:
     """Fração do DAS que cabe a cada tributo na faixa do RBT12.
 
-    Aplica o teto de 5% de ISS efetivo: o excesso vai, proporcionalmente, para os
-    tributos federais da mesma faixa (LC 123/2006, Anexo III, nota da 5ª faixa).
+    Aplica o teto de ISS efetivo da tabela (5% até 2028 e, depois, 4,5%, 4%, 3,5% e 3%): o excesso vai, proporcionalmente,
+    aos demais tributos da mesma faixa (LC 123/2006, Anexo III, nota da 5ª faixa).
     """
     data = data or date.today()
     _, f = faixa(anexo, rbt12, data, extrapolar)
@@ -280,9 +312,9 @@ def partilha(anexo: str, rbt12: Numero, data: date | None = None, extrapolar: bo
     if aliq > 0 and aliq * iss > teto_iss:
         nova = teto_iss / aliq
         excesso = iss - nova
-        federais = {k: v for k, v in fracoes.items() if k in TRIBUTOS_FEDERAIS}
-        soma = sum(federais.values(), ZERO)
-        for k, v in federais.items():
+        demais = {k: v for k, v in fracoes.items() if k not in TRIBUTOS_FORA_DO_TETO_ISS}
+        soma = sum(demais.values(), ZERO)
+        for k, v in demais.items():
             fracoes[k] = v + excesso * v / soma
         fracoes["iss"] = nova
     return fracoes

@@ -253,7 +253,8 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     de PIS, Cofins, ICMS e IPI (mercadorias); IRPJ, CSLL e CPP continuam (LC 123/2006, art. 18, § 14; Res. CGSN 140/2018, art.
     25, § 3º). Conferido no texto consolidado da Resolução, em 26/10/2026. A exclusão do ISS na exportação de serviços segue a
     LC 116/2003 e a desconsideração dos percentuais do art. 25; a SC Cosit 78/2019 só cita PIS/Cofins. A Res. CGSN 190/2026
-    revoga os §§ 4º e 4º-A do art. 25 e muda o cálculo a partir de 01/01/2027: o Tolaris calcula 2025 e 2026 e avisa.
+    revoga os §§ 4º e 4º-A do art. 25 e muda o cálculo a partir de 01/01/2027: de 2027 em diante o DAS da exportação deixa de contar
+    CBS, IBS, ICMS/ISS (e IPI, nas mercadorias), conforme o art. 18, §§ 14 e 14-A (premissa 75).
 62. **Limites e alíquota do Simples com exportação:** mercado interno e exportação têm, cada um, o limite de R$ 4,8 mi (LC
     123/2006, art. 3º, § 14; Res. CGSN 140/2018, art. 2º, § 1º). **Cada mercado usa o RBT12 do próprio mercado** para achar a
     faixa e a alíquota efetiva (LC 123/2006, art. 3º, § 15, redação da LC 147/2014; Res. CGSN 140/2018, art. 23). A primeira
@@ -333,8 +334,8 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
       ficam fora desses prazos.
     - **195/2026** (efeitos a partir de 01/01/2027): a DASN-Simei pode servir de documento fiscal do MEI para consumidor final pessoa
       física. Sem efeito no cálculo.
-    O Tolaris continua calculando o Simples de 2025 e 2026 com as tabelas atuais; os Anexos de 2027 em diante ainda não foram
-    carregados como vigências. A Res. 186/2026 (origem dos prazos) não foi lida, só a parte que a 194 reescreve.
+    Os Anexos de 2027 a 2033 já estão carregados como vigências do motor (premissa 75). A Res. 186/2026 (origem dos prazos) não foi
+    lida, só a parte que a 194 reescreve.
 
 73. **LC 227/2026 e LC 238/2026 (lidas nos autógrafos da Câmara, em 26/10/2026):** a **LC 227/2026** (PLP 108/2024) instituiu o CGIBS e
     alterou a LC 123: art. 18, § 4º, VIII e IX (receitas de serviços e bens com IBS/CBS vão ao Anexo III e ao Anexo I), art. 21, § 4º, I
@@ -353,7 +354,20 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     cai com a transição (5% em 2027-28, 4,5% em 2029, 4% em 2030, 3,5% em 2031, 3% em 2032), com a diferença indo ao IBS e aos federais;
     (d) os Anexos de 2027-28 da LC 227 coincidem com os da Res. CGSN 190; a partir de 2029 as tabelas escalonam ICMS/ISS para IBS por
     ano (ex.: Anexo III 2029: ISS 30,15% e IBS 3,35% na 1ª faixa). **Limites:** o texto lido é o autógrafo (antes de vetos e sanção);
-    as tabelas de 2029 em diante não estão carregadas como vigências do motor, que calcula 2025-2026.
+    as tabelas de 2027 em diante foram carregadas do texto da Res. CGSN 190 (premissa 75).
+
+75. **Anexos do Simples de 2027 a 2033 carregados no motor (Res. CGSN 190/2026, em 26/10/2026):** `simples_nacional.json` ganhou seis
+    vigências (2027-28, 2029, 2030, 2031, 2032 e 2033 em diante), geradas pelo `scripts/gerar_simples_2027.py` a partir do texto dos
+    Anexos I a V da resolução. Cada faixa soma 100% na partilha e, nas cinco primeiras faixas, CBS + IBS (+ ICMS + ISS) igualam as
+    fatias de PIS, Cofins, ICMS e ISS de 2026 (teste automático). A alíquota efetiva de 2027 é a de 2026 nas cinco primeiras faixas; a
+    6ª faixa muda (Anexo I: 18,90%; Anexo III: 32,90% em 2027-28 e 33,00% depois). O teto do ISS efetivo no DAS cai de 5% (2027-28)
+    para 4,5% (2029), 4% (2030), 3,5% (2031) e 3% (2032), e o ISS sai do DAS em 2033; o excesso acima do teto vai para todos os demais
+    tributos da faixa, inclusive CBS e IBS (como na tabela da resolução). **Onde vale:** o Simples na Reforma usa a tabela do próprio
+    ano (2027 a 2033) para o DAS e para a fatia de CBS + IBS; o cálculo do Simples (`simples.calcular`) e a recuperação de PIS/Cofins
+    e ICMS-ST usam a tabela da data. **Onde não vale:** a simulação completa e o comparativo entre regimes seguem limitados a 2025 e
+    2026, porque Lucro Presumido e Lucro Real ainda calculam PIS/Cofins; a transição desses regimes está na calculadora da Reforma.
+    A RBT12 de 2027 (12 meses anteriores ao mês anterior) não muda o cálculo, que supõe faturamento constante. Conferir com a
+    publicação oficial, pois parte do texto veio dos autógrafos (LC 214 e LC 227) e da resolução, sem o Planalto.
 
 ## Pontos para o contador validar
 
@@ -367,7 +381,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Tratamento da LC 224/2025 diante das liminares e ADIs 7920/7936.
 - [ ] Premissa de margem de 20% na simulação expressa do Lucro Real.
 - [ ] Desembutir tributos das compras na reforma (fator padrão 27,25% para mercadorias).
-- [ ] Percentuais de partilha do DAS (tabela em `simples_nacional.json`, campo `partilha`).
+- [ ] Percentuais de partilha do DAS (tabela em `simples_nacional.json`, campo `partilha`), inclusive as vigências de 2027 a 2033.
 - [ ] Modelo da decisão do Simples na Reforma (preços ajustados para o mesmo custo líquido do cliente).
 - [ ] Carnê-leão: livro-caixa × desconto simplificado (o motor usa o maior dos dois).
 - [ ] Casos da planilha `validacao/casos_validacao.xlsx` (69 casos, incluindo SR*, AU*, REC* e AV*).

@@ -178,6 +178,7 @@ def estimar(meses: list[MesBase], anexo: str = "I") -> Recuperacao:
     fora_do_limite: list[str] = []
     sem_tabela: list[str] = []
     sem_icms_acima_sublimite: list[str] = []
+    sem_pis_cofins: list[str] = []
 
     for m in ordenados:
         mes = MesRecuperacao(
@@ -200,7 +201,9 @@ def estimar(meses: list[MesBase], anexo: str = "I") -> Recuperacao:
             (fora_do_limite if "excede" in str(erro) else sem_tabela).append(m.competencia)
             continue
         mes.calculado, mes.rbt12, mes.rbt12_estimado, mes.faixa, mes.aliquota_efetiva = True, rbt12, estimado, n_faixa, aliquota
-        mes.pct_pis_cofins = fracoes["pis"] + fracoes["cofins"]
+        mes.pct_pis_cofins = fracoes.get("pis", ZERO) + fracoes.get("cofins", ZERO)
+        if simples.tem_cbs_ibs(data) and mes.base_monofasico + m.mono_verificar > 0:
+            sem_pis_cofins.append(m.competencia)
         mes.pct_icms = fracoes.get("icms", ZERO)
         mes.pis_cofins = arredondar(mes.base_monofasico * aliquota * mes.pct_pis_cofins)
         mes.icms = arredondar(mes.base_st * aliquota * mes.pct_icms)
@@ -267,6 +270,10 @@ def estimar(meses: list[MesBase], anexo: str = "I") -> Recuperacao:
     if total_verificar > 0:
         res.alerta(f"Mais {brl(total_verificar)} em itens de lista parcial ou só com CEST: confirme o enquadramento "
                    "de cada produto antes de contar esse valor.")
+    if sem_pis_cofins:
+        res.alerta("Em " + ", ".join(sem_pis_cofins) + " o DAS já traz CBS e IBS no lugar de PIS e Cofins (Res. CGSN 190/2026): "
+                   "não há parcela de PIS/Cofins a recuperar nesses meses; a CBS e o IBS seguem as regras da reforma, ainda não "
+                   "incorporadas a esta análise.")
     if sem_icms_acima_sublimite:
         res.alerta("Em " + ", ".join(sem_icms_acima_sublimite) + " o ICMS já é recolhido fora do DAS (receita acima de "
                    "R$ 3,6 milhões): não há economia de ICMS nesses meses.")
