@@ -53,9 +53,28 @@ for (const trecho of ["6201-5/01", "principal", "8599-6/04", "Anexo III ou V (fa
 }
 const cand = await page.getByTestId("candidatos-anexo-iii").innerText();
 if (!cand.includes("Treinamento")) throw new Error(`candidato ao Anexo III ausente: ${cand}`);
-if (!/não sugere CNAEs que a empresa ainda não tem/.test(textoCnaes)) throw new Error("faltou o aviso de que o Tolaris não sugere CNAEs novos");
+if (!textoCnaes.includes("Tabela comercial")) throw new Error("faltou o selo de confiança da tabela");
+if (!/pela atividade realmente exercida/.test(textoCnaes)) throw new Error("faltou o aviso de que o Anexo vale pela atividade exercida");
+passo("CNAEs do cliente classificados, com candidato ao Anexo III, selo de confiança e aviso");
+
+// 2b. Explorar todos os CNAEs: filtro inicial "Anexo III direto", busca por texto, vedados e áreas
+const busca = page.getByTestId("busca-cnae");
+await busca.getByTestId("linha-cnae").first().waitFor();
+const total0 = Number((await busca.getByTestId("total-cnae").innerText()).match(/\d+/)[0]);
+if (total0 < 100) throw new Error(`poucos CNAEs de Anexo III direto: ${total0}`);
+await busca.locator("#busca_cnae_texto").fill("treinamento");
+await page.waitForFunction(() => /treinamento/i.test(document.querySelector('[data-testid="busca-cnae"]').innerText));
+const achou = await busca.innerText();
+if (!achou.includes("8599-6/04") || !achou.includes("Anexo III")) throw new Error(`busca por treinamento: ${achou.slice(0, 400)}`);
+await busca.locator("#busca_cnae_anexo").selectOption("vedado");
+await busca.locator("#busca_cnae_texto").fill("bancos");
+await page.waitForFunction(() => /Vedado ao Simples/.test(document.querySelector('[data-testid="busca-cnae"]').innerText));
+await busca.locator("#busca_cnae_anexo").selectOption("");
+await busca.locator("#busca_cnae_texto").fill("");
+await busca.locator("#busca_cnae_divisao").selectOption("62");
+await page.waitForFunction(() => /6209-1\/00/.test(document.querySelector('[data-testid="busca-cnae"]').innerText));
 await page.screenshot({ path: `${OUT}/enquadramento_1_cnaes.png`, fullPage: true });
-passo("CNAEs do cliente classificados, com candidato ao Anexo III e aviso");
+passo("busca de CNAEs: Anexo III direto, texto, vedados e área do CNAE");
 
 // 3. Análise dos caminhos (fator R de 6%: Anexo V hoje)
 await page.fill("#receita", "60000000");       // máscara: dígitos são centavos

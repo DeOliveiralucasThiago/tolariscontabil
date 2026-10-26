@@ -48,7 +48,7 @@ export const TOUR_GERAL: Passo[] = [
     alvo: menu("/enquadramento"), menu: true, titulo: "Enquadramento",
     texto:
       "Para empresa de serviços no Anexo V do Simples: compare os caminhos até o Anexo III (mais pró-labore ou parte da receita em atividade do Anexo III) " +
-      "e veja os CNAEs do cliente. Só vale se a atividade for exercida de fato.",
+      "veja os CNAEs do cliente e explore todos os CNAEs com o Anexo provável. Só vale se a atividade for exercida de fato.",
   },
   {
     alvo: menu("/reforma"), menu: true, titulo: "Reforma Tributária",

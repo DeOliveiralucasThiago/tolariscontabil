@@ -291,17 +291,21 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     separação por Anexo. **Só vale se a atividade for exercida de fato**, com o CNAE no cadastro e nota fiscal do serviço: a Receita
     enquadra pela atividade real, e um CNAE incluído sem a atividade pode ser desconsiderado, com cobrança e multa. A tela e o
     PDF repetem esse aviso.
-70. **CNAEs do cliente:** o cadastro pela consulta de CNPJ guarda os CNAEs secundários. A classificação de cada CNAE é a mesma regra
-    orientativa por divisão usada na sugestão de atividade, **não** a tabela oficial (Res. CGSN 140/2018, Anexo VI), que o
-    ambiente de desenvolvimento não conseguiu ler. As fontes consultadas divergem até sobre CNAEs comuns de TI (por exemplo,
-    6209-1/00). Por isso o Tolaris aponta apenas, entre os CNAEs que o cliente **já tem**, os que a regra põe no Anexo III e
-    **não sugere CNAEs novos**: isso exige a tabela oficial e o julgamento do contador.
+70. **CNAEs e Anexos:** o catálogo traz as 1.334 subclasses da CNAE 2.3 (IBGE/Concla), as vedações oficiais (Res. CGSN 140/2018,
+    Anexo VI: 101 CNAEs impeditivos; Anexo VII: 22 ambíguos) e o Anexo de 389 CNAEs vindo da tabela da Contabilizei (fonte
+    **comercial**, coletada em 26/10/2026). Atenção: os Anexos VI e VII da Resolução são listas de **vedação**, não de Anexo; a
+    Resolução define o Anexo III, IV ou V pela **descrição da atividade** (art. 25, § 1º), e não existe tabela oficial por
+    CNAE. A tabela comercial é, portanto, uma interpretação e cada resposta traz a confiança: `oficial` (vedação), `tabela`
+    (Contabilizei) ou `divisao` (regra aproximada, para os CNAEs que a tabela não cobre; ela errava 112 dos 389 códigos da
+    tabela, por isso só vale como último recurso). Os CNAEs secundários do cliente vêm da consulta de CNPJ. A tela Enquadramento
+    lista os CNAEs de Anexo III direto, sem fator R, que o contador pode avaliar, sempre com o aviso de que só vale para atividade
+    exercida de fato. Para atualizar, baixe as fontes de novo e rode `scripts/gerar_tabela_cnae.py`.
 
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias?).
 - [ ] RAT/terceiros padrão (2% e 5,8%) para os clientes típicos do escritório.
-- [ ] Enquadramento: conferir, no Anexo VI da Res. CGSN 140/2018, o Anexo de cada CNAE do cliente e se há atividade real que justifique segregar receita no Anexo III.
+- [ ] Enquadramento: conferir o Anexo de cada CNAE do cliente na descrição da atividade (Res. CGSN 140/2018, art. 25, § 1º), já que a tabela por CNAE é comercial, e se há atividade real que justifique segregar receita no Anexo III.
 - [ ] Pró-labore elevado para o fator R: custo do INSS (11% do sócio) e do IRRF, e se a retirada total já comporta o valor.
 - [ ] Tratamento da LC 224/2025 diante das liminares e ADIs 7920/7936.
 - [ ] Premissa de margem de 20% na simulação expressa do Lucro Real.

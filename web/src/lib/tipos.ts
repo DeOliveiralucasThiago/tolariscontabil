@@ -63,7 +63,7 @@ export const ATIVIDADES: InfoAtividade[] = [
 ];
 
 export const NOTA_ANEXO_V =
-  "O Anexo V não é uma opção à parte: ele aparece como resultado do fator R, quando a folha fica abaixo de 28% da receita. Em dúvida, o CNAE principal define o Anexo (Anexo VI da Resolução CGSN 140/2018); a busca por CNPJ já sugere a atividade.";
+  "O Anexo V não é uma opção à parte: ele aparece como resultado do fator R, quando a folha fica abaixo de 28% da receita. O Anexo vale pela atividade realmente exercida (Resolução CGSN 140/2018, art. 25, § 1º); a busca por CNPJ e a tela Enquadramento mostram o Anexo provável de cada CNAE.";
 
 export const ROTULO_ATIVIDADE: Record<string, string> = Object.fromEntries(
   ATIVIDADES.map((a) => [a.valor, a.rotulo]),
@@ -148,17 +148,50 @@ export interface CnaeSecundario {
   descricao: string;
 }
 
+export type ConfiancaCnae = "oficial" | "tabela" | "divisao";
+
 export interface CnaeClassificado extends CnaeSecundario {
   principal: boolean;
   atividade: Atividade | null;
   anexo: string;
+  vedacao: "impeditivo" | "ambiguo" | null;
+  confianca: ConfiancaCnae;
   motivo: string;
+}
+
+export interface CnaeDoCatalogo {
+  codigo: string;
+  codigo_formatado: string;
+  descricao: string;
+  secao: string | null;
+  secao_nome: string;
+  divisao: string;
+  divisao_nome: string;
+  atividade: Atividade | null;
+  anexo: string;
+  anexos: string[];
+  fator_r: boolean;
+  vedacao: "impeditivo" | "ambiguo" | null;
+  confianca: ConfiancaCnae;
+  motivo: string;
+}
+
+export interface BuscaDeCnae {
+  total: number;
+  itens: CnaeDoCatalogo[];
+  fontes: Record<string, string>;
+}
+
+export interface OpcoesDeCnae {
+  divisoes: { codigo: string; nome: string; secao: string }[];
+  filtros: { codigo: string; nome: string }[];
 }
 
 export interface CnaesDoCliente {
   cnaes: CnaeClassificado[];
   atividade_fator_r: boolean;
   anexo_iii_no_cadastro: CnaeClassificado[];
+  vedados: CnaeClassificado[];
   aviso: string;
 }
 

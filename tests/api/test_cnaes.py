@@ -35,7 +35,7 @@ def test_classifica_e_separa_candidatos_ao_anexo_iii():
     assert principal["principal"] and principal["atividade"] == "servico_fator_r" and "fator R" in principal["anexo"]
     assert treino["atividade"] == "servico_anexo_iii" and advocacia["atividade"] == "servico_anexo_iv"
     assert [c["codigo"] for c in r["anexo_iii_no_cadastro"]] == ["8599604"]
-    assert "Anexo VI" in r["aviso"]
+    assert "art. 25" in r["aviso"]
     # empresa que não é do fator R não tem o que "segregar"
     comercio = cnpj.classificar_cnaes("4711302", "Mercado", [{"codigo": "8599604", "descricao": "x"}], "comercio")
     assert comercio["atividade_fator_r"] is False and comercio["anexo_iii_no_cadastro"] == []
@@ -57,3 +57,30 @@ def test_cnaes_do_cliente_pela_api(logado: TestClient):
     assert logado.get(f"/api/clientes/{sem['id']}/cnaes").json()["cnaes"] == []
     assert logado.post("/api/clientes", json={"razao_social": "X", "cnaes_secundarios": [{"codigo": "123"}]}).status_code == 422
     assert logado.get("/api/clientes/99999/cnaes").status_code == 404
+
+
+def test_busca_de_cnaes_pela_api(logado: TestClient):
+    anonimo = TestClient(logado.app)
+    assert anonimo.get("/api/cnae").status_code == 401 and anonimo.get("/api/cnae/6201501").status_code == 401
+    r = logado.get("/api/cnae", params={"q": "treinamento", "anexo": "iii_direto", "limite": 5}).json()
+    assert r["total"] >= 2 and len(r["itens"]) <= 5 and all(i["anexo"] == "Anexo III" for i in r["itens"])
+    assert r["fontes"]["atualizado_em"] and "Contabilizei" in r["fontes"]["anexos"]
+    assert logado.get("/api/cnae", params={"anexo": "qualquer"}).status_code == 422
+    assert logado.get("/api/cnae", params={"limite": 999}).status_code == 422
+    vedados = logado.get("/api/cnae", params={"q": "bancos", "anexo": "vedado"}).json()["itens"]
+    assert vedados and all(v["vedacao"] for v in vedados)
+    d = logado.get("/api/cnae/6209100").json()
+    assert d["codigo"] == "6209100" and d["fator_r"] is True and d["confianca"] == "tabela"
+    assert logado.get("/api/cnae/0000000").status_code == 404
+    div = logado.get("/api/cnae/divisoes").json()
+    assert len(div["divisoes"]) == 87 and {f["codigo"] for f in div["filtros"]} >= {"iii_direto", "fator_r", "vedado"}
+
+
+def test_cnaes_do_cliente_marcam_os_vedados(logado: TestClient):
+    cid = logado.post("/api/clientes", json={
+        "razao_social": "Mista Ltda", "atividade": "servico_fator_r", "cnae_principal": "6201501",
+        "cnaes_secundarios": [{"codigo": "6421200", "descricao": "Bancos comerciais"}],
+    }).json()["id"]
+    r = logado.get(f"/api/clientes/{cid}/cnaes").json()
+    assert [v["codigo"] for v in r["vedados"]] == ["6421200"] and r["cnaes"][1]["anexo"] == "Vedado ao Simples"
+    assert r["anexo_iii_no_cadastro"] == []

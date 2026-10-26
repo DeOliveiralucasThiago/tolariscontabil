@@ -39,7 +39,8 @@ def test_sugestao_de_atividade_por_cnae():
     assert sugerir_atividade("6920601")[0] is Atividade.SERVICO_ANEXO_III  # contabilidade
     assert sugerir_atividade("1091101")[0] is Atividade.INDUSTRIA
     assert sugerir_atividade("6422100")[0] is None
-    assert "confirme" in sugerir_atividade("4711302")[1]
+    assert "confira" in sugerir_atividade("4711302")[1]
+    assert "Anexo VI" in sugerir_atividade("6422100")[1]  # banco: vedado pela Res. CGSN 140/2018
 
 
 def test_interpretar_resposta_brasilapi():

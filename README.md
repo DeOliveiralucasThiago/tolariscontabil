@@ -207,7 +207,10 @@ As premissas e o que o contador precisa validar estão em `docs/premissas.md` (i
 
 **Enquadramento (Anexo V → III):** a tela *Enquadramento* compara, para empresa de serviços do fator R, a situação de hoje com
 o pró-labore que leva o fator R a 28% e com parte da receita em atividade do Anexo III, mostra os CNAEs do cliente (principal e
-secundários da Receita) e gera o PDF. Só vale se a atividade for exercida de fato; veja os itens 69 e 70 de `docs/premissas.md`.
+secundários da Receita) e gera o PDF. Há também uma busca em todos os CNAEs do IBGE (1.334 subclasses) com o Anexo provável, as
+vedações do Simples (Anexos VI e VII da Resolução CGSN 140/2018) e a fonte de cada informação; a tabela fica em
+`src/tolaris_motor/tabelas/cnae.json` e é refeita por `scripts/gerar_tabela_cnae.py`. Só vale se a atividade for exercida de
+fato; veja os itens 69 e 70 de `docs/premissas.md`.
 
 Todo resultado traz uma **memória de cálculo** (descrição, fórmula, valor e base legal
 de cada passo) e **alertas** (premissas e limitações). As tabelas legais ficam em

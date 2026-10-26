@@ -9,6 +9,7 @@ from typing import Any
 import httpx
 
 from tolaris_motor import Atividade
+from tolaris_motor import cnae as cnae_motor
 
 from .config import get_settings
 
@@ -38,81 +39,34 @@ def formatar_cnpj(cnpj: str) -> str:
 
 
 # --- Sugestão de atividade (anexo do Simples) pelo CNAE ------------------------
-# Regras por grupo (3 dígitos) têm prioridade sobre as por divisão (2 dígitos).
-_POR_GRUPO: dict[str, tuple[Atividade | None, str]] = {
-    "691": (Atividade.SERVICO_ANEXO_IV, "Advocacia: Anexo IV (CPP fora do DAS)"),
-    "692": (Atividade.SERVICO_ANEXO_III, "Serviços contábeis: Anexo III"),
-    "801": (Atividade.SERVICO_ANEXO_IV, "Vigilância e segurança: Anexo IV"),
-    "812": (Atividade.SERVICO_ANEXO_IV, "Limpeza: Anexo IV"),
-    "813": (Atividade.SERVICO_ANEXO_IV, "Paisagismo: Anexo IV"),
-    "641": (None, "Atividade financeira: em regra vedada ao Simples"),
-}
-_POR_DIVISAO: list[tuple[range, Atividade | None, str]] = [
-    (range(1, 4), None, "Atividade rural: avaliar tributação como produtor rural"),
-    (range(5, 34), Atividade.INDUSTRIA, "Indústria (extrativa ou de transformação): Anexo II"),
-    (range(35, 40), None, "Utilidades públicas: verificar vedações ao Simples"),
-    (range(41, 44), Atividade.SERVICO_ANEXO_IV, "Construção civil: Anexo IV (CPP fora do DAS)"),
-    (range(45, 48), Atividade.COMERCIO, "Comércio: Anexo I"),
-    (range(49, 54), Atividade.SERVICO_ANEXO_III, "Transporte e correio: Anexo III"),
-    (range(55, 56), Atividade.SERVICO_ANEXO_III, "Alojamento: Anexo III"),
-    (range(56, 57), Atividade.COMERCIO, "Alimentação (restaurantes e similares): Anexo I"),
-    (range(58, 62), Atividade.SERVICO_ANEXO_III, "Edição, audiovisual e telecom: Anexo III"),
-    (range(62, 64), Atividade.SERVICO_FATOR_R, "Tecnologia da informação: Anexo III ou V pelo fator R"),
-    (range(64, 67), None, "Atividade financeira: em regra vedada ao Simples"),
-    (range(68, 69), Atividade.SERVICO_ANEXO_III, "Atividades imobiliárias: Anexo III"),
-    (range(70, 76), Atividade.SERVICO_FATOR_R, "Serviços intelectuais/técnicos: Anexo III ou V pelo fator R"),
-    (range(77, 80), Atividade.SERVICO_ANEXO_III, "Locação, agências e turismo: Anexo III"),
-    (range(80, 82), Atividade.SERVICO_ANEXO_IV, "Vigilância, limpeza e conservação: Anexo IV"),
-    (range(82, 86), Atividade.SERVICO_ANEXO_III, "Serviços administrativos e educação: Anexo III"),
-    (range(86, 87), Atividade.SERVICO_FATOR_R, "Saúde (medicina, odontologia): Anexo III ou V pelo fator R"),
-    (range(87, 100), Atividade.SERVICO_ANEXO_III, "Demais serviços: Anexo III"),
-]
-_AVISO = " — sugestão automática; confirme no Anexo VI da Resolução CGSN 140/2018."
-
-
 def sugerir_atividade(cnae: str | None) -> tuple[Atividade | None, str]:
-    d = so_digitos(cnae or "")
-    if len(d) < 2:
-        return None, "CNAE não informado"
-    if d[:3] in _POR_GRUPO:
-        atividade, motivo = _POR_GRUPO[d[:3]]
-        return atividade, motivo + _AVISO
-    divisao = int(d[:2])
-    for faixa, atividade, motivo in _POR_DIVISAO:
-        if divisao in faixa:
-            return atividade, motivo + _AVISO
-    return None, "CNAE sem regra de sugestão" + _AVISO
-
-
-_ROTULO_ATIVIDADE = {
-    Atividade.COMERCIO: "Anexo I (comércio)",
-    Atividade.INDUSTRIA: "Anexo II (indústria)",
-    Atividade.SERVICO_ANEXO_III: "Anexo III",
-    Atividade.SERVICO_ANEXO_IV: "Anexo IV",
-    Atividade.SERVICO_FATOR_R: "Anexo III ou V (fator R)",
-}
+    """Atividade (e portanto Anexo) provável de um CNAE: vedação oficial, tabela de Anexos ou regra por divisão."""
+    c = cnae_motor.classificar(cnae)
+    return c.atividade, c.motivo
 
 
 def _item_cnae(codigo: str, descricao: str | None, principal: bool) -> dict[str, Any]:
-    atividade, motivo = sugerir_atividade(codigo)
+    c = cnae_motor.classificar(codigo)
     return {
         "codigo": codigo,
-        "descricao": descricao or "",
+        "descricao": descricao or cnae_motor.descricao(codigo) or "",
         "principal": principal,
-        "atividade": atividade.value if atividade else None,
-        "anexo": _ROTULO_ATIVIDADE[atividade] if atividade else "Sem enquadramento automático",
-        "motivo": motivo,
+        "atividade": c.atividade.value if c.atividade else None,
+        "anexo": c.rotulo,
+        "vedacao": c.vedacao,
+        "confianca": c.confianca,
+        "motivo": c.motivo,
     }
 
 
 def classificar_cnaes(
     principal: str | None, descricao: str | None, secundarios: list[dict[str, str]] | None, atividade_cliente: str | None
 ) -> dict[str, Any]:
-    """CNAEs do cadastro do cliente com o Anexo provável de cada um (regra orientativa por divisão do CNAE).
+    """CNAEs do cadastro do cliente com o Anexo provável de cada um.
 
-    ``anexo_iii_no_cadastro`` lista os secundários que a regra põe no Anexo III quando a atividade do cliente é do
-    fator R: já estão no cadastro, então bastam ser exercidos de fato para segregar a receita. Sugerir CNAEs que o
-    cliente ainda não tem exigiria a tabela oficial (Res. CGSN 140/2018, Anexo VI), que o Tolaris não carrega.
+    ``anexo_iii_no_cadastro`` lista os secundários que a tabela põe no Anexo III direto quando a atividade do cliente é do
+    fator R: já estão no cadastro, então bastam ser exercidos de fato para segregar a receita. Para conhecer CNAEs que o
+    cliente ainda não tem, use a busca de CNAEs (``/cnae``).
     """
     itens = []
     if principal:
@@ -121,13 +75,18 @@ def classificar_cnaes(
     fator_r = atividade_cliente == Atividade.SERVICO_FATOR_R.value or (
         bool(itens) and itens[0]["principal"] and itens[0]["atividade"] == Atividade.SERVICO_FATOR_R.value
     )
-    candidatos = [i for i in itens if not i["principal"] and i["atividade"] == Atividade.SERVICO_ANEXO_III.value] if fator_r else []
+    candidatos = (
+        [i for i in itens if not i["principal"] and i["atividade"] == Atividade.SERVICO_ANEXO_III.value and not i["vedacao"]]
+        if fator_r
+        else []
+    )
     return {
         "cnaes": itens,
         "atividade_fator_r": fator_r,
         "anexo_iii_no_cadastro": candidatos,
-        "aviso": "Classificação orientativa por divisão do CNAE; confirme cada código no Anexo VI da Resolução CGSN 140/2018. "
-        "O Anexo vale pela atividade realmente exercida, não só pelo CNAE cadastrado.",
+        "vedados": [i for i in itens if i["vedacao"]],
+        "aviso": "O Anexo vem da tabela de CNAEs e é orientativo: a Resolução CGSN 140/2018 (art. 25, § 1º) define o Anexo pela "
+        "atividade realmente exercida, não só pelo código cadastrado. Vedações: Anexos VI e VII da mesma Resolução.",
     }
 
 

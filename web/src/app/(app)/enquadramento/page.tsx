@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+import { BuscaCnae, SeloConfianca } from "@/components/BuscaCnae";
 import { FormCompleta } from "@/components/FormCompleta";
 import { ResultadoEnquadramento } from "@/components/ResultadosFase2";
 import { SalvarNoCliente } from "@/components/SalvarNoCliente";
@@ -29,7 +30,10 @@ function CnaesDoClienteCartao({ clienteId }: { clienteId: number }) {
               <span className="num font-medium">{c.codigo.replace(/^(\d{4})(\d)(\d{2})$/, "$1-$2/$3")}</span>{" "}
               {c.principal && <span className="rounded bg-fundo px-1.5 py-0.5 text-xs">principal</span>} {c.descricao}
             </span>
-            <span className="text-xs text-tinta-2">{c.anexo}</span>
+            <span className="flex items-center gap-1.5 text-xs text-tinta-2">
+              <span className={c.vedacao === "impeditivo" ? "font-medium text-red-700" : ""}>{c.anexo}</span>
+              <SeloConfianca confianca={c.confianca} />
+            </span>
           </li>
         ))}
       </ul>
@@ -40,7 +44,13 @@ function CnaesDoClienteCartao({ clienteId }: { clienteId: number }) {
           Anexo III. Se a empresa realmente presta esse serviço, vale simular abaixo quanto da receita ele representa.
         </p>
       )}
-      <p className="mt-3 text-xs text-tinta-2">{dados.aviso} O Tolaris não sugere CNAEs que a empresa ainda não tem: isso exige a tabela oficial e a análise do contador.</p>
+      {dados.vedados.length > 0 && (
+        <p role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-800" data-testid="cnaes-vedados">
+          <strong className="font-medium">Atenção:</strong> {dados.vedados.map((c) => c.descricao || c.codigo).join("; ")} —{" "}
+          {dados.vedados.some((c) => c.vedacao === "impeditivo") ? "CNAE impeditivo ao Simples Nacional (Resolução CGSN 140/2018, Anexo VI)." : "CNAE ambíguo no Simples (Anexo VII): confirme se a atividade exercida permite a opção."}
+        </p>
+      )}
+      <p className="mt-3 text-xs text-tinta-2">{dados.aviso}</p>
     </Cartao>
     </div>
   );
@@ -98,6 +108,9 @@ function PaginaEnquadramento() {
           />
         </div>
       )}
+      <div className="mt-6">
+        <BuscaCnae filtroInicial="iii_direto" />
+      </div>
     </>
   );
 }
