@@ -194,3 +194,11 @@ def test_aviso_de_notas_paradas_so_para_cliente_ativo(logado: TestClient):
     hoje = date.today()
     assert _enviar(logado, cid, [("n2.xml", nfe_itens(2, f"{hoje.year}-{hoje.month:02d}-01", [item]))]).json()["importados"] == 1
     assert "movimento_desatualizado" not in _por_codigo(logado)
+
+
+def test_feed_traz_as_mudancas_publicadas_em_2026(logado: TestClient):
+    ids = {m["id"]: m for m in logado.get("/api/mudancas").json()}
+    assert {"mei-lc238", "simples-anexos-2027", "simples-regime-regular-ibs-cbs-prazo", "nfse-nacional-simples"} <= set(ids)
+    assert "R$ 110" in ids["mei-lc238"]["titulo"] and "LC 238/2026" in ids["mei-lc238"]["base_legal"]
+    assert "Ainda não incorporado" in ids["mei-lc238"]["observacao"]
+    assert ids["simples-regime-regular-ibs-cbs-prazo"]["data"] == "2026-10-30"

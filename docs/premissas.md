@@ -336,10 +336,19 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     O Tolaris continua calculando o Simples de 2025 e 2026 com as tabelas atuais; os Anexos de 2027 em diante ainda não foram
     carregados como vigências. A Res. 186/2026 (origem dos prazos) não foi lida, só a parte que a 194 reescreve.
 
+73. **LC 227/2026 e LC 238/2026 (lidas nos autógrafos da Câmara, em 26/10/2026):** a **LC 227/2026** (PLP 108/2024) instituiu o CGIBS e
+    alterou a LC 123: art. 18, § 4º, VIII e IX (receitas de serviços e bens com IBS/CBS vão ao Anexo III e ao Anexo I), art. 21, § 4º, I
+    (retenção do ISS pela alíquota efetiva do mês da prestação), arts. 22, 33, 39 e 41 (repasses, competência e contencioso, com o
+    CGIBS) e art. 38-B (redução das multas fixas das ME e EPP de 50% para 60%). A **LC 238/2026** (PLP 186/2026, DOU de 21/10/2026)
+    sobe o limite do MEI para **R$ 110 mil em 2027** e **R$ 140 mil a partir de 2028** (início de atividade: R$ 9.166,67 e R$ 11.666,67
+    por mês), permite até **dois empregados** (a partir de 2027) e concede remissão dos créditos da União do MEI até 13/10/2026. Os
+    avisos do MEI continuam com R$ 81 mil, o limite de 2026. As duas leis estão no feed de mudanças como "ainda não incorporadas".
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias? A lei, art. 18, § 24, soma também a CPP efetivamente recolhida).
 - [ ] RAT/terceiros padrão (2% e 5,8%) para os clientes típicos do escritório.
+- [ ] MEI: a LC 238/2026 muda os limites a partir de 2027; avisar os clientes MEI e, quando o ano de 2027 entrar no cálculo, ajustar os avisos de limite.
 - [ ] **Prazo:** decisão sobre o regime regular de IBS/CBS (jan-jun/2027) até 30/10/2026; cancelamento irretratável de 03/11 a 20/12/2026 (Res. CGSN 194/2026). Rodar o "Simples na Reforma" dos clientes B2B antes.
 - [ ] NFS-e nacional obrigatória a partir de 01/11/2026 para os optantes que prestam serviços (Res. CGSN 191/2026): conferir os clientes ainda em emissor municipal.
 - [ ] Enquadramento: conferir o Anexo de cada CNAE do cliente na descrição da atividade (Res. CGSN 140/2018, art. 25, § 1º), já que a tabela por CNAE é comercial, e se há atividade real que justifique segregar receita no Anexo III.

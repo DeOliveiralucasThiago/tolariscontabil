@@ -1,5 +1,5 @@
 {
-  "fonte": "Resumo, em linguagem de escritório, das mudanças legais já incorporadas às tabelas do motor. Cada item aponta a base legal; o texto da lei prevalece.",
+  "fonte": "Resumo, em linguagem de escritório, das mudanças legais. Cada item aponta a base legal; o texto da lei prevalece. Os itens marcados em \"observacao\" como ainda não incorporados já foram publicados, mas o cálculo do Tolaris segue as regras de 2026.",
   "mudancas": [
     {
       "id": "irpf-lei-15270",
@@ -7,7 +7,12 @@
       "titulo": "Menos IRPF até R$ 7.350 por mês e retenção sobre dividendos",
       "resumo": "Quem tem rendimentos tributáveis de até R$ 5.000 por mês deixa de pagar IRPF, e a redução diminui até zerar em R$ 7.350. Dividendos pagos por uma mesma empresa a uma mesma pessoa acima de R$ 50 mil no mês têm 10% de retenção na fonte, e rendas anuais acima de R$ 600 mil entram no imposto mínimo (IRPFM, até 10% em R$ 1,2 milhão).",
       "base_legal": "Lei 15.270/2025; Lei 15.191/2025",
-      "areas": ["pessoa_fisica", "simples", "presumido", "real"],
+      "areas": [
+        "pessoa_fisica",
+        "simples",
+        "presumido",
+        "real"
+      ],
       "efeito": "Muda o melhor equilíbrio entre pró-labore e dividendos e o líquido do sócio."
     },
     {
@@ -16,7 +21,9 @@
       "titulo": "Lucro Presumido: presunção com acréscimo de 10% acima de R$ 5 milhões",
       "resumo": "Sobre a parte da receita anual que passa de R$ 5 milhões, os percentuais de presunção de IRPJ e de CSLL ganham 10% de acréscimo. IRPJ desde janeiro de 2026; CSLL desde abril de 2026.",
       "base_legal": "LC 224/2025",
-      "areas": ["presumido"],
+      "areas": [
+        "presumido"
+      ],
       "efeito": "Reduz a vantagem do Presumido para clientes grandes; vale revisar o comparativo com Simples e Lucro Real.",
       "observacao": "A regra é questionada no STF (ADIs 7920 e 7936); o motor aplica a lei enquanto não houver decisão em contrário."
     },
@@ -26,7 +33,12 @@
       "titulo": "Reforma Tributária: ano de teste da CBS (0,9%) e do IBS (0,1%)",
       "resumo": "As notas passam a destacar CBS e IBS de teste. O valor é compensado com PIS/Cofins e dispensado de recolhimento para quem cumprir as obrigações acessórias, então não há aumento de carga em 2026.",
       "base_legal": "EC 132/2023 (ADCT, arts. 125 a 133); LC 214/2025",
-      "areas": ["reforma", "simples", "presumido", "real"],
+      "areas": [
+        "reforma",
+        "simples",
+        "presumido",
+        "real"
+      ],
       "efeito": "Exige emissão correta das notas com os novos campos; os cálculos de 2026 não cobram CBS/IBS."
     },
     {
@@ -35,7 +47,11 @@
       "titulo": "Salário mínimo de R$ 1.621 e teto do INSS de R$ 8.475,55",
       "resumo": "Novos valores para o INSS do empregado e do sócio, para o MEI e para os pisos de contribuição.",
       "base_legal": "Portaria Interministerial MPS/MF nº 13/2026",
-      "areas": ["previdencia", "pessoa_fisica", "simples"],
+      "areas": [
+        "previdencia",
+        "pessoa_fisica",
+        "simples"
+      ],
       "efeito": "Atualiza o custo de pró-labore, folha e DAS-MEI."
     },
     {
@@ -44,7 +60,12 @@
       "titulo": "Reforma Tributária: CBS substitui PIS/Cofins e o IPI é zerado",
       "resumo": "A CBS passa a ser cobrada à alíquota de referência (menos 0,1 ponto percentual nos dois primeiros anos), junto com 0,1% de IBS. PIS e Cofins deixam de existir e o IPI vai a zero, com exceção de produtos que concorrem com a Zona Franca de Manaus. ICMS e ISS seguem como hoje.",
       "base_legal": "EC 132/2023; LC 214/2025",
-      "areas": ["reforma", "simples", "presumido", "real"],
+      "areas": [
+        "reforma",
+        "simples",
+        "presumido",
+        "real"
+      ],
       "efeito": "Clientes do Simples precisam decidir entre IBS/CBS no DAS ou por fora; a recuperação de PIS/Cofins monofásico perde o sentido daí em diante.",
       "observacao": "As alíquotas de referência (CBS 8,8% e IBS 17,7%) são estimativas até a fixação oficial pelo Senado. O motor ainda não trata a Zona Franca de Manaus."
     },
@@ -54,7 +75,11 @@
       "titulo": "Reforma Tributária: ICMS e ISS caem 10% ao ano, e o IBS cresce",
       "resumo": "ICMS e ISS são cobrados em 90% (2029), 80% (2030), 70% (2031) e 60% (2032) do valor atual, enquanto o IBS entra na mesma proporção.",
       "base_legal": "EC 132/2023 (ADCT, arts. 125 a 133); LC 214/2025",
-      "areas": ["reforma", "presumido", "real"],
+      "areas": [
+        "reforma",
+        "presumido",
+        "real"
+      ],
       "efeito": "A carga muda ano a ano; o simulador da Reforma mostra o efeito por cliente."
     },
     {
@@ -63,8 +88,58 @@
       "titulo": "Reforma Tributária concluída: ICMS e ISS extintos",
       "resumo": "A partir de 2033 ficam só CBS e IBS sobre o consumo.",
       "base_legal": "EC 132/2023 (ADCT, arts. 125 a 133)",
-      "areas": ["reforma"],
+      "areas": [
+        "reforma"
+      ],
       "efeito": "Fim da transição."
+    },
+    {
+      "id": "simples-regime-regular-ibs-cbs-prazo",
+      "data": "2026-10-30",
+      "titulo": "Último dia para optar pelo regime regular de IBS/CBS em 2027",
+      "resumo": "A opção pelo regime regular de IBS e CBS para janeiro a junho de 2027 vai de 01/09 a 30/10/2026 e pode ser cancelada, em caráter irretratável, de 03/11 a 20/12/2026. Quem opta deixa de pagar IBS e CBS dentro do DAS.",
+      "base_legal": "Res. CGSN 186/2026, alterada pela Res. CGSN 194/2026; LC 214/2025, art. 41",
+      "areas": [
+        "simples"
+      ],
+      "efeito": "Vale rodar o Simples na Reforma dos clientes que vendem para empresas (B2B): por fora, o crédito do cliente é integral.",
+      "observacao": "Decisão do cliente com o contador; o Tolaris só compara os cenários."
+    },
+    {
+      "id": "nfse-nacional-simples",
+      "data": "2026-11-01",
+      "titulo": "NFS-e de padrão nacional obrigatória para o Simples",
+      "resumo": "O optante do Simples que presta serviços passa a emitir a nota pelo Emissor Nacional da NFS-e (web ou API), inclusive o optante pendente e o impedido de recolher ISS e ICMS no Simples.",
+      "base_legal": "Res. CGSN 191/2026 (altera o art. 59 da Res. CGSN 140/2018)",
+      "areas": [
+        "simples"
+      ],
+      "efeito": "Conferir os clientes de serviços que ainda emitem por sistema municipal.",
+      "observacao": "Não altera o cálculo."
+    },
+    {
+      "id": "mei-lc238",
+      "data": "2027-01-01",
+      "titulo": "MEI: limite de R$ 110 mil em 2027 e R$ 140 mil a partir de 2028, com até 2 empregados",
+      "resumo": "O limite de receita do MEI sobe para R$ 110.000 em 2027 e para R$ 140.000 a partir de 2028 (início de atividade: R$ 9.166,67 e R$ 11.666,67 por mês). O MEI poderá ter até dois empregados com um salário mínimo ou o piso. A lei também dá remissão dos créditos da União do MEI até 13/10/2026, mediante condições.",
+      "base_legal": "LC 238/2026 (DOU de 21/10/2026), arts. 1º, 2º, 5º e 10",
+      "areas": [
+        "mei"
+      ],
+      "efeito": "Clientes MEI perto do limite de R$ 81 mil ganham folga a partir de 2027.",
+      "observacao": "Ainda não incorporado: os avisos de limite do MEI usam R$ 81.000 até 2026."
+    },
+    {
+      "id": "simples-anexos-2027",
+      "data": "2027-01-01",
+      "titulo": "Simples: novos Anexos com CBS e IBS na partilha do DAS",
+      "resumo": "Os Anexos I a V passam a trazer CBS e IBS no lugar de PIS, Cofins, ICMS e ISS, em tabelas próprias para 2027-2028, 2029, 2030, 2031, 2032 e 2033 em diante. Em cada faixa, a soma é igual à de hoje; o IPI da indústria permanece. A 6ª faixa tem alíquota nominal um pouco menor e o teto do ISS cai a 4% em 2030. A RBT12 passa a contar os 12 meses anteriores ao mês anterior à apuração.",
+      "base_legal": "Res. CGSN 190/2026 (Anexos I a V e art. 21 da Res. CGSN 140/2018)",
+      "areas": [
+        "simples"
+      ],
+      "efeito": "Muda o DAS de 2027 em diante e a comparação do Simples na Reforma.",
+      "observacao": "Ainda não incorporado como tabela de cálculo: o Simples na Reforma já usa a fatia de CBS e IBS conferida com a Resolução."
     }
   ]
 }
