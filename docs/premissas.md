@@ -34,7 +34,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 
 10. **Simples na Reforma (IBS/CBS no DAS ou por fora):**
     - Fatia do DAS substituída por IBS/CBS = partilha atual da LC 123/2006 (PIS + Cofins em 2027;
-      PIS + Cofins + ICMS + ISS + IPI em 2033). A LC 214/2025 vai redefinir a partilha; até lá é aproximação.
+      PIS + Cofins + ICMS + ISS em 2033). Conferido com os Anexos da Res. CGSN 190/2026 (item 72): a aproximação vale, exceto o IPI da indústria, que permanece em 2033.
     - Comparação por real vendido com preços ajustados para o cliente pagar o mesmo custo líquido:
       cliente empresa (B2B) se credita do IBS/CBS; consumidor final (B2C) paga o mesmo preço final.
     - Recolhendo por fora, a empresa se credita do IBS/CBS das compras de fornecedores do regime regular.
@@ -317,10 +317,31 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     os §§ 5º-D, IV e VI exigem que o programa ou a página sejam desenvolvidos "em estabelecimento do optante". Escritórios contábeis
     recolhem ISS em valor fixo (§ 22-A), o que o cálculo não trata.
 
+72. **Resoluções CGSN 190, 191, 194 e 195 (lidas no portal de normas da Receita, em 26/10/2026):**
+    - **190/2026** (publicada em 10/08/2026, efeitos a partir de 01/01/2027): adapta o Simples ao IBS e à CBS. Novos Anexos I a V com a
+      partilha por período (2027–28, 2029, 2030, 2031, 2032 e 2033 em diante): a CBS e o IBS ocupam, em cada faixa, a soma das
+      fatias de PIS, Cofins, ICMS e ISS de hoje (conferido por Anexo e faixa); o IPI do Anexo II permanece (7,5%); a 6ª faixa tem
+      alíquota nominal um pouco menor (Anexo I: 18,90%; Anexo III: 32,90%) e o teto do ISS efetivo cai a 4% em 2030. Cria a opção pelo
+      regime regular de IBS/CBS (art. 40-C e 40-D) e o split payment. A RBT12 passa a ser a dos 12 meses anteriores ao mês anterior ao
+      da apuração; interno e exportação continuam separados; os §§ 4º e 4º-A do art. 25 (exportação de serviços) são revogados e a
+      qualificação segue cada tributo (§ 4º-B). A folha do fator R mantém a mesma composição. Novo Anexo XIII com os valores do MEI.
+    - **191/2026** (efeitos a partir de 01/11/2026): o optante do Simples que presta serviços passa a emitir obrigatoriamente a NFS-e
+      de padrão nacional (Emissor Nacional, web ou API), também o optante pendente ou impedido; vedada em operação só de ICMS.
+    - **194/2026** (publicada em 28/09/2026): altera a Res. 186/2026. Opção pelo Simples para 2027: de 01/09 a 15/10/2026 (cancelável de
+      03/11 a 20/12/2026; pendências regularizáveis até 30/10/2026). **Opção pelo regime regular de IBS/CBS para jan-jun/2027: de
+      01/09 a 30/10/2026, cancelável de 03/11 a 20/12/2026.** Empresas abertas depois de 16/10 (Simples) ou de 31/10 (regime regular)
+      ficam fora desses prazos.
+    - **195/2026** (efeitos a partir de 01/01/2027): a DASN-Simei pode servir de documento fiscal do MEI para consumidor final pessoa
+      física. Sem efeito no cálculo.
+    O Tolaris continua calculando o Simples de 2025 e 2026 com as tabelas atuais; os Anexos de 2027 em diante ainda não foram
+    carregados como vigências. A Res. 186/2026 (origem dos prazos) não foi lida, só a parte que a 194 reescreve.
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias? A lei, art. 18, § 24, soma também a CPP efetivamente recolhida).
 - [ ] RAT/terceiros padrão (2% e 5,8%) para os clientes típicos do escritório.
+- [ ] **Prazo:** decisão sobre o regime regular de IBS/CBS (jan-jun/2027) até 30/10/2026; cancelamento irretratável de 03/11 a 20/12/2026 (Res. CGSN 194/2026). Rodar o "Simples na Reforma" dos clientes B2B antes.
+- [ ] NFS-e nacional obrigatória a partir de 01/11/2026 para os optantes que prestam serviços (Res. CGSN 191/2026): conferir os clientes ainda em emissor municipal.
 - [ ] Enquadramento: conferir o Anexo de cada CNAE do cliente na descrição da atividade (Res. CGSN 140/2018, art. 25, § 1º), já que a tabela por CNAE é comercial, e se há atividade real que justifique segregar receita no Anexo III.
 - [ ] Pró-labore elevado para o fator R: custo do INSS (11% do sócio) e do IRRF, e se a retirada total já comporta o valor.
 - [ ] Tratamento da LC 224/2025 diante das liminares e ADIs 7920/7936.

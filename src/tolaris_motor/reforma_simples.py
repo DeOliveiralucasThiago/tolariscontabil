@@ -36,8 +36,17 @@ from .empresa import Atividade, PerfilEmpresa
 BASE_LEGAL = "LC 214/2025; LC 123/2006 (opção pelo regime regular de IBS/CBS)"
 SUBSTITUIDOS = {
     2027: ("pis", "cofins"),
-    2033: ("pis", "cofins", "icms", "iss", "ipi"),
+    2033: ("pis", "cofins", "icms", "iss"),
 }
+"""Tributos que o IBS/CBS substituem dentro do DAS. Conferido com os Anexos I a V da Res. CGSN 190/2026: em cada faixa, CBS + IBS
+somam o que PIS, Cofins, ICMS e ISS somavam hoje. O IPI **não** sai: o Anexo II segue com 7,5% de IPI em 2033."""
+
+PRAZOS_OPCAO_2027 = (
+    "Prazos de 2026 (Res. CGSN 186/2026, alterada pela 194/2026): a opção pelo regime regular de IBS/CBS para janeiro a junho de "
+    "2027 vai de 01/09 a 30/10/2026 e pode ser cancelada, em caráter irretratável, de 03/11 a 20/12/2026; as parcelas de IBS e CBS "
+    "deixam de ser devidas no DAS. Empresas inscritas no CNPJ depois de 16/10 (Simples) ou de 31/10 (regime regular) seguem regra "
+    "própria."
+)
 
 
 @dataclass
@@ -189,9 +198,11 @@ def simular(e: EntradaSimplesReforma) -> list[CenarioAno]:
         if fracoes.get("icms", ZERO) == 0 and fracoes.get("iss", ZERO) == 0 and ano == 2033:
             res.alerta("Receita na 6ª faixa: ICMS/ISS já são recolhidos fora do DAS; a fatia substituída fica subestimada.")
         res.alerta(
-            "A partilha do DAS a partir de 2027 será redefinida (LC 214/2025); o cálculo usa a partilha atual "
-            "como aproximação da fatia de IBS/CBS."
+            "A fatia de IBS/CBS do DAS foi conferida com os Anexos da Res. CGSN 190/2026 (vigência a partir de 01/01/2027): CBS + IBS "
+            "somam o que PIS, Cofins, ICMS e ISS somam hoje, exceto o IPI da indústria, que permanece. A 6ª faixa tem alíquota nominal "
+            "um pouco menor em 2027 (Anexo I: 18,90%) e o teto de ISS cai a 4% em 2030; o cálculo usa a tabela de 2026."
         )
+        res.alerta(PRAZOS_OPCAO_2027)
         cenarios.append(
             CenarioAno(
                 ano=ano,

@@ -387,7 +387,8 @@ def _rel_simples_reforma(sim: Simulacao, cor: str) -> dict[str, Any]:
         ],
         "alertas": [x for c in cen for x in c["alertas"]],
         "memorias": [{"titulo": str(c["ano"]), "passos": c["memoria"]} for c in cen],
-        "aviso_extra": "A partilha do DAS a partir de 2027 ainda será redefinida; os percentuais atuais são usados como aproximação.",
+        "aviso_extra": "Fatia de IBS/CBS conferida com os Anexos da Res. CGSN 190/2026. Prazo da opção pelo regime regular de IBS/CBS para "
+                       "jan-jun/2027: 01/09 a 30/10/2026 (cancelamento de 03/11 a 20/12/2026), Res. CGSN 186 e 194/2026.",
     }
 
 

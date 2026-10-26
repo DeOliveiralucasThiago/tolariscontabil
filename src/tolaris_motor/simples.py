@@ -249,9 +249,10 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
     if exterior:
         res.alerta(
             "Cálculo pelas regras vigentes em 2026 (LC 123/2006, art. 3º, § 15 e art. 18, § 14; Res. CGSN 140/2018, arts. 23 e 25): "
-            "cada mercado usa o RBT12 do próprio mercado. A Resolução CGSN 190/2026 muda o art. 25 e o cálculo do RBT12 a partir de "
-            "01/01/2027, fora do alcance desta estimativa. Confira a qualificação da operação como exportação antes de segregar a "
-            "receita no PGDAS-D."
+            "cada mercado usa o RBT12 do próprio mercado. A partir de 01/01/2027 (Res. CGSN 190/2026) a RBT12 passa a contar os 12 meses "
+            "anteriores ao mês anterior ao da apuração, a separação entre os mercados continua, e os §§ 4º e 4º-A do art. 25 são "
+            "revogados: a qualificação como exportação de serviços passa a seguir as regras de cada tributo (§ 4º-B). Este cálculo "
+            "é de 2025 e 2026. Confira a qualificação da operação como exportação antes de segregar a receita no PGDAS-D."
         )
         res.alerta(
             "Vedações a conferir para quem exporta (LC 123/2006, art. 17, II e art. 3º, § 4º, XII): titular ou sócio domiciliado no "

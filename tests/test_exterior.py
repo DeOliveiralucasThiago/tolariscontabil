@@ -53,7 +53,7 @@ def test_simples_servico_exportado_sem_iss_pis_cofins():
     assert len(efetivas) == 2 and all("300.000,00" in p.formula for p in efetivas)
     assert {p.descricao.split(", ")[-1] for p in efetivas} == {"mercado interno", "exportação"}
     assert any("exportação de serviços" in a and "ingresso de divisas" in a for a in parcial.alertas)
-    assert any("Resolução CGSN 190/2026" in a for a in parcial.alertas)
+    assert any("Res. CGSN 190/2026" in a and "§ 4º-B" in a for a in parcial.alertas)
 
 
 def test_simples_mercadoria_exportada_sem_icms_ipi_pis_cofins():
