@@ -40,7 +40,7 @@ ARQUIVOS
    deve mostrar e seis CNAEs para procurar na busca, com o Anexo esperado de cada um.
 
 7) 6-casos-de-validacao.xlsx
-   Opcional, para quem for conferir os números do cálculo com a própria conta. São 91 casos (empresas nos três regimes,
+   Opcional, para quem for conferir os números do cálculo com a própria conta. São 94 casos (empresas nos três regimes,
    pessoa física, Reforma Tributária, Simples na Reforma de 2027 a 2033 e Enquadramento, casos ENQ1 a ENQ6). Cada caso traz
    o valor calculado pelo Tolaris, a memória de cálculo com a base legal e os avisos. Na aba "Casos", preencha a coluna
    amarela "Valor correto" com o que você apuraria: a diferença aparece sozinha. O ENQ1 é o mesmo caso do arquivo 5.

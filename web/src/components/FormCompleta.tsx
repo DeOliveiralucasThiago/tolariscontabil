@@ -43,6 +43,7 @@ export function FormCompleta({
     sociedade_profissionais: false,
     profissionais: 0,
     iss_fixo_por_profissional_anual: 0,
+    iss_fixo_no_simples: false,
     servicos_hospitalares: false,
     ...inicial,
   });
@@ -70,6 +71,7 @@ export function FormCompleta({
           ...f,
           folha_fator_r_anual: f.folha_fator_r_anual || null,
           sociedade_profissionais: !mercadoria && !!f.sociedade_profissionais,
+          iss_fixo_no_simples: !mercadoria && !!f.sociedade_profissionais && f.atividade === "servico_anexo_iii" && !!f.iss_fixo_no_simples,
           servicos_hospitalares: !mercadoria && !!f.servicos_hospitalares,
         });
       }}
@@ -193,6 +195,24 @@ export function FormCompleta({
                   ajuda="Valor da lei do seu município; varia de cidade para cidade."
                 />
               </div>
+            )}
+            {f.sociedade_profissionais && f.atividade === "servico_anexo_iii" && (
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  id="iss_fixo_no_simples"
+                  type="checkbox"
+                  className="mt-1"
+                  checked={!!f.iss_fixo_no_simples}
+                  onChange={(e) => set("iss_fixo_no_simples")(e.target.checked)}
+                />
+                <span>
+                  Escritório de serviços contábeis: recolhe o ISS fixo ao Município também no Simples
+                  <span className="block text-xs text-tinta-2">
+                    O DAS deixa de incluir o ISS, que é pago em valor fixo à prefeitura (LC 123, art. 18, § 22-A). Só vale se a lei do município permitir;
+                    se não permitir, o ISS vai no DAS pela receita.
+                  </span>
+                </span>
+              </label>
             )}
             <label className="flex items-start gap-2 text-sm">
               <input

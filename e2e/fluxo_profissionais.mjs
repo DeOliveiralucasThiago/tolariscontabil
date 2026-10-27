@@ -88,6 +88,31 @@ for (const trecho of ["R$ 14.400,00", "Serviços hospitalares", "Anvisa"]) {
 await page.screenshot({ path: `${OUT}/profissionais_2_hospitalar.png`, fullPage: true });
 passo("serviços hospitalares: IRPJ de R$ 14.400,00 no Presumido, com o aviso da Anvisa");
 
+// 3b. Escritório de serviços contábeis: ISS fixo também no Simples (a opção só aparece no Anexo III)
+await abrir();
+await page.selectOption("select[name=atividade_completa]", "servico_anexo_iii");
+await preencherBase();
+await bloco.locator("summary").click();
+await page.check("#sociedade_profissionais");
+await page.fill("#profissionais", "2");
+await page.fill("#iss_fixo_profissional", "150000");
+await page.check("#iss_fixo_no_simples");
+await page.click("text=Calcular e salvar planejamento");
+await page.getByText("Regime recomendado").first().waitFor();
+await page.waitForTimeout(800);
+const contabil = await corpo();
+for (const trecho of ["R$ 42.768,00", "ISS fixo (recolhido ao Município, fora do DAS)", "R$ 45.768,00", "Res. CGSN 140/2018, art. 34"]) {
+  if (!contabil.includes(trecho)) throw new Error(`escritório contábil sem “${trecho}”`);
+}
+await page.screenshot({ path: `${OUT}/profissionais_3_contabil.png`, fullPage: true });
+passo("escritório contábil: DAS de R$ 42.768,00 (sem o ISS) e ISS fixo de R$ 3.000,00 ao Município");
+await abrir();
+await page.selectOption("select[name=atividade_completa]", "servico_anexo_iv");
+await bloco.locator("summary").click();
+await page.check("#sociedade_profissionais");
+if ((await page.locator("#iss_fixo_no_simples").count()) !== 0) throw new Error("a opção do contábil não deveria aparecer fora do Anexo III");
+passo("a opção do ISS fixo no Simples só aparece no Anexo III");
+
 // 4. Atividade de mercadoria não oferece o bloco
 await abrir();
 await page.selectOption("select[name=atividade_completa]", "comercio");

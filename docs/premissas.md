@@ -385,8 +385,8 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     - **ISS fixo:** o planejamento completo e o Enquadramento ganharam o bloco "Sociedade de profissionais (ISS fixo)", com a quantidade de
       profissionais e o ISS fixo anual de cada um (valor do município). No **Lucro Presumido e no Lucro Real** o ISS passa a ser esse valor fixo
       (quantidade x valor), no lugar de uma porcentagem da receita (Decreto-Lei 406/1968, art. 9º, §§ 1º e 3º). **No Simples Nacional nada muda:** o
-      ISS é calculado sobre a receita e vai no DAS, e o ISS fixo da sociedade uniprofissional não vale para o optante (a exceção legal é o escritório
-      de serviços contábeis, LC 123, art. 18, § 22-A, com a lei municipal permitindo; este cálculo **não** trata essa exceção). Os campos ficam no
+      ISS é calculado sobre a receita e vai no DAS, e o ISS fixo da sociedade uniprofissional não vale para o optante; a única exceção é o escritório
+      de serviços contábeis (premissa 78). Os campos ficam no
       planejamento (e vão para o PDF e para o acompanhamento do cliente), não no cadastro do cliente. O Tolaris não sabe se a sociedade cumpre as
       condições da lei municipal (habilitação, responsabilidade pessoal, sem caráter empresarial) nem o valor do município: o contador informa.
     - **Serviços hospitalares:** o bloco traz a opção de usar a presunção de 8% (IRPJ) e 12% (CSLL) no Presumido, que já existia no motor mas não
@@ -395,6 +395,17 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
       norma e o alcance do conceito de "serviços hospitalares" precisam de conferência.
     - **Não lido:** o Decreto-Lei 406/1968 e as leis municipais; a LC 214/2025 só nos pontos do Simples. Como a advocacia e as sociedades
       uniprofissionais ficam na Reforma (redução de 30% de IBS e CBS, ISS fixo durante a transição) não foi modelado além da opção de redução de 30%.
+
+78. **Escritório de serviços contábeis com ISS fixo no Simples (Res. CGSN 140/2018 lida no portal da Receita; 27/10/2026):** o escritório de serviços contábeis
+    é tributado pelo Anexo III e, quando a lei do município prevê, **recolhe o ISS em valor fixo diretamente ao Município**, e o DAS é calculado
+    **desconsiderando o percentual do ISS** (LC 123, art. 18, § 5º-B, XIV e § 22-A; Res. CGSN 140/2018, art. 25, § 1º, VIII, § 9º, III, e art. 34). O ISS
+    fixo fica fora do DAS (art. 13, § 1º, XIII, c). Se o município não autorizar, o ISS vai no DAS pela receita (art. 25, § 11). No Tolaris: na atividade
+    "Serviços (Anexo III)", com a sociedade de profissionais marcada, a opção "recolhe o ISS fixo ao Município também no Simples" calcula
+    DAS = receita x alíquota efetiva x (1 - fatia do ISS da faixa), com o teto de ISS da 5ª faixa já aplicado, e soma o ISS fixo (profissionais x valor anual)
+    como tributo à parte; Presumido e Real usam o mesmo ISS fixo. Exemplo: receita de R$ 600 mil, 3ª faixa, DAS de R$ 63.360 cai para R$ 42.768 (fatia de ISS
+    de 32,5%) e o escritório paga R$ 3.000 de ISS fixo (2 sócios x R$ 1.500). **Limites:** só vale para o escritório de serviços contábeis (Anexo III); a
+    informação do ISS fixo no PGDAS-D é do contador; valor, condições e autorização são da lei municipal e não foram lidos; sublimite (ICMS/ISS fora do DAS
+    acima de R$ 3,6 mi) e retenção de ISS não são combinados com o ISS fixo.
 
 ## Pontos para o contador validar
 
@@ -411,7 +422,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Percentuais de partilha do DAS (tabela em `simples_nacional.json`, campo `partilha`), inclusive as vigências de 2027 a 2033.
 - [ ] Modelo da decisão do Simples na Reforma (preços ajustados para o mesmo custo líquido do cliente).
 - [ ] Carnê-leão: livro-caixa × desconto simplificado (o motor usa o maior dos dois).
-- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (91 casos, incluindo ENQ*, ADV1, HOSP1, SR* de 2027 a 2033, AU*, REC* e AV*).
+- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (94 casos, incluindo ENQ*, ADV1, CONT1, HOSP1, SR* de 2027 a 2033, AU*, REC* e AV*).
 - [ ] Importação: quais CFOPs excluir da receita (remessas, devoluções, transferências).
 - [ ] **Tabela de NCM monofásicos** (`src/tolaris_motor/tabelas/monofasico.json`): conferir cada prefixo e as
       exceções por subitem na tabela oficial da Receita; hoje é uma lista inicial montada sem acesso à fonte oficial.
@@ -451,6 +462,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - Envio automático pela API oficial do WhatsApp Business, rastreio de abertura de e-mail e assinatura com certificado.
 - Aviso por e-mail ou WhatsApp (resumo semanal da carteira) e avisos por projeção de crescimento da receita.
 - DIFAL e benefícios fiscais estaduais (a segregação de ST do Simples está na recuperação de tributos).
+- [ ] Escritório de serviços contábeis: o Município autoriza o ISS fixo para optante do Simples? O DAS sem a fatia do ISS e o ISS fixo à parte (premissa 78) batem com o PGDAS-D do cliente?
 - [ ] ISS fixo de sociedade uniprofissional: valor anual por profissional e condições da lei do município; confirmar que o Presumido e o Real do cliente (advocacia, contabilidade, medicina etc.) passam a usar o valor fixo e que o Simples segue pela receita.
 - [ ] Presunção de serviços hospitalares (8% e 12%): requisitos legais, aplicação a clínicas e laboratórios e a citação da norma.
 - [ ] Reforma Tributária para sociedades uniprofissionais: redução de 30% de IBS/CBS e ISS fixo na transição (não modelados além da redução).

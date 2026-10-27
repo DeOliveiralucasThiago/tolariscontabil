@@ -116,6 +116,7 @@ def _partes_por_anexo(perfil: PerfilEmpresa, anexo_principal: str) -> list[tuple
     return [(anexo_principal, principal), ("III", separada)] if principal > 0 else [("III", separada)]
 
 
+BASE_LEGAL_ISS_FIXO = "LC 123/2006, art. 18, § 5º-B, XIV e § 22-A; Res. CGSN 140/2018, art. 25, § 1º, VIII, e art. 34"
 BASE_LEGAL_EXPORTACAO = "Res. CGSN 140/2018, art. 25, §§ 3º, 4º e 4º-A; LC 116/2003, art. 2º, I; LC 123/2006, art. 18"
 TRIBUTOS_DESCONSIDERADOS_EXPORTACAO = {
     "servicos": ("pis", "cofins", "iss"),
@@ -206,15 +207,25 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             )
             valor = rbt12 * (parte / receita if receita else D(1))  # parcela do mercado neste Anexo
             sufixo = f" (Anexo {anx}, {brl(valor)})" if multiplas else ""
+            tira_iss = perfil.iss_fixo_no_simples and anx == "III" and mercado != "exportação"
+            fracao_iss = partilha(anx, rbt12, data).get("iss", ZERO) if tira_iss else ZERO
+            if tira_iss:
+                formula_iss = f" x (1 - {pct(fracao_iss, 2)} de ISS da partilha da faixa)"
+                base_iss = BASE_LEGAL_ISS_FIXO
+            else:
+                formula_iss, base_iss = "", "LC 123/2006, art. 13"
             if not mercado:
                 das_parte = res.passo(
                     "DAS anual" if not multiplas else f"DAS{sufixo}",
-                    f"{brl(valor)} x {pct(aliq, 4)}",
-                    valor * aliq,
-                    "LC 123/2006, art. 13",
+                    f"{brl(valor)} x {pct(aliq, 4)}{formula_iss}",
+                    valor * aliq * (1 - fracao_iss),
+                    base_iss,
                 )
             elif mercado == "mercado interno":
-                das_parte = res.passo(f"DAS - mercado interno{sufixo}", f"{brl(valor)} x {pct(aliq, 4)}", valor * aliq, "LC 123/2006, art. 13")
+                das_parte = res.passo(
+                    f"DAS - mercado interno{sufixo}", f"{brl(valor)} x {pct(aliq, 4)}{formula_iss}",
+                    valor * aliq * (1 - fracao_iss), base_iss if tira_iss else "LC 123/2006, art. 13",
+                )
             else:
                 fracoes = partilha(anx, rbt12, data)
                 fracao_excluida = sum((fracoes.get(k, ZERO) for k in desconsiderados), ZERO)
@@ -241,6 +252,18 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             "atividade realmente exercida."
         )
 
+    if perfil.iss_fixo_no_simples:
+        res.tributos["ISS fixo (recolhido ao Município, fora do DAS)"] = res.passo(
+            "ISS fixo do escritório de serviços contábeis",
+            f"{perfil.profissionais} profissional(is) x {brl(perfil.iss_fixo_por_profissional_anual)}/ano",
+            perfil.iss_fixo_anual,
+            BASE_LEGAL_ISS_FIXO,
+        )
+        res.alerta(
+            "ISS fixo do escritório de serviços contábeis: o DAS não inclui o ISS e o imposto é pago em valor fixo diretamente ao Município, "
+            "conforme a lei municipal (Res. CGSN 140/2018, art. 34). Se o Município não autorizar esse recolhimento, o ISS vai no DAS pela receita "
+            "(art. 25, § 11): desmarque a opção. Informe o ISS fixo no PGDAS-D e confirme o valor e as condições com a prefeitura."
+        )
     if anexo == "IV":
         aliq_folha = ALIQUOTA_CPP + perfil.rat
         res.tributos["INSS patronal (fora do DAS)"] = res.passo(
@@ -289,11 +312,12 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             "Vedações a conferir para quem exporta (LC 123/2006, art. 17, II e art. 3º, § 4º, XII): titular ou sócio domiciliado no "
             "exterior, ou filial, sucursal, agência ou representação no exterior, impedem o Simples Nacional."
         )
-    if perfil.sociedade_profissionais:
+    if perfil.sociedade_profissionais and not perfil.iss_fixo_no_simples:
         res.alerta(
             "Sociedade de profissionais com ISS fixo: no Simples Nacional o ISS é calculado sobre a receita e vai no DAS; o ISS fixo da "
             "sociedade uniprofissional não vale para o optante. A exceção legal é o escritório de serviços contábeis, que pode recolher o ISS fixo "
-            "ao Município se a lei municipal permitir (LC 123/2006, art. 18, § 22-A), e este cálculo não trata esse caso."
+            "ao Município se a lei municipal permitir (LC 123/2006, art. 18, § 22-A): para esse caso (atividade do Anexo III), marque "
+            "\"recolhe o ISS fixo também no Simples\"."
         )
     if perfil.servicos_hospitalares:
         res.alerta("A presunção de serviços hospitalares é do Lucro Presumido e não muda o cálculo do Simples Nacional.")

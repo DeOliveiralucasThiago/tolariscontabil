@@ -236,6 +236,8 @@ class CompletaEntrada(BaseModel):
     """Sociedade uniprofissional com ISS fixo por profissional (Lucro Presumido e Lucro Real)."""
     profissionais: int = Field(default=0, ge=0, le=1000)
     iss_fixo_por_profissional_anual: Dinheiro = Field(default=Decimal(0), ge=0)
+    iss_fixo_no_simples: bool = False
+    """Escritório de serviços contábeis (Anexo III) que recolhe o ISS fixo ao Município também como optante do Simples."""
     servicos_hospitalares: bool = False
     """Presunção reduzida de serviços hospitalares no Lucro Presumido (IRPJ 8% e CSLL 12%)."""
     ano: int = Field(default=2026, ge=2025, le=2026)
@@ -248,6 +250,8 @@ class CompletaEntrada(BaseModel):
                 raise ValueError("O ISS fixo de sociedade de profissionais só vale para serviços")
             if self.profissionais < 1 or self.iss_fixo_por_profissional_anual <= 0:
                 raise ValueError("Informe a quantidade de profissionais e o ISS fixo anual de cada um")
+        if self.iss_fixo_no_simples and not (self.sociedade_profissionais and self.atividade is Atividade.SERVICO_ANEXO_III):
+            raise ValueError("O ISS fixo no Simples é do escritório de serviços contábeis (Anexo III) e exige a sociedade de profissionais com ISS fixo")
         if self.servicos_hospitalares and mercadoria:
             raise ValueError("A presunção de serviços hospitalares só vale para serviços")
         if self.receita_exterior_anual > self.receita_bruta_anual:

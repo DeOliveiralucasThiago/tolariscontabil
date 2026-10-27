@@ -163,6 +163,8 @@ def _entradas_legiveis(sim: Simulacao) -> list[tuple[str, str]]:
                        f"{e.get('profissionais', 0)} profissional(is) x {brl(e.get('iss_fixo_por_profissional_anual', 0))}/ano"))
     else:
         linhas.append(("ISS", pct(e.get("aliquota_iss", 0))))
+    if e.get("iss_fixo_no_simples"):
+        linhas.append(("ISS fixo no Simples", "escritório de serviços contábeis: ISS recolhido ao Município, fora do DAS"))
     if e.get("servicos_hospitalares"):
         linhas.append(("Serviços hospitalares", "presunção reduzida no Lucro Presumido"))
     linhas.append(("Ano-calendário", str(e.get("ano", ""))))

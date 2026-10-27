@@ -152,3 +152,20 @@ def test_completa_com_iss_fixo_e_servicos_hospitalares(logado: TestClient):
         "atividade": "servico_fator_r", "receita_bruta_anual": 600000, "pro_labore_anual": 36000, "outras_despesas_anual": 60000,
         "sociedade_profissionais": True, "profissionais": 2, "iss_fixo_por_profissional_anual": 1500}).json()
     assert d["cenarios"][0]["anexos_simples"] == ["V"]
+
+
+def test_completa_do_escritorio_contabil_com_iss_fixo_no_simples(logado: TestClient):
+    cid = logado.post("/api/clientes", json={"razao_social": "Escritório Contábil Exemplo", "atividade": "servico_anexo_iii"}).json()["id"]
+    base = {"atividade": "servico_anexo_iii", "receita_bruta_anual": 600000, "pro_labore_anual": 36000, "outras_despesas_anual": 60000,
+            "sociedade_profissionais": True, "profissionais": 2, "iss_fixo_por_profissional_anual": 1500}
+    sem = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json=base).json()
+    com = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "iss_fixo_no_simples": True}).json()
+    sn = lambda s: next(r for r in s["resultado"]["regimes"] if r["titulo"] == "Simples Nacional")  # noqa: E731
+    assert {t["nome"]: t["valor"] for t in sn(sem)["tributos"]} == {"DAS": 63360}
+    assert {t["nome"]: t["valor"] for t in sn(com)["tributos"]} == {"DAS": 42768, "ISS fixo (recolhido ao Município, fora do DAS)": 3000}
+    pdf = logado.get(f"/api/simulacoes/{com['id']}/proposta.pdf")
+    assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
+    # só vale para o escritório de serviços contábeis (Anexo III) com a sociedade de profissionais
+    assert logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "atividade": "servico_anexo_iv", "iss_fixo_no_simples": True}).status_code == 422
+    sem_sociedade = {k: v for k, v in base.items() if k not in ("sociedade_profissionais", "profissionais", "iss_fixo_por_profissional_anual")}
+    assert logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**sem_sociedade, "iss_fixo_no_simples": True}).status_code == 422

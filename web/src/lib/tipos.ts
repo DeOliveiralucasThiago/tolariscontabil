@@ -333,6 +333,7 @@ export interface CompletaEntrada {
   sociedade_profissionais?: boolean;
   profissionais?: number;
   iss_fixo_por_profissional_anual?: number;
+  iss_fixo_no_simples?: boolean;
   servicos_hospitalares?: boolean;
   ano?: number;
 }

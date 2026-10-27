@@ -233,8 +233,8 @@ na tela): a Resolução CGSN 140/2018 define o Anexo pela descrição da ativida
 
 **Advocacia e sociedades de profissionais:** advocacia (inclusive a sociedade individual) usa o Anexo IV no Simples, com a CPP fora do DAS. No
 planejamento completo e no Enquadramento, o bloco "Sociedade de profissionais (ISS fixo)" troca o ISS de porcentagem da receita pelo valor fixo
-por profissional no Lucro Presumido e no Lucro Real (no Simples o ISS segue a receita), e a opção "serviços hospitalares" usa a presunção
-de 8% e 12%. Os valores do município e o enquadramento são informados pelo contador; veja o item 77 de `docs/premissas.md`.
+por profissional no Lucro Presumido e no Lucro Real (no Simples o ISS segue a receita, exceto no escritório de serviços contábeis, que recolhe o ISS fixo ao Município e tem o DAS sem a parcela do ISS), e a opção "serviços hospitalares" usa a presunção
+de 8% e 12%. Os valores do município e o enquadramento são informados pelo contador; veja os itens 77 e 78 de `docs/premissas.md`.
 
 **Simples de 2027 a 2033:** `simples_nacional.json` traz as tabelas da Resolução CGSN 190/2026 (CBS e IBS na partilha do DAS, teto de ISS
 decrescente de 5% a 3% até 2032 e fim do ISS em 2033), geradas por `scripts/gerar_simples_2027.py`; o Simples na Reforma e o cálculo do
@@ -290,7 +290,7 @@ print(reforma.tabela_resumo(anos))
 
 ## Validação com contador
 
-`validacao/casos_validacao.xlsx` traz 91 casos (empresas, PF, sócios, reforma, Simples na reforma de 2027 a 2033, enquadramento do Anexo V ao III, sociedade de profissionais com ISS fixo, serviços hospitalares, autônomo × CNPJ, recuperação de tributos e avisos de fator R) com os
+`validacao/casos_validacao.xlsx` traz 94 casos (empresas, PF, sócios, reforma, Simples na reforma de 2027 a 2033, enquadramento do Anexo V ao III, sociedade de profissionais com ISS fixo, serviços hospitalares, autônomo × CNPJ, recuperação de tributos e avisos de fator R) com os
 valores do motor, a memória de cálculo e os alertas. O contador preenche a coluna
 amarela "Valor correto" e a planilha mostra a diferença. Para regenerar:
 

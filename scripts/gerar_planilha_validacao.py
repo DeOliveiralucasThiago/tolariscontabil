@@ -177,6 +177,10 @@ def casos() -> list[Caso]:
         "ADV1": ("Advocacia (Anexo IV), 3 advogados com ISS fixo de R$ 1.800 por ano cada (valor de exemplo: use o do seu município)",
                  PerfilEmpresa(Atividade.SERVICO_ANEXO_IV, 600_000, pro_labore_anual=36_000, outras_despesas_anual=60_000,
                                sociedade_profissionais=True, profissionais=3, iss_fixo_por_profissional_anual=1_800)),
+        "CONT1": ("Escritório de serviços contábeis (Anexo III), 2 sócios com ISS fixo de R$ 1.500 por ano cada, recolhido ao Município também no Simples "
+                  "(valor de exemplo: use o do seu município)",
+                  PerfilEmpresa(Atividade.SERVICO_ANEXO_III, 600_000, pro_labore_anual=36_000, outras_despesas_anual=60_000,
+                                sociedade_profissionais=True, profissionais=2, iss_fixo_por_profissional_anual=1_500, iss_fixo_no_simples=True)),
         "HOSP1": ("Serviços hospitalares (fator R): presunção de 8% no IRPJ e 12% na CSLL no Presumido",
                   PerfilEmpresa(Atividade.SERVICO_FATOR_R, 1_200_000, folha_clt_anual=300_000, pro_labore_anual=60_000,
                                 servicos_hospitalares=True)),

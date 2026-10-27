@@ -82,6 +82,9 @@ class PerfilEmpresa:
     """Quantidade de profissionais habilitados da sociedade, para o ISS fixo."""
     iss_fixo_por_profissional_anual: Numero = 0
     """ISS fixo anual de cada profissional, conforme a lei do município (Decreto-Lei 406/1968, art. 9º, §§ 1º e 3º)."""
+    iss_fixo_no_simples: bool = False
+    """Escritório de serviços contábeis que recolhe o ISS em valor fixo ao Município também como optante do Simples (LC 123/2006,
+    art. 18, § 22-A; Res. CGSN 140/2018, art. 34): o DAS (Anexo III) deixa de incluir a parcela do ISS. Exige ``sociedade_profissionais``."""
     servicos_hospitalares: bool = False
     """Serviços hospitalares (e afins) com a presunção reduzida do Lucro Presumido: IRPJ 8% e CSLL 12%."""
     ano: int = 2026
@@ -130,6 +133,8 @@ class PerfilEmpresa:
                 raise ValueError("ISS fixo de sociedade de profissionais só se aplica a serviços")
             if self.profissionais < 1 or self.iss_fixo_por_profissional_anual <= 0:
                 raise ValueError("Informe a quantidade de profissionais e o ISS fixo anual de cada um")
+        if self.iss_fixo_no_simples and not (self.sociedade_profissionais and self.atividade is Atividade.SERVICO_ANEXO_III):
+            raise ValueError("O ISS fixo no Simples é do escritório de serviços contábeis (Anexo III) e exige a sociedade de profissionais com ISS fixo")
         if self.servicos_hospitalares and self.atividade.vende_mercadoria:
             raise ValueError("A presunção de serviços hospitalares só se aplica a serviços")
         if self.presuncao is None:
