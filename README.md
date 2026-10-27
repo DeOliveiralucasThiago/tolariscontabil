@@ -248,6 +248,10 @@ alíquotas de IBS e CBS (`src/tolaris_motor/consumo.py`). As alíquotas de refer
 profissão da redução de IBS e CBS (30% para as 18 profissões do art. 127 da LC 214/2025, 60% para serviços de saúde do Anexo III). O Tolaris lista os requisitos do art. 127, § 1º, II, mas não
 decide o enquadramento. Veja o item 81 de `docs/premissas.md`.
 
+**Atividades mistas:** o campo "Receitas em outras atividades" (planejamento completo e Enquadramento) separa a receita por atividade: cada uma segue o seu Anexo no Simples (I, II, III, IV ou V), tem a
+sua presunção no Presumido, e o ICMS e o ISS incidem sobre mercadorias e serviços respectivamente. O Enquadramento mostra a receita por Anexo. A repartição da CPP com Anexo IV é uma estimativa
+(item 82 de `docs/premissas.md`).
+
 **Legislação lida:** LC 123/2006 (texto completo), LC 214/2025 (pontos do Simples), LC 227/2026 e LC 238/2026 (MEI de R$ 110 mil em 2027 e
 R$ 140 mil em 2028) e as Resoluções CGSN 190, 191, 194 e 195 (itens 71 a 75 de `docs/premissas.md`). `docs/fontes-da-legislacao.md` diz onde
 cada texto foi lido e o que cada fonte entrega. O feed de mudanças (`tabelas/mudancas.json`) marca o que ainda não entrou no cálculo
@@ -297,7 +301,7 @@ print(reforma.tabela_resumo(anos))
 
 ## Validação com contador
 
-`validacao/casos_validacao.xlsx` traz 106 casos (empresas, PF, sócios, reforma, Simples na reforma de 2027 a 2033, enquadramento do Anexo V ao III, sociedade de profissionais com ISS fixo, serviços hospitalares, autônomo × CNPJ, recuperação de tributos e avisos de fator R) com os
+`validacao/casos_validacao.xlsx` traz 115 casos (empresas, PF, sócios, reforma, Simples na reforma de 2027 a 2033, enquadramento do Anexo V ao III, sociedade de profissionais com ISS fixo, serviços hospitalares, autônomo × CNPJ, recuperação de tributos e avisos de fator R) com os
 valores do motor, a memória de cálculo e os alertas. O contador preenche a coluna
 amarela "Valor correto" e a planilha mostra a diferença. Para regenerar:
 

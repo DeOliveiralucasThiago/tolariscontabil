@@ -68,7 +68,7 @@ function PaginaEnquadramento() {
 
   return (
     <>
-      <Titulo sub="Empresa de serviços no Anexo V do Simples? Veja o que muda no imposto se ela chegar ao Anexo III, e por qual caminho.">
+      <Titulo sub="Empresa de serviços no Anexo V do Simples? Veja o que muda no imposto se ela chegar ao Anexo III, e por qual caminho. Com mais de uma atividade, informe a receita de cada uma.">
         Enquadramento
       </Titulo>
       <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="note">

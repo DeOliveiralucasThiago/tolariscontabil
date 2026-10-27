@@ -67,8 +67,9 @@ def pro_labore_minimo_fator_r(
     return max(ZERO, falta) / 12
 
 
-def anexo_da_atividade(perfil: PerfilEmpresa, res: Resultado | None = None) -> str:
-    a = perfil.atividade
+def anexo_da_atividade(perfil: PerfilEmpresa, res: Resultado | None = None, atividade: Atividade | None = None) -> str:
+    """Anexo do Simples da atividade (a principal, se não vier outra). O fator R usa a receita e a folha totais da empresa."""
+    a = atividade or perfil.atividade
     if a is Atividade.COMERCIO:
         return "I"
     if a is Atividade.INDUSTRIA:
@@ -107,13 +108,16 @@ def anexo_da_atividade(perfil: PerfilEmpresa, res: Resultado | None = None) -> s
     return anexo
 
 
-def _partes_por_anexo(perfil: PerfilEmpresa, anexo_principal: str) -> list[tuple[str, Decimal]]:
-    """Receita por Anexo: a atividade principal e, se houver, a parte que tributa direto no Anexo III."""
-    separada = perfil.receita_anexo_iii_anual
-    if not separada or anexo_principal == "III":
-        return [(anexo_principal, perfil.receita_bruta_anual)]
-    principal = perfil.receita_bruta_anual - separada
-    return [(anexo_principal, principal), ("III", separada)] if principal > 0 else [("III", separada)]
+def _partes_por_anexo(perfil: PerfilEmpresa, res: Resultado | None = None) -> list[tuple[str, Decimal]]:
+    """Receita por Anexo: cada atividade no seu Anexo (LC 123/2006, art. 18, § 4º); atividades no mesmo Anexo somam."""
+    por_anexo: dict[str, Decimal] = {}
+    fator_r_lancado = False
+    for atividade, valor in perfil.partes_atividade:
+        lancar = res if atividade is Atividade.SERVICO_FATOR_R and not fator_r_lancado else None
+        fator_r_lancado = fator_r_lancado or atividade is Atividade.SERVICO_FATOR_R
+        anexo = anexo_da_atividade(perfil, lancar, atividade)
+        por_anexo[anexo] = por_anexo.get(anexo, ZERO) + valor
+    return list(por_anexo.items())
 
 
 BASE_LEGAL_ISS_FIXO = "LC 123/2006, art. 18, § 5º-B, XIV e § 22-A; Res. CGSN 140/2018, art. 25, § 1º, VIII, e art. 34"
@@ -144,18 +148,20 @@ def alerta_exportacao(perfil: PerfilEmpresa, res: Resultado) -> None:
     """Avisos que acompanham qualquer cálculo com receita do exterior (iguais nos três regimes)."""
     consumo = "CBS e IBS" if perfil.ano >= 2027 else "PIS/Cofins"
     if perfil.receita_exterior_anual:
-        if perfil.atividade.vende_mercadoria:
+        if perfil.receita_mercadorias_anual > 0:
             res.alerta(
                 f"Receita de exportação de mercadorias ({brl(perfil.receita_exterior_anual)}): tratada sem ICMS, IPI e "
                 f"{consumo}. Guarde a declaração de exportação (DU-E) e o contrato de câmbio."
             )
-        else:
+        if perfil.receita_servicos_anual > 0:
             res.alerta(
                 f"Receita de exportação de serviços ({brl(perfil.receita_exterior_anual)}): tratada sem ISS e sem "
                 f"{consumo}. Só vale se o serviço foi prestado a residente no exterior, o resultado se verifica no "
                 "exterior e o pagamento representa ingresso de divisas (Res. CGSN 140/2018, art. 25, §4º; "
                 "LC 116/2003, art. 2º, parágrafo único). Guarde contrato, nota fiscal e contrato de câmbio."
             )
+        if perfil.tem_atividades_mistas:
+            res.alerta("Atividades mistas com exportação: a receita do exterior foi repartida entre as atividades na proporção da receita de cada uma.")
     if perfil.variacao_cambial_anual:
         res.alerta(
             f"Variação cambial líquida de {brl(perfil.variacao_cambial_anual)} informada: o tratamento depende do regime "
@@ -184,11 +190,8 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             res.alerta(f"Receita de exportação acima de {brl(limite)}: empresa não pode optar pelo Simples Nacional.")
         return res
 
-    anexo = anexo_da_atividade(perfil, res)
-    partes = _partes_por_anexo(perfil, anexo)
+    partes = _partes_por_anexo(perfil, res)
     multiplas = len(partes) > 1
-    tipo = "mercadorias" if perfil.atividade.vende_mercadoria else "servicos"
-    desconsiderados = tributos_desconsiderados_exportacao(tipo, data)
     # A alíquota de cada mercado sai do RBT12 daquele mercado (LC 123/2006, art. 3º, § 15; Res. CGSN 140/2018, art. 23)
     mercados = [("mercado interno", interna), ("exportação", exterior)] if exterior else [("", receita)]
     das_total = ZERO
@@ -207,6 +210,7 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
                 BASE_LEGAL_ALIQUOTA + ("; art. 3º, § 15" if mercado else ""),
             )
             valor = rbt12 * (parte / receita if receita else D(1))  # parcela do mercado neste Anexo
+            desconsiderados = tributos_desconsiderados_exportacao("mercadorias" if anx in ("I", "II") else "servicos", data)
             sufixo = f" (Anexo {anx}, {brl(valor)})" if multiplas else ""
             tira_iss = perfil.iss_fixo_no_simples and anx == "III" and mercado != "exportação"
             fracao_iss = partilha(anx, rbt12, data).get("iss", ZERO) if tira_iss else ZERO
@@ -246,11 +250,12 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             "DAS anual", " + ".join(brl(v) for v in passos_das), das_total, "LC 123/2006, art. 13 e art. 18, §§ 1º e 4º"
         )
     if multiplas:
+        anexos_txt = ", ".join(f"Anexo {anx} ({brl(v)})" for anx, v in partes)
         res.alerta(
-            f"Receita de {brl(perfil.receita_anexo_iii_anual)} separada como atividade do Anexo III: o Simples só aceita "
-            "isso se a empresa exerce de fato essa atividade, tem o CNAE no cadastro e emite a nota com o serviço "
-            "correspondente (LC 123/2006, art. 18, §§ 4º e 5º-B). Não basta incluir o CNAE: a Receita enquadra pela "
-            "atividade realmente exercida."
+            f"Receita segregada por atividade: {anexos_txt}. Cada atividade tributa no Anexo da atividade realmente exercida, com a faixa "
+            "pela receita total. Só vale se a empresa exerce de fato cada atividade, tem o CNAE no cadastro e emite a nota com a atividade "
+            "correspondente, separando as receitas no PGDAS-D (LC 123/2006, art. 18, §§ 4º e 5º-B). Não basta incluir o CNAE: a Receita "
+            "enquadra pela atividade realmente exercida."
         )
 
     if perfil.iss_fixo_no_simples:
@@ -265,15 +270,28 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             "conforme a lei municipal (Res. CGSN 140/2018, art. 34). Se o Município não autorizar esse recolhimento, o ISS vai no DAS pela receita "
             "(art. 25, § 11): desmarque a opção. Informe o ISS fixo no PGDAS-D e confirme o valor e as condições com a prefeitura."
         )
-    if anexo == "IV":
+    receita_iv = next((v for anx, v in partes if anx == "IV"), ZERO)
+    if receita_iv > 0:
         aliq_folha = ALIQUOTA_CPP + perfil.rat
+        parte_iv = receita_iv / receita if receita else D(1)
+        formula_cpp = (
+            f"{brl(perfil.folha_clt_anual)} x ({pct(ALIQUOTA_CPP)} + {pct(perfil.rat)} RAT) + "
+            f"{brl(perfil.pro_labore_anual)} x {pct(ALIQUOTA_CPP)}"
+        )
+        if multiplas:
+            formula_cpp = f"({formula_cpp}) x {pct(parte_iv, 2)} da receita no Anexo IV"
         res.tributos["INSS patronal (fora do DAS)"] = res.passo(
             "CPP fora do DAS (Anexo IV)",
-            f"{brl(perfil.folha_clt_anual)} x ({pct(ALIQUOTA_CPP)} + {pct(perfil.rat)} RAT) + "
-            f"{brl(perfil.pro_labore_anual)} x {pct(ALIQUOTA_CPP)}",
-            perfil.folha_clt_anual * aliq_folha + perfil.pro_labore_anual * ALIQUOTA_CPP,
+            formula_cpp,
+            (perfil.folha_clt_anual * aliq_folha + perfil.pro_labore_anual * ALIQUOTA_CPP) * parte_iv,
             "LC 123/2006, art. 18, §5º-C e art. 13, VI",
         )
+        if multiplas:
+            res.alerta(
+                "Atividade do Anexo IV junto com outras: a CPP patronal sai do DAS só na atividade do Anexo IV, mas o texto que reparte a folha entre "
+                "as atividades não foi lido (portais oficiais indisponíveis em 27/10/2026). O Tolaris estima a CPP fora do DAS na proporção da "
+                "receita do Anexo IV. Confirme com o contador como a folha é apropriada."
+            )
 
     if interna > D(tab["sublimite_icms_iss"]):
         res.alerta(

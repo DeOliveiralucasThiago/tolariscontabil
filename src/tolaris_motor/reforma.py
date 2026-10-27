@@ -48,6 +48,8 @@ class EntradaReforma:
     aliquota_ipi: Numero = 0
     iss_fixo_anual: Numero = 0
     """ISS fixo anual total da sociedade uniprofissional (DL 406/1968, art. 9º, §§ 1º e 3º); substitui ``aliquota_iss`` nos serviços."""
+    base_venda_anual: Numero | None = None
+    """Vendas sem tributos já calculadas por quem chama (atividades mistas); substitui o cálculo a partir da receita e das alíquotas."""
     reducao_setorial: Numero = 0
     """0 (padrão), 0.3 (profissões regulamentadas), 0.6 (saúde, educação...) ou 1 (alíquota zero)."""
     fracao_credito_compras: Numero = 1
@@ -105,6 +107,8 @@ class AnoReforma:
 
 def base_venda_sem_tributos(e: EntradaReforma) -> Decimal:
     """Receita bruta menos PIS/Cofins e ICMS/ISS embutidos (alíquotas nominais)."""
+    if e.base_venda_anual is not None:
+        return D(e.base_venda_anual)
     pis_cofins = PIS_COFINS_NAO_CUMULATIVO if e.pis_cofins_nao_cumulativo else PIS_COFINS_CUMULATIVO
     local = e.aliquota_icms if e.vende_mercadoria else aliquota_iss_efetiva(e)
     return e.receita_bruta_anual * (1 - pis_cofins - local)

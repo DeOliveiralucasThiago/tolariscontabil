@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { type Atividade, type CompletaEntrada } from "@/lib/tipos";
+import { ATIVIDADES, type Atividade, type CompletaEntrada } from "@/lib/tipos";
 
 import { CampoMoeda, CampoPercentual } from "./CampoMoeda";
 import { ConversorDeMoeda } from "./ConversorDeMoeda";
@@ -40,6 +40,7 @@ export function FormCompleta({
     receita_exterior_anual: 0,
     variacao_cambial_anual: 0,
     receita_anexo_iii_anual: 0,
+    receitas_outras_atividades: {},
     folha_fator_r_anual: null,
     sociedade_profissionais: false,
     profissionais: 0,
@@ -71,8 +72,16 @@ export function FormCompleta({
         if (!mercadoria && f.sociedade_profissionais && ((f.profissionais ?? 0) < 1 || (f.iss_fixo_por_profissional_anual ?? 0) <= 0)) {
           return setErro("Informe a quantidade de profissionais e o ISS fixo anual de cada um.");
         }
+        const outras = Object.fromEntries(
+          Object.entries(f.receitas_outras_atividades ?? {}).filter(([k, v]) => k !== f.atividade && (v ?? 0) > 0),
+        ) as CompletaEntrada["receitas_outras_atividades"];
+        const somaOutras = Object.values(outras ?? {}).reduce((t, v) => t + (v ?? 0), 0) + (f.receita_anexo_iii_anual ?? 0);
+        if (somaOutras > f.receita_bruta_anual) {
+          return setErro("A soma das receitas das outras atividades não pode passar da receita bruta anual (elas são partes dela).");
+        }
         onCalcular({
           ...f,
+          receitas_outras_atividades: outras,
           folha_fator_r_anual: f.folha_fator_r_anual || null,
           sociedade_profissionais: !mercadoria && !!f.sociedade_profissionais,
           iss_fixo_no_simples: !mercadoria && !!f.sociedade_profissionais && f.atividade === "servico_anexo_iii" && !!f.iss_fixo_no_simples,
@@ -311,6 +320,37 @@ export function FormCompleta({
           </div>
         </details>
       )}
+      <details
+        className="rounded-lg border border-borda p-3"
+        open={Object.values(f.receitas_outras_atividades ?? {}).some((v) => (v ?? 0) > 0)}
+        data-testid="bloco-atividades-mistas"
+      >
+        <summary className="cursor-pointer text-sm font-medium">
+          Receitas em outras atividades (cada uma no seu Anexo)
+          <span className="ml-2 text-xs font-normal text-tinta-2">Opcional: empresa que vende mercadorias e presta serviços, ou tem mais de um tipo de serviço</span>
+        </summary>
+        <div className="mt-3 flex flex-col gap-3">
+          <p className="text-xs text-tinta-2">
+            No Simples Nacional cada atividade tributa no Anexo da atividade realmente exercida, com a faixa pela receita total (LC 123/2006, art. 18, § 4º).
+            No Lucro Presumido cada uma tem a sua presunção, e o ICMS incide sobre as mercadorias e o ISS sobre os serviços. Informe o valor anual de cada
+            atividade <strong>além da principal</strong>; a receita da principal é o que sobra da receita bruta.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {ATIVIDADES.filter((a) => a.valor !== f.atividade && !(f.atividade === "servico_fator_r" && a.valor === "servico_anexo_iii" && mostrarAnexoIII)).map((a) => (
+              <CampoMoeda
+                key={a.valor}
+                id={`outra_${a.valor}`}
+                rotulo={`Receita em ${a.rotuloLongo}`}
+                valor={f.receitas_outras_atividades?.[a.valor] ?? 0}
+                onChange={(v) => setF((x) => ({ ...x, receitas_outras_atividades: { ...x.receitas_outras_atividades, [a.valor]: v } }))}
+              />
+            ))}
+          </div>
+          <p className="text-xs text-tinta-2">
+            Se a empresa tem atividade do Anexo IV com outra, a CPP fora do DAS é estimada na proporção da receita do Anexo IV: confirme com o contador.
+          </p>
+        </div>
+      </details>
       {mostrarAnexoIII && f.atividade === "servico_fator_r" && (
         <details className="rounded-lg border border-borda p-3" open={(f.receita_anexo_iii_anual ?? 0) > 0} data-testid="bloco-anexo-iii">
           <summary className="cursor-pointer text-sm font-medium">

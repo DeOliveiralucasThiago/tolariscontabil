@@ -148,3 +148,9 @@ O fluxo das sociedades uniprofissionais na Reforma (ISS fixo na transição, pro
 ```bash
 node fluxo_uniprofissional.mjs saida
 ```
+
+O fluxo das atividades mistas (receita por Anexo no planejamento e no Enquadramento) também não usa rede externa:
+
+```bash
+node fluxo_atividades_mistas.mjs saida
+```

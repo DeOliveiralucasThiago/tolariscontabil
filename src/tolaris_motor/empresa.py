@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
 
@@ -88,6 +88,10 @@ class PerfilEmpresa:
     art. 18, § 22-A; Res. CGSN 140/2018, art. 34): o DAS (Anexo III) deixa de incluir a parcela do ISS. Exige ``sociedade_profissionais``."""
     servicos_hospitalares: bool = False
     """Serviços hospitalares (e afins) com a presunção reduzida do Lucro Presumido: IRPJ 8% e CSLL 12%."""
+    receitas_outras_atividades: dict = field(default_factory=dict)
+    """Partes de ``receita_bruta_anual`` em atividades diferentes da principal ({atividade: valor}); cada uma tributa no Anexo da sua atividade
+    no Simples (LC 123/2006, art. 18, § 4º), com a presunção própria no Presumido e ICMS ou ISS conforme mercadoria ou serviço. A receita da
+    atividade principal é o que sobra."""
     reducao_ibs_cbs: Numero = 0
     """Redução de alíquota de IBS e CBS a partir de 2027: 0, 0,3 (profissões regulamentadas), 0,6 (saúde) ou 1 (alíquota zero)."""
     ano: int = 2026
@@ -128,6 +132,18 @@ class PerfilEmpresa:
             raise ValueError("receita_anexo_iii_anual não pode passar da receita bruta anual")
         if self.receita_anexo_iii_anual and self.atividade is not Atividade.SERVICO_FATOR_R:
             raise ValueError("A receita separada do Anexo III só se aplica a quem tem atividade principal do fator R")
+        outras: dict[Atividade, Decimal] = {}
+        for chave, valor in dict(self.receitas_outras_atividades).items():
+            ativ, v = Atividade(chave), D(valor)
+            if ativ is self.atividade:
+                raise ValueError("A receita de outra atividade não pode ser da própria atividade principal")
+            if v < 0:
+                raise ValueError("A receita de outra atividade não pode ser negativa")
+            if v > 0:
+                outras[ativ] = v
+        self.receitas_outras_atividades = outras
+        if sum(outras.values(), ZERO) + self.receita_anexo_iii_anual > self.receita_bruta_anual:
+            raise ValueError("A soma das receitas das outras atividades não pode passar da receita bruta anual")
         self.iss_fixo_por_profissional_anual = D(self.iss_fixo_por_profissional_anual)
         if self.iss_fixo_por_profissional_anual < 0 or self.profissionais < 0:
             raise ValueError("profissionais e iss_fixo_por_profissional_anual não podem ser negativos")
@@ -158,17 +174,49 @@ class PerfilEmpresa:
         return Decimal(self.profissionais) * self.iss_fixo_por_profissional_anual
 
     @property
+    def partes_atividade(self) -> list[tuple[Atividade, Decimal]]:
+        """Receita bruta por atividade: a principal (o que sobra) e as outras; a parte do Anexo III separada entra como serviço do Anexo III."""
+        outras = dict(self.receitas_outras_atividades)
+        if self.receita_anexo_iii_anual:
+            outras[Atividade.SERVICO_ANEXO_III] = outras.get(Atividade.SERVICO_ANEXO_III, ZERO) + self.receita_anexo_iii_anual
+        principal = self.receita_bruta_anual - sum(outras.values(), ZERO)
+        partes = [(self.atividade, principal)] if principal > 0 else []
+        partes.extend(outras.items())
+        return partes
+
+    @property
+    def partes_internas(self) -> list[tuple[Atividade, Decimal]]:
+        """``partes_atividade`` só do mercado interno (a exportação é repartida na proporção da receita de cada atividade)."""
+        if not self.receita_bruta_anual:
+            return []
+        fator = self.receita_interna_anual / self.receita_bruta_anual
+        return [(a, v * fator) for a, v in self.partes_atividade]
+
+    @property
+    def tem_atividades_mistas(self) -> bool:
+        return len(self.partes_atividade) > 1
+
+    @property
+    def receita_mercadorias_anual(self) -> Decimal:
+        return sum((v for a, v in self.partes_atividade if a.vende_mercadoria), ZERO)
+
+    @property
+    def receita_servicos_anual(self) -> Decimal:
+        return sum((v for a, v in self.partes_atividade if not a.vende_mercadoria), ZERO)
+
+    @property
     def receita_interna_anual(self) -> Decimal:
         """Receita do mercado interno: a que paga ISS/ICMS e PIS/Cofins."""
         return self.receita_bruta_anual - self.receita_exterior_anual
 
 
-def icms_liquido(perfil: PerfilEmpresa, res: Resultado) -> Decimal:
+def icms_liquido(perfil: PerfilEmpresa, res: Resultado, vendas_internas: Decimal | None = None) -> Decimal:
     """ICMS não cumulativo (débito nas saídas - crédito nas compras), igual no Presumido e no Real."""
+    vendas = perfil.receita_interna_anual if vendas_internas is None else vendas_internas
     debito = res.passo(
         "ICMS - débito nas vendas",
-        f"{brl(perfil.receita_interna_anual)} x {pct(perfil.aliquota_icms)}",
-        perfil.receita_interna_anual * perfil.aliquota_icms,
+        f"{brl(vendas)} x {pct(perfil.aliquota_icms)}",
+        vendas * perfil.aliquota_icms,
         "LC 87/1996 e legislação estadual (exportação: CF, art. 155, §2º, X, a)" if perfil.receita_exterior_anual else "LC 87/1996 e legislação estadual",
     )
     credito = res.passo(
@@ -189,24 +237,30 @@ def fracao_icms_iss(ano: int) -> Decimal:
 
 
 def tributo_sobre_receita_local(perfil: PerfilEmpresa, res: Resultado) -> None:
-    """Lança ICMS (mercadorias) ou ISS (serviços) no resultado do regime normal, já com a transição da Reforma."""
-    _lancar_tributo_local(perfil, res)
+    """Lança ICMS (mercadorias) e ISS (serviços) no resultado do regime normal, já com a transição da Reforma.
+
+    Na atividade mista o ICMS incide sobre a receita de mercadorias e o ISS sobre a de serviços, cada um no mercado interno."""
+    merc_interna = sum((v for a, v in perfil.partes_internas if a.vende_mercadoria), ZERO)
+    serv_interna = sum((v for a, v in perfil.partes_internas if not a.vende_mercadoria), ZERO)
+    if perfil.receita_mercadorias_anual > 0:
+        res.tributos["ICMS"] = icms_liquido(perfil, res, merc_interna)
+    if perfil.receita_servicos_anual > 0:
+        _lancar_iss(perfil, res, serv_interna)
     fracao = fracao_icms_iss(perfil.ano)
     if fracao != 1:
-        chave = "ICMS" if perfil.atividade.vende_mercadoria else "ISS"
-        antes = res.tributos[chave]
-        res.tributos[chave] = res.passo(
-            f"{chave} na transição da Reforma ({perfil.ano})",
-            f"{brl(antes)} x {pct(fracao, 0)}",
-            antes * fracao,
-            "EC 132/2023, ADCT art. 128",
-        )
+        for chave in ("ICMS", "ISS"):
+            if chave in res.tributos:
+                antes = res.tributos[chave]
+                res.tributos[chave] = res.passo(
+                    f"{chave} na transição da Reforma ({perfil.ano})",
+                    f"{brl(antes)} x {pct(fracao, 0)}",
+                    antes * fracao,
+                    "EC 132/2023, ADCT art. 128",
+                )
 
 
-def _lancar_tributo_local(perfil: PerfilEmpresa, res: Resultado) -> None:
-    if perfil.atividade.vende_mercadoria:
-        res.tributos["ICMS"] = icms_liquido(perfil, res)
-    elif perfil.sociedade_profissionais:
+def _lancar_iss(perfil: PerfilEmpresa, res: Resultado, receita_servicos_interna: Decimal) -> None:
+    if perfil.sociedade_profissionais:
         res.tributos["ISS"] = res.passo(
             "ISS fixo da sociedade de profissionais",
             f"{perfil.profissionais} profissional(is) x {brl(perfil.iss_fixo_por_profissional_anual)}/ano",
@@ -221,8 +275,8 @@ def _lancar_tributo_local(perfil: PerfilEmpresa, res: Resultado) -> None:
     else:
         res.tributos["ISS"] = res.passo(
             "ISS",
-            f"{brl(perfil.receita_interna_anual)} x {pct(perfil.aliquota_iss)}",
-            perfil.receita_interna_anual * perfil.aliquota_iss,
+            f"{brl(receita_servicos_interna)} x {pct(perfil.aliquota_iss)}",
+            receita_servicos_interna * perfil.aliquota_iss,
             "LC 116/2003, art. 2º, I (exportação não paga ISS) e lei municipal" if perfil.receita_exterior_anual else "LC 116/2003 e lei municipal",
         )
 

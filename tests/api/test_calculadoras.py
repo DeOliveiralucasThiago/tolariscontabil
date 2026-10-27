@@ -208,3 +208,24 @@ def test_reforma_de_sociedade_uniprofissional_com_iss_fixo(logado: TestClient):
     pdf = logado.get(f"/api/simulacoes/{sim.json()['id']}/proposta.pdf")
     assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
     assert logado.post("/api/calculadoras/reforma", json={**corpo, "vende_mercadoria": True}).status_code == 422
+
+
+def test_completa_e_enquadramento_com_receitas_de_outras_atividades(logado: TestClient):
+    cid = logado.post("/api/clientes", json={"razao_social": "Loja e Consultoria", "atividade": "comercio"}).json()["id"]
+    corpo = {"atividade": "comercio", "receita_bruta_anual": 1800000, "folha_clt_anual": 240000, "pro_labore_anual": 60000,
+             "compras_anual": 700000, "receitas_outras_atividades": {"servico_fator_r": 600000}}
+    s = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json=corpo)
+    assert s.status_code == 201, s.text
+    regimes = {r["titulo"]: {t["nome"]: t["valor"] for t in r["tributos"]} for r in s.json()["resultado"]["regimes"]}
+    assert round(regimes["Simples Nacional"]["DAS"]) == 230700
+    assert {"ICMS", "ISS"} <= set(regimes["Lucro Presumido"])
+    pdf = logado.get(f"/api/simulacoes/{s.json()['id']}/proposta.pdf")
+    assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
+    d = logado.post("/api/calculadoras/enquadramento", json=corpo).json()
+    assert d["cenarios"][0]["anexos_simples"] == ["I", "V"]
+    assert [x["anexo"] for x in d["cenarios"][0]["receitas_por_anexo"]] == ["I", "V"]
+    assert d["cenarios"][-1]["anexos_simples"] == ["I", "III"] and d["cenarios"][-1]["receita_anexo_iii"] == 600000
+    # validações
+    for invalido in ({"comercio": 100}, {"servico_fator_r": 2000000}, {"servico_fator_r": 0}, {"padaria": 100}):
+        r = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**corpo, "receitas_outras_atividades": invalido})
+        assert r.status_code == 422, invalido

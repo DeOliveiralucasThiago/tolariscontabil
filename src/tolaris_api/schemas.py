@@ -241,6 +241,8 @@ class CompletaEntrada(BaseModel):
     """Variação cambial líquida do ano, em reais: positiva é ganho, negativa é perda."""
     receita_anexo_iii_anual: Dinheiro = Field(default=Decimal(0), ge=0)
     """Parte da receita de serviços em atividade que tributa direto no Anexo III (só para a atividade do fator R)."""
+    receitas_outras_atividades: dict[Atividade, Dinheiro] = Field(default_factory=dict)
+    """Partes da receita bruta em atividades diferentes da principal ({atividade: valor anual}); cada uma segue o seu Anexo no Simples."""
     sociedade_profissionais: bool = False
     """Sociedade uniprofissional com ISS fixo por profissional (Lucro Presumido e Lucro Real)."""
     profissionais: int = Field(default=0, ge=0, le=1000)
@@ -278,6 +280,12 @@ class CompletaEntrada(BaseModel):
             raise ValueError("A receita do Anexo III não pode passar da receita bruta anual")
         if self.receita_anexo_iii_anual and self.atividade is not Atividade.SERVICO_FATOR_R:
             raise ValueError("A receita separada do Anexo III só vale para a atividade \"serviços do fator R\"")
+        if self.atividade in self.receitas_outras_atividades:
+            raise ValueError("A receita de outra atividade não pode ser da própria atividade principal")
+        if any(v <= 0 for v in self.receitas_outras_atividades.values()):
+            raise ValueError("Informe valores maiores que zero nas outras atividades (ou retire a linha)")
+        if sum(self.receitas_outras_atividades.values(), Decimal(0)) + self.receita_anexo_iii_anual > self.receita_bruta_anual:
+            raise ValueError("A soma das receitas das outras atividades não pode passar da receita bruta anual")
         return self
 
 

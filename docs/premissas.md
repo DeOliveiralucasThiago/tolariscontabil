@@ -448,6 +448,18 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     - **Limites:** valor do ISS fixo e regras locais vêm da lei do município (não lida); o Simples (inclusive o escritório contábil com ISS fixo) usa a partilha do ano e não tem esta transição; o
       tratamento do ISS fixo de 2029 a 2032 é interpretação, e o Comitê Gestor ou o regulamento podem dispor diferente.
 
+82. **Receitas de mais de uma atividade (27/10/2026):** o planejamento completo e o Enquadramento aceitam, além da atividade principal, a receita das outras atividades
+    (comércio, indústria, serviços do Anexo III, do Anexo IV e do fator R); a da principal é o que sobra da receita bruta. **Simples:** cada atividade tributa no Anexo da atividade realmente
+    exercida (LC 123/2006, art. 18, § 4º, conforme as premissas 72 e 74), com a faixa pela receita total; atividades que caem no mesmo Anexo somam; o fator R usa a folha e a receita totais;
+    a exportação é repartida na proporção da receita e usa os tributos desconsiderados do Anexo de cada parte (mercadorias nos Anexos I e II, serviços nos demais). **Presumido:** a base de
+    IRPJ e CSLL é a soma de cada receita pela presunção da sua atividade (média ponderada na memória de cálculo); o ICMS incide sobre a receita de mercadorias (com o crédito das compras) e o
+    ISS sobre a de serviços; o ISS fixo da sociedade de profissionais não muda. **Lucro Real:** ICMS e ISS por parte e, de 2027 em diante, CBS e IBS sobre as vendas sem tributos de cada parte.
+    **Reforma:** a redução de IBS e CBS vale só para a receita da atividade principal. **Enquadramento:** os caminhos para o Anexo III valem para a receita do fator R, seja a principal ou uma das
+    outras; a tela mostra a receita por Anexo. **Não lido:** (a) como a CPP patronal é repartida quando há atividade do Anexo IV com outra: o Tolaris a estima **na proporção da receita do
+    Anexo IV** e avisa em todo resultado (LC 123/2006, art. 18, § 5º-C, e Res. CGSN 140/2018, arts. 25 a 27, não puderam ser relidos em 27/10/2026, quando os portais oficiais recusaram o acesso);
+    (b) a regra de apropriação das compras por atividade no ICMS (todas as compras abatem o ICMS das mercadorias); (c) a presunção de cada atividade seguiu a tabela padrão (comércio 8% e 12%,
+    indústria 8% e 12%, serviços 32%), sem as presunções especiais (transporte, serviços hospitalares nas outras atividades etc.).
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias? A lei, art. 18, § 24, soma também a CPP efetivamente recolhida).
@@ -463,9 +475,10 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Percentuais de partilha do DAS (tabela em `simples_nacional.json`, campo `partilha`), inclusive as vigências de 2027 a 2033.
 - [ ] Modelo da decisão do Simples na Reforma (preços ajustados para o mesmo custo líquido do cliente).
 - [ ] Carnê-leão: livro-caixa × desconto simplificado (o motor usa o maior dos dois).
-- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (106 casos, incluindo ENQ*, ADV1, CONT1, HOSP1, RG* (Presumido e Real de 2027 em diante), RT5 (sociedade de advogados), SR* de 2027 a 2033, AU*, REC* e AV*).
+- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (115 casos, incluindo ENQ*, ADV1, CONT1, HOSP1, RG* (Presumido e Real de 2027 em diante), RT5 (sociedade de advogados), MIX* (atividades mistas), SR* de 2027 a 2033, AU*, REC* e AV*).
 - [ ] **Presumido e Real a partir de 2027 (premissa 80):** conferir a receita-base de IRPJ/CSLL sem CBS e IBS, o crédito integral das compras, o tratamento do ISS fixo na transição e as reduções de 30% e 60% (quais clientes se enquadram); conferir os casos RG1 a RG4 da planilha.
 - [ ] **Sociedades uniprofissionais (premissa 81):** conferir a leitura do ISS fixo na transição (redução de 2029 a 2032 e fim em 2033), a lista de 18 profissões e os requisitos do art. 127, § 1º, II, e o caso RT5 da planilha.
+- [ ] **Atividades mistas (premissa 82):** conferir a repartição da CPP quando há Anexo IV com outra atividade (hoje, proporcional à receita), a presunção por atividade no Presumido, o ICMS sobre as mercadorias e o ISS sobre os serviços, e os casos MIX1 a MIX3 da planilha.
 - [ ] Importação: quais CFOPs excluir da receita (remessas, devoluções, transferências).
 - [ ] **Tabela de NCM monofásicos** (`src/tolaris_motor/tabelas/monofasico.json`): conferir cada prefixo e as
       exceções por subitem na tabela oficial da Receita; hoje é uma lista inicial montada sem acesso à fonte oficial.

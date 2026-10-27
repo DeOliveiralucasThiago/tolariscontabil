@@ -330,6 +330,12 @@ export function ResultadoEnquadramento({ r, acoes }: { r: TResultadoEnquadrament
             </tbody>
           </table>
         </div>
+        {atual.receitas_por_anexo.length > 1 && (
+          <p className="mt-3 text-sm" data-testid="receita-por-anexo">
+            <strong className="font-medium">Receita por Anexo hoje:</strong>{" "}
+            {atual.receitas_por_anexo.map((x) => `Anexo ${x.anexo} ${brl(x.receita)}`).join(" · ")}. A faixa de cada Anexo vem da receita total.
+          </p>
+        )}
         <ul className="mt-3 list-disc pl-5 text-xs text-tinta-2">
           {r.cenarios.filter((c) => c.observacao).map((c) => (
             <li key={c.chave}><strong>{c.descricao}:</strong> {c.observacao}</li>

@@ -82,6 +82,11 @@ def executar_expressa(e: ExpressaEntrada) -> dict[str, Any]:
     return serializar_comparativo(c)
 
 
+def _receitas_por_anexo(perfil: PerfilEmpresa) -> list[tuple[str, Decimal]]:
+    """Receita de cada Anexo do Simples, na ordem do cálculo (a atividade principal primeiro)."""
+    return simples._partes_por_anexo(perfil)
+
+
 def executar_enquadramento(e: EnquadramentoEntrada) -> dict[str, Any]:
     dados = e.model_dump(exclude={"percentual_anexo_iii", "receita_anexo_iii_anual"})
     perfil = PerfilEmpresa(**dados)
@@ -106,9 +111,12 @@ def executar_enquadramento(e: EnquadramentoEntrada) -> dict[str, Any]:
                 "custo_extra_anual": _num(c.custo_extra_anual),
                 "total_com_custo_extra": _num(c.melhor_total),
                 "economia_vs_atual": _num(atual.melhor_total - c.melhor_total),
-                "alertas": [a for a in simples_res.alertas if "separada como atividade do Anexo III" not in a],
+                "alertas": [a for a in simples_res.alertas if "Receita segregada por atividade" not in a],
                 "pro_labore_anual": _num(c.perfil.pro_labore_anual),
-                "receita_anexo_iii": _num(c.perfil.receita_anexo_iii_anual),
+                "receita_anexo_iii": _num(
+                    c.perfil.receita_anexo_iii_anual + c.perfil.receitas_outras_atividades.get(Atividade.SERVICO_ANEXO_III, Decimal(0))
+                ),
+                "receitas_por_anexo": [{"anexo": a, "receita": _num(v)} for a, v in _receitas_por_anexo(c.perfil)],
             }
         )
     economia = atual.melhor_total - melhor.melhor_total
@@ -123,10 +131,10 @@ def executar_enquadramento(e: EnquadramentoEntrada) -> dict[str, Any]:
         "global acima do limite (art. 3º, § 4º, V) ou sócios com relação de pessoalidade, subordinação e habitualidade com o contratante "
         "do serviço (art. 3º, § 4º, XI), nem quem tem débitos com o INSS ou as Fazendas sem exigibilidade suspensa (art. 17, V).",
     ]
-    if perfil.atividade is not Atividade.SERVICO_FATOR_R:
+    if not any(a is Atividade.SERVICO_FATOR_R for a, _ in perfil.partes_atividade):
         alertas.append(
-            "Esta análise é para empresas de serviços do fator R (Anexo III ou V conforme a folha: LC 123/2006, art. 18, §§ 5º-I, 5º-J "
-            "e 5º-M). Para as demais atividades o Anexo já é definido pela atividade."
+            "Os caminhos de enquadramento são para empresas com serviços do fator R (Anexo III ou V conforme a folha: LC 123/2006, art. 18, "
+            "§§ 5º-I, 5º-J e 5º-M). Para as demais atividades o Anexo já é definido pela atividade; veja a receita de cada Anexo no cenário atual."
         )
     return {
         "receita_anual": _num(receita),

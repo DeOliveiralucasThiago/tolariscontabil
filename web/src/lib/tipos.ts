@@ -330,6 +330,8 @@ export interface CompletaEntrada {
   receita_exterior_anual?: number;
   variacao_cambial_anual?: number;
   receita_anexo_iii_anual?: number;
+  /** Partes da receita bruta em outras atividades; cada uma segue o seu Anexo no Simples. */
+  receitas_outras_atividades?: Partial<Record<Atividade, number>>;
   folha_fator_r_anual?: number | null;
   sociedade_profissionais?: boolean;
   profissionais?: number;
@@ -452,6 +454,7 @@ export interface CenarioEnquadramento {
   alertas: string[];
   pro_labore_anual: number;
   receita_anexo_iii: number;
+  receitas_por_anexo: { anexo: string; receita: number }[];
 }
 
 export interface ResultadoEnquadramento {

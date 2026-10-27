@@ -55,6 +55,8 @@ def _perfil_desc(p: PerfilEmpresa) -> str:
         if v:
             partes.append(f"{rotulo} {brl(v)}")
     partes.append(f"ano {p.ano}")
+    for atividade, valor in p.receitas_outras_atividades.items():
+        partes.append(f"receita em {atividade.value} {brl(valor)}")
     if p.reducao_ibs_cbs:
         partes.append(f"redução de {pct(p.reducao_ibs_cbs, 0)} no IBS e na CBS")
     if p.atividade.vende_mercadoria:
@@ -211,6 +213,25 @@ def casos() -> list[Caso]:
         for mod in (presumido, real):
             r = mod.calcular(p)
             sigla = {"Lucro Presumido": "LP", "Lucro Real": "LR"}[r.titulo]
+            lista.append(Caso(f"{cod}-{sigla}", r.titulo, f"{desc}; {_perfil_desc(p)}", r))
+
+    # Receitas de mais de uma atividade: cada uma no seu Anexo do Simples, presunção própria no Presumido, ICMS e ISS por parte
+    mistas = {
+        "MIX1": ("Comércio (R$ 1,2 mi) + serviços do fator R (R$ 0,6 mi, fator R de 17,7%): Anexo I e Anexo V no Simples",
+                 PerfilEmpresa(Atividade.COMERCIO, 1_800_000, folha_clt_anual=240_000, pro_labore_anual=60_000, compras_anual=700_000,
+                               receitas_outras_atividades={"servico_fator_r": 600_000})),
+        "MIX2": ("Advocacia (Anexo IV, R$ 600 mil) + comércio (R$ 300 mil): CPP fora do DAS estimada na proporção da receita do Anexo IV "
+                 "(regra de repartição da folha não lida: confirme)",
+                 PerfilEmpresa(Atividade.SERVICO_ANEXO_IV, 900_000, folha_clt_anual=120_000, pro_labore_anual=36_000, compras_anual=150_000,
+                               receitas_outras_atividades={"comercio": 300_000})),
+        "MIX3": ("Mesma empresa do MIX1 em 2027: CBS e IBS no Presumido e no Real, DAS com a tabela de 2027",
+                 PerfilEmpresa(Atividade.COMERCIO, 1_800_000, folha_clt_anual=240_000, pro_labore_anual=60_000, compras_anual=700_000,
+                               receitas_outras_atividades={"servico_fator_r": 600_000}, ano=2027)),
+    }
+    for cod, (desc, p) in mistas.items():
+        for mod in (simples, presumido, real):
+            r = mod.calcular(p)
+            sigla = {"Simples Nacional": "SN", "Lucro Presumido": "LP", "Lucro Real": "LR"}[r.titulo]
             lista.append(Caso(f"{cod}-{sigla}", r.titulo, f"{desc}; {_perfil_desc(p)}", r))
 
     simples_b2b_intermediarios = {

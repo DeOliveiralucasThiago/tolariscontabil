@@ -153,6 +153,8 @@ def _entradas_legiveis(sim: Simulacao) -> list[tuple[str, str]]:
         ("receita_exterior_anual", "Receita do exterior (exportação)"),
     ]
     linhas = [("Atividade", atividade)]
+    outras = {k: v for k, v in (e.get("receitas_outras_atividades") or {}).items() if float(v or 0)}
+    linhas += [(f"Receita em outra atividade: {ROTULOS_ATIVIDADE.get(k, k)}", brl(v)) for k, v in outras.items()]
     linhas += [(r, brl(e[c])) for c, r in rotulos if float(e.get(c) or 0)]
     if float(e.get("variacao_cambial_anual") or 0):
         linhas.append(("Variação cambial líquida", brl(e["variacao_cambial_anual"])))
@@ -163,6 +165,10 @@ def _entradas_legiveis(sim: Simulacao) -> list[tuple[str, str]]:
                        f"{e.get('profissionais', 0)} profissional(is) x {brl(e.get('iss_fixo_por_profissional_anual', 0))}/ano"))
     else:
         linhas.append(("ISS", pct(e.get("aliquota_iss", 0))))
+    if e.get("atividade") in ("comercio", "industria") and any(k not in ("comercio", "industria") for k in outras):
+        linhas.append(("ISS (parte de serviços)", pct(e.get("aliquota_iss", 0))))
+    elif e.get("atividade") not in ("comercio", "industria") and any(k in ("comercio", "industria") for k in outras):
+        linhas.append(("ICMS (parte de mercadorias)", pct(e.get("aliquota_icms", 0))))
     if e.get("iss_fixo_no_simples"):
         linhas.append(("ISS fixo no Simples", "escritório de serviços contábeis: ISS recolhido ao Município, fora do DAS"))
     if e.get("servicos_hospitalares"):

@@ -51,12 +51,31 @@ def _cenario(chave: str, descricao: str, perfil: PerfilEmpresa, custo: Decimal =
     return Cenario(chave, descricao, perfil, c, custo, obs, _anexos_usados(c))
 
 
+def _receita_fator_r(p: PerfilEmpresa) -> Decimal:
+    """Receita da atividade do fator R (a principal ou uma das outras)."""
+    return sum((v for a, v in p.partes_atividade if a is Atividade.SERVICO_FATOR_R), ZERO)
+
+
+def _com_parte_no_anexo_iii(p: PerfilEmpresa, parte: Decimal) -> PerfilEmpresa:
+    """Tira ``parte`` da receita do fator R e a põe numa atividade que tributa direto no Anexo III."""
+    outras = dict(p.receitas_outras_atividades)
+    if p.atividade is not Atividade.SERVICO_FATOR_R:
+        restante = outras.get(Atividade.SERVICO_FATOR_R, ZERO) - parte
+        if restante > 0:
+            outras[Atividade.SERVICO_FATOR_R] = restante
+        else:
+            outras.pop(Atividade.SERVICO_FATOR_R, None)
+    outras[Atividade.SERVICO_ANEXO_III] = outras.get(Atividade.SERVICO_ANEXO_III, ZERO) + parte
+    return replace(p, receitas_outras_atividades=outras)
+
+
 def analisar(perfil: PerfilEmpresa, percentual_personalizado: Numero | None = None) -> list[Cenario]:
     """Cenário atual e as alternativas. ``perfil`` deve descrever a empresa como ela é hoje."""
     data = date(perfil.ano, 1, 1)
     base = replace(perfil, receita_anexo_iii_anual=ZERO)
     cenarios = [_cenario("atual", "Como está hoje", base)]
-    if base.atividade is not Atividade.SERVICO_FATOR_R:
+    receita_fr = _receita_fator_r(base)
+    if receita_fr <= 0:
         return cenarios
 
     minimo = D(simples._tabela(data)["fator_r_minimo"])
@@ -95,13 +114,14 @@ def analisar(perfil: PerfilEmpresa, percentual_personalizado: Numero | None = No
         p = D(percentual_personalizado)
         if 0 < p <= 1 and p not in percentuais:
             percentuais.append(p)
+    mista = base.tem_atividades_mistas
     for p in sorted(percentuais):
-        parte = (base.receita_bruta_anual * p).quantize(Decimal("0.01"))
+        parte = (receita_fr * p).quantize(Decimal("0.01"))
         cenarios.append(
             _cenario(
                 f"anexo_iii_{int(p * 100)}",
-                f"{int(p * 100)}% da receita em atividade do Anexo III ({brl(parte)})",
-                replace(base, receita_anexo_iii_anual=parte),
+                f"{int(p * 100)}% da receita {'de serviços do fator R ' if mista else ''}em atividade do Anexo III ({brl(parte)})",
+                _com_parte_no_anexo_iii(base, parte),
                 ZERO,
                 "Só vale se a empresa passar a exercer essa atividade de verdade e emitir nota com ela.",
             )

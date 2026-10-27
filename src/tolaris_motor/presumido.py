@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from . import consumo, tabelas
 from .base import ZERO, D, Resultado, brl, pct
-from .empresa import PerfilEmpresa, inss_patronal_regime_normal, tributo_sobre_receita_local
+from .empresa import PRESUNCAO_PADRAO, PerfilEmpresa, inss_patronal_regime_normal, tributo_sobre_receita_local
 from .simples import alerta_exportacao
 
 
@@ -58,12 +58,30 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
 
     p = presuncoes[perfil.presuncao]
     p_irpj, p_csll = D(p["irpj"]), D(p["csll"])
-    res.passo(
-        "Percentuais de presunção",
-        f"{p['descricao']}: IRPJ {pct(p_irpj, 1)}, CSLL {pct(p_csll, 1)}",
-        p_irpj,
-        "Lei 9.249/1995, art. 15, §1º e art. 20",
-    )
+    if perfil.tem_atividades_mistas:
+        # Cada atividade tem a presunção própria (Lei 9.249/1995, art. 15); a base é a soma das receitas x percentuais
+        partes_txt = []
+        soma_irpj = soma_csll = ZERO
+        for ativ, valor in perfil.partes_atividade:
+            chave = perfil.presuncao if ativ is perfil.atividade else PRESUNCAO_PADRAO[ativ]
+            pi, pc = D(presuncoes[chave]["irpj"]), D(presuncoes[chave]["csll"])
+            soma_irpj += valor * pi
+            soma_csll += valor * pc
+            partes_txt.append(f"{presuncoes[chave]['descricao']} {brl(valor)} (IRPJ {pct(pi, 1)}, CSLL {pct(pc, 1)})")
+        p_irpj, p_csll = soma_irpj / receita, soma_csll / receita
+        res.passo(
+            "Percentuais de presunção (atividades mistas, média ponderada pela receita)",
+            "; ".join(partes_txt) + f" => IRPJ {pct(p_irpj, 2)}, CSLL {pct(p_csll, 2)}",
+            p_irpj,
+            "Lei 9.249/1995, art. 15, §1º e art. 20 (percentual de cada atividade)",
+        )
+    else:
+        res.passo(
+            "Percentuais de presunção",
+            f"{p['descricao']}: IRPJ {pct(p_irpj, 1)}, CSLL {pct(p_csll, 1)}",
+            p_irpj,
+            "Lei 9.249/1995, art. 15, §1º e art. 20",
+        )
     if perfil.presuncao == "servicos_hospitalares":
         res.alerta(
             "Serviços hospitalares (IRPJ 8% e CSLL 12%): a presunção reduzida só vale para quem presta serviços hospitalares e afins na forma da lei "
