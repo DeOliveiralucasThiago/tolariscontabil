@@ -243,3 +243,19 @@ def test_cpp_do_anexo_iv_com_divisao_da_folha_pela_api(logado: TestClient):
     assert cpp({**base, "folha_so_outros_anexos_pct": 1}) == 0
     r = logado.post("/api/simulacoes/previa/completa", json={**base, "folha_so_anexo_iv_pct": 0.7, "folha_so_outros_anexos_pct": 0.5})
     assert r.status_code == 422
+
+
+def test_atividades_com_partilha_ajustada_pela_api(logado: TestClient):
+    cid = logado.post("/api/clientes", json={"razao_social": "Locadora Ltda", "atividade": "locacao_bens_moveis"}).json()["id"]
+    base = {"receita_bruta_anual": 600000, "folha_clt_anual": 100000}
+    das = lambda s: next(t["valor"] for r in s["resultado"]["regimes"] if r["titulo"] == "Simples Nacional" for t in r["tributos"] if t["nome"] == "DAS")  # noqa: E731
+    loc = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "atividade": "locacao_bens_moveis"}).json()
+    assert round(das(loc)) == 42768
+    transp = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "atividade": "transporte_cargas_icms"}).json()
+    assert round(das(transp), 2) == 57219.9
+    mista = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "atividade": "comercio", "receitas_outras_atividades": {"comunicacao_icms": 300000}}).json()
+    assert any("com a do ICMS do Anexo I" in p["descricao"] for r in mista["resultado"]["regimes"] if r["titulo"] == "Simples Nacional" for p in r["memoria"])
+    assert logado.get(f"/api/simulacoes/{transp['id']}/proposta.pdf").content.startswith(b"%PDF")
+    enq = logado.post("/api/calculadoras/enquadramento", json={**base, "atividade": "locacao_bens_moveis"}).json()
+    assert enq["cenarios"][0]["anexos_simples"] == ["III"]
+    assert logado.post("/api/clientes", json={"razao_social": "X", "atividade": "locacao_de_imoveis"}).status_code == 422

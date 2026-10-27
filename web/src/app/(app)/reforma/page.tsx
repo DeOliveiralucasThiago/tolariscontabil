@@ -323,7 +323,7 @@ function PaginaReforma() {
   const params = useSearchParams();
   const clienteInicial = params.get("cliente") ? Number(params.get("cliente")) : undefined;
   const receitaInicial = Number(params.get("receita")) > 0 ? Number(params.get("receita")) : undefined;
-  const atividadeInicial = ["comercio", "industria", "servico_anexo_iii", "servico_anexo_iv", "servico_fator_r"].includes(params.get("atividade") ?? "")
+  const atividadeInicial = ["comercio", "industria", "servico_anexo_iii", "servico_anexo_iv", "servico_fator_r", "locacao_bens_moveis", "industria_ipi_iss", "transporte_cargas_icms", "transporte_passageiros_icms", "comunicacao_icms"].includes(params.get("atividade") ?? "")
     ? (params.get("atividade") as Atividade)
     : undefined;
   const [aba, setAba] = useState<"transicao" | "simples">(params.get("aba") === "simples" ? "simples" : "transicao");

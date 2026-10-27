@@ -458,9 +458,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     outras; a tela mostra a receita por Anexo. **CPP do Anexo IV com outra atividade (lida em 27/10/2026 na IN RFB 2.110/2022, arts. 168 a 171, e na Res. CGSN 140/2018, art. 147):** empregados que trabalham só em atividades dos
     Anexos I, II, III e V têm a CPP dentro do DAS; os que trabalham só no Anexo IV pagam a CPP (20% + RAT) sobre a remuneração, fora do DAS; os que atuam nas duas (exercício concomitante) pagam a CPP
     fora do DAS na proporção da receita do Anexo IV sobre a receita total (a mesma proporção para o 13º). O Tolaris aceita a divisão da folha ("só do Anexo IV" e "só dos outros Anexos"; o resto é
-    concomitante) e, sem ela, trata todos como concomitantes e avisa. A divisão vale também para o pró-labore. **Não modelado, previsto no art. 25 da Res. CGSN 140:** transporte intermunicipal e
-    interestadual e comunicação (Anexo III sem ISS e com o ICMS do Anexo I), locação de bens móveis (Anexo III sem ISS), atividade com IPI e ISS simultâneos (Anexo II sem ICMS e com o ISS do Anexo
-    III), medicamentos manipulados, venda de veículos em consignação e agência de viagem. **Não lido:** (a) a apropriação das compras por atividade no ICMS (todas as compras abatem o ICMS das
+    concomitante) e, sem ela, trata todos como concomitantes e avisa. A divisão vale também para o pró-labore. **Segregações do art. 25 (transporte intermunicipal, comunicação, locação de bens móveis, IPI com ISS) foram modeladas no item 85.** **Não lido:** (a) a apropriação das compras por atividade no ICMS (todas as compras abatem o ICMS das
     mercadorias); (b) a presunção de cada atividade seguiu a tabela padrão (comércio 8% e 12%, indústria 8% e 12%, serviços 32%), sem as presunções especiais (transporte, serviços hospitalares nas
     outras atividades etc.).
 
@@ -485,6 +483,18 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     participação em outra empresa, atividade financeira etc.) dependem de dados que o Tolaris não tem e seguem como lista de conferência; a EIRELI foi extinta em 2021 e as que restam viraram sociedades
     limitadas unipessoais; o registro na Junta ou no cartório (art. 3º, caput) não é verificado.
 
+85. **Segregações do art. 25, § 1º, da Res. CGSN 140/2018 (texto na pasta `legislação/`, 27/10/2026):** cinco atividades novas, usáveis como principal ou como "outra atividade": **locação de bens
+    móveis** (Anexo III sem a parcela do ISS; art. 25, § 1º, VI; LC 123, art. 18, § 4º, V), **indústria com IPI e ISS** (Anexo II sem a parcela do ICMS e com a do ISS do Anexo III; VII; LC 123, art. 18,
+    § 4º, VI), **transporte intermunicipal e interestadual de cargas e de passageiros** e **comunicação** (Anexo III sem a parcela do ISS e com a do ICMS do Anexo I; IX; LC 123, art. 18, § 5º-E).
+    **Conta usada:** a alíquota efetiva do Anexo (RBT12 total) x (1 - repartição do tributo retirado) + a alíquota efetiva do outro Anexo x a repartição do tributo acrescentado, isto é, o "percentual
+    efetivo de cada tributo" da LC 123, art. 18, § 1º-B. **A resolução e a lei dizem "deduzida a parcela" e "acrescida a parcela", sem a conta passo a passo; essa é a leitura do Tolaris e vem com aviso
+    em todo resultado: confira com o PGDAS-D.** A partilha de 2027 em diante usa as tabelas do ano (em 2033 não há mais ISS nem ICMS nas tabelas, e o ajuste some). **Presumido e Real:** locação de bens
+    móveis não paga ISS (Súmula Vinculante 31 do STF) nem ICMS; transporte e comunicação pagam ICMS (alíquota do cadastro, sem o crédito próprio da atividade) e não ISS; a indústria com IPI e ISS paga
+    ISS, sem IPI; presunções de 8% (cargas), 16% (passageiros), 32% (locação e comunicação) e a da indústria (IPI e ISS). **Não modelado:** exportação dessas atividades (usa o Anexo base), crédito de ICMS
+    do transporte, IPI, e o Simples na Reforma (avisa que usa a partilha sem o ajuste). **Só orientação, sem cálculo próprio:** medicamentos manipulados (Anexo III sob encomenda, Anexo I nos demais: § 2º),
+    venda de veículos em consignação (comissão no Anexo III, contrato estimatório no Anexo I: § 16) e agência de viagem (receita é a comissão quando só intermedia: § 15): informe a receita já com essa regra
+    e escolha a atividade.
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias? A lei, art. 18, § 24, soma também a CPP efetivamente recolhida).
@@ -500,11 +510,12 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Percentuais de partilha do DAS (tabela em `simples_nacional.json`, campo `partilha`), inclusive as vigências de 2027 a 2033.
 - [ ] Modelo da decisão do Simples na Reforma (preços ajustados para o mesmo custo líquido do cliente).
 - [ ] Carnê-leão: livro-caixa × desconto simplificado (o motor usa o maior dos dois).
-- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (115 casos, incluindo ENQ*, ADV1, CONT1, HOSP1, RG* (Presumido e Real de 2027 em diante), RT5 (sociedade de advogados), MIX* (atividades mistas), SR* de 2027 a 2033, AU*, REC* e AV*).
+- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (127 casos, incluindo ENQ*, ADV1, CONT1, HOSP1, RG* (Presumido e Real de 2027 em diante), RT5 (sociedade de advogados), MIX* (atividades mistas), SEG* (segregações do art. 25), SR* de 2027 a 2033, AU*, REC* e AV*).
 - [ ] **Presumido e Real a partir de 2027 (premissa 80):** conferir a receita-base de IRPJ/CSLL sem CBS e IBS, o crédito integral das compras, o tratamento do ISS fixo na transição e as reduções de 30% e 60% (quais clientes se enquadram); conferir os casos RG1 a RG4 da planilha.
 - [ ] **Sociedades uniprofissionais (premissa 81):** conferir a leitura do ISS fixo na transição (redução de 2029 a 2032 e fim em 2033), a lista de 18 profissões e os requisitos do art. 127, § 1º, II, e o caso RT5 da planilha.
 - [ ] **Atividades mistas (premissa 82):** a divisão da folha entre os Anexos para a CPP do Anexo IV (IN RFB 2.110/2022), a presunção por atividade no Presumido, o ICMS sobre as mercadorias e o ISS sobre os serviços, e os casos MIX1 a MIX3 da planilha.
 - [ ] **Natureza jurídica (premissa 84):** conferir a classificação por descrição (por exemplo, "Sociedade Simples Pura" e "Sociedade Unipessoal de Advogados" como sociedade simples) e os clientes do Simples que o Tolaris marcar como vedados.
+- [ ] **Segregações do art. 25 (premissa 85):** a conta da alíquota aplicada (alíquota efetiva x repartição, com o tributo retirado e o acrescentado) contra o PGDAS-D, e os casos SEG1 a SEG4 da planilha.
 - [ ] Importação: quais CFOPs excluir da receita (remessas, devoluções, transferências).
 - [ ] **Tabela de NCM monofásicos** (`src/tolaris_motor/tabelas/monofasico.json`): conferir cada prefixo e as
       exceções por subitem na tabela oficial da Receita; hoje é uma lista inicial montada sem acesso à fonte oficial.

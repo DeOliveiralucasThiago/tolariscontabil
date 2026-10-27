@@ -29,6 +29,11 @@ ROTULOS_ATIVIDADE = {
     "servico_anexo_iii": "Serviços (Anexo III)",
     "servico_anexo_iv": "Serviços (Anexo IV)",
     "servico_fator_r": "Serviços sujeitos ao fator R",
+    "locacao_bens_moveis": "Locação de bens móveis",
+    "industria_ipi_iss": "Indústria com IPI e ISS",
+    "transporte_cargas_icms": "Transporte intermunicipal de cargas",
+    "transporte_passageiros_icms": "Transporte intermunicipal de passageiros",
+    "comunicacao_icms": "Serviços de comunicação",
 }
 
 

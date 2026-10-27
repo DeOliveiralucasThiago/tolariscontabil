@@ -67,6 +67,27 @@ def pro_labore_minimo_fator_r(
     return max(ZERO, falta) / 12
 
 
+AJUSTE_ANEXO: dict[Atividade, tuple[str, str]] = {
+    Atividade.LOCACAO_BENS_MOVEIS: ("III", "sem_iss"),
+    Atividade.INDUSTRIA_IPI_ISS: ("II", "icms_por_iss"),
+    Atividade.TRANSPORTE_CARGAS_ICMS: ("III", "iss_por_icms"),
+    Atividade.TRANSPORTE_PASSAGEIROS_ICMS: ("III", "iss_por_icms"),
+    Atividade.COMUNICACAO_ICMS: ("III", "iss_por_icms"),
+}
+"""Anexo e ajuste da partilha de cada atividade do art. 25, § 1º, VI, VII e IX, da Res. CGSN 140/2018 (LC 123/2006, art. 18, §§ 4º, V e VI, e 5º-E)."""
+ROTULO_AJUSTE = {
+    "": "",
+    "sem_iss": " sem a parcela do ISS",
+    "icms_por_iss": " sem a parcela do ICMS e com a do ISS do Anexo III",
+    "iss_por_icms": " sem a parcela do ISS e com a do ICMS do Anexo I",
+}
+BASE_LEGAL_AJUSTE = {
+    "sem_iss": "LC 123/2006, art. 18, § 4º, V; Res. CGSN 140/2018, art. 25, § 1º, VI",
+    "icms_por_iss": "LC 123/2006, art. 18, § 4º, VI; Res. CGSN 140/2018, art. 25, § 1º, VII",
+    "iss_por_icms": "LC 123/2006, art. 18, § 5º-E; Res. CGSN 140/2018, art. 25, § 1º, IX",
+}
+
+
 def anexo_da_atividade(perfil: PerfilEmpresa, res: Resultado | None = None, atividade: Atividade | None = None) -> str:
     """Anexo do Simples da atividade (a principal, se não vier outra). O fator R usa a receita e a folha totais da empresa."""
     a = atividade or perfil.atividade
@@ -78,6 +99,8 @@ def anexo_da_atividade(perfil: PerfilEmpresa, res: Resultado | None = None, ativ
         return "III"
     if a is Atividade.SERVICO_ANEXO_IV:
         return "IV"
+    if a in AJUSTE_ANEXO:
+        return AJUSTE_ANEXO[a][0]
     data = date(perfil.ano, 1, 1)
     minimo = D(_tabela(data)["fator_r_minimo"])
     folha = folha_fator_r(perfil)
@@ -108,16 +131,51 @@ def anexo_da_atividade(perfil: PerfilEmpresa, res: Resultado | None = None, ativ
     return anexo
 
 
-def _partes_por_anexo(perfil: PerfilEmpresa, res: Resultado | None = None) -> list[tuple[str, Decimal]]:
-    """Receita por Anexo: cada atividade no seu Anexo (LC 123/2006, art. 18, § 4º); atividades no mesmo Anexo somam."""
-    por_anexo: dict[str, Decimal] = {}
+def _partes_simples(perfil: PerfilEmpresa, res: Resultado | None = None) -> list[tuple[str, str, Decimal]]:
+    """Receita por (Anexo, ajuste da partilha): cada atividade no seu Anexo (LC 123/2006, art. 18, § 4º); o que cai no mesmo par soma."""
+    por_parte: dict[tuple[str, str], Decimal] = {}
     fator_r_lancado = False
     for atividade, valor in perfil.partes_atividade:
         lancar = res if atividade is Atividade.SERVICO_FATOR_R and not fator_r_lancado else None
         fator_r_lancado = fator_r_lancado or atividade is Atividade.SERVICO_FATOR_R
         anexo = anexo_da_atividade(perfil, lancar, atividade)
+        chave = (anexo, AJUSTE_ANEXO[atividade][1] if atividade in AJUSTE_ANEXO else "")
+        por_parte[chave] = por_parte.get(chave, ZERO) + valor
+    return [(anexo, ajuste, valor) for (anexo, ajuste), valor in por_parte.items()]
+
+
+def _partes_por_anexo(perfil: PerfilEmpresa, res: Resultado | None = None) -> list[tuple[str, Decimal]]:
+    """Receita por Anexo (sem separar os ajustes da partilha)."""
+    por_anexo: dict[str, Decimal] = {}
+    for anexo, _, valor in _partes_simples(perfil, res):
         por_anexo[anexo] = por_anexo.get(anexo, ZERO) + valor
     return list(por_anexo.items())
+
+
+def aliquota_da_parte(anexo: str, ajuste: str, rbt12: Numero, data: date) -> tuple[Decimal, str]:
+    """Alíquota efetiva aplicada à parte da receita e a fórmula do ajuste (vazia quando não há).
+
+    Os percentuais efetivos de cada tributo são a alíquota efetiva x a repartição da faixa (LC 123/2006, art. 18, § 1º-B)."""
+    aliq = aliquota_efetiva(anexo, rbt12, data)
+    if not ajuste:
+        return aliq, ""
+    if ajuste == "sem_iss":
+        iss = partilha("III", rbt12, data).get("iss", ZERO)
+        return aliq * (1 - iss), f"{pct(aliq, 4)} x (1 - {pct(iss, 2)} de ISS do Anexo III)"
+    if ajuste == "iss_por_icms":
+        iss = partilha("III", rbt12, data).get("iss", ZERO)
+        aliq_i, icms = aliquota_efetiva("I", rbt12, data), partilha("I", rbt12, data).get("icms", ZERO)
+        return (
+            aliq * (1 - iss) + aliq_i * icms,
+            f"{pct(aliq, 4)} x (1 - {pct(iss, 2)} de ISS do Anexo III) + {pct(aliq_i, 4)} do Anexo I x {pct(icms, 2)} de ICMS",
+        )
+    # icms_por_iss: Anexo II sem o ICMS e com o ISS do Anexo III
+    icms = partilha("II", rbt12, data).get("icms", ZERO)
+    aliq_iii, iss = aliquota_efetiva("III", rbt12, data), partilha("III", rbt12, data).get("iss", ZERO)
+    return (
+        aliq * (1 - icms) + aliq_iii * iss,
+        f"{pct(aliq, 4)} x (1 - {pct(icms, 2)} de ICMS do Anexo II) + {pct(aliq_iii, 4)} do Anexo III x {pct(iss, 2)} de ISS",
+    )
 
 
 BASE_LEGAL_ISS_FIXO = "LC 123/2006, art. 18, § 5º-B, XIV e § 22-A; Res. CGSN 140/2018, art. 25, § 1º, VIII, e art. 34"
@@ -196,7 +254,7 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             res.alerta(f"Receita de exportação acima de {brl(limite)}: empresa não pode optar pelo Simples Nacional.")
         return res
 
-    partes = _partes_por_anexo(perfil, res)
+    partes = _partes_simples(perfil, res)
     multiplas = len(partes) > 1
     # A alíquota de cada mercado sai do RBT12 daquele mercado (LC 123/2006, art. 3º, § 15; Res. CGSN 140/2018, art. 23)
     mercados = [("mercado interno", interna), ("exportação", exterior)] if exterior else [("", receita)]
@@ -206,19 +264,24 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
         if rbt12 <= 0:
             continue
         em_mercado = f", {mercado}" if mercado else ""
-        for anx, parte in partes:
+        for anx, ajuste, parte in partes:
             n, f = faixa(anx, rbt12, data)
-            aliq = aliquota_efetiva(anx, rbt12, data)
+            aliq_efetiva = aliquota_efetiva(anx, rbt12, data)
             res.passo(
                 f"Alíquota efetiva - Anexo {anx}, {n}ª faixa{em_mercado}",
-                f"({brl(rbt12)} x {pct(D(f['aliquota']))} - {brl(f['deduzir'])}) / {brl(rbt12)} = {pct(aliq, 4)}",
-                aliq,
+                f"({brl(rbt12)} x {pct(D(f['aliquota']))} - {brl(f['deduzir'])}) / {brl(rbt12)} = {pct(aliq_efetiva, 4)}",
+                aliq_efetiva,
                 BASE_LEGAL_ALIQUOTA + ("; art. 3º, § 15" if mercado else ""),
             )
+            aliq, formula_ajuste = aliquota_da_parte(anx, ajuste, rbt12, data)
+            if ajuste:
+                res.passo(
+                    f"Alíquota aplicada - Anexo {anx}{ROTULO_AJUSTE[ajuste]}{em_mercado}", formula_ajuste + f" = {pct(aliq, 4)}", aliq, BASE_LEGAL_AJUSTE[ajuste]
+                )
             valor = rbt12 * (parte / receita if receita else D(1))  # parcela do mercado neste Anexo
             desconsiderados = tributos_desconsiderados_exportacao("mercadorias" if anx in ("I", "II") else "servicos", data)
-            sufixo = f" (Anexo {anx}, {brl(valor)})" if multiplas else ""
-            tira_iss = perfil.iss_fixo_no_simples and anx == "III" and mercado != "exportação"
+            sufixo = f" (Anexo {anx}{ROTULO_AJUSTE[ajuste]}, {brl(valor)})" if multiplas else ""
+            tira_iss = perfil.iss_fixo_no_simples and anx == "III" and not ajuste and mercado != "exportação"
             fracao_iss = partilha(anx, rbt12, data).get("iss", ZERO) if tira_iss else ZERO
             if tira_iss:
                 formula_iss = f" x (1 - {pct(fracao_iss, 2)} de ISS da partilha da faixa)"
@@ -256,7 +319,7 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             "DAS anual", " + ".join(brl(v) for v in passos_das), das_total, "LC 123/2006, art. 13 e art. 18, §§ 1º e 4º"
         )
     if multiplas:
-        anexos_txt = ", ".join(f"Anexo {anx} ({brl(v)})" for anx, v in partes)
+        anexos_txt = ", ".join(f"Anexo {anx}{ROTULO_AJUSTE[ajuste]} ({brl(v)})" for anx, ajuste, v in partes)
         res.alerta(
             f"Receita segregada por atividade: {anexos_txt}. Cada atividade tributa no Anexo da atividade realmente exercida, com a faixa "
             "pela receita total. Só vale se a empresa exerce de fato cada atividade, tem o CNAE no cadastro e emite a nota com a atividade "
@@ -264,6 +327,13 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             "enquadra pela atividade realmente exercida."
         )
 
+    if any(ajuste for _, ajuste, _ in partes):
+        res.alerta(
+            "Atividade com partilha ajustada (locação de bens móveis, IPI com ISS, transporte intermunicipal ou comunicação): o DAS usa a alíquota efetiva do Anexo, "
+            "tira a parcela do ISS ou do ICMS que não é devida e põe a do outro tributo (Res. CGSN 140/2018, art. 25, § 1º, VI, VII e IX). O Tolaris aplica o "
+            "percentual efetivo de cada tributo (alíquota efetiva x repartição da faixa, LC 123/2006, art. 18, § 1º-B); o texto da resolução não traz a conta passo a "
+            "passo, então confira o valor no PGDAS-D."
+        )
     if perfil.iss_fixo_no_simples:
         res.tributos["ISS fixo (recolhido ao Município, fora do DAS)"] = res.passo(
             "ISS fixo do escritório de serviços contábeis",
@@ -276,7 +346,7 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             "conforme a lei municipal (Res. CGSN 140/2018, art. 34). Se o Município não autorizar esse recolhimento, o ISS vai no DAS pela receita "
             "(art. 25, § 11): desmarque a opção. Informe o ISS fixo no PGDAS-D e confirme o valor e as condições com a prefeitura."
         )
-    receita_iv = next((v for anx, v in partes if anx == "IV"), ZERO)
+    receita_iv = sum((v for anx, _, v in partes if anx == "IV"), ZERO)
     if receita_iv > 0:
         aliq_folha = ALIQUOTA_CPP + perfil.rat
         parte_iv = receita_iv / receita if receita else D(1)

@@ -30,12 +30,14 @@ def _pis_cofins_atual(nao_cumulativo: bool) -> Decimal:
 def _partes(perfil: PerfilEmpresa, nao_cumulativo: bool) -> list[tuple[Atividade, Decimal, Decimal, Decimal]]:
     """Por atividade, no mercado interno: (atividade, receita, ICMS/ISS nominal embutido, vendas sem tributos)."""
     internas = perfil.partes_internas
-    servicos = sum((v for a, v in internas if not a.vende_mercadoria), ZERO)
+    servicos = sum((v for a, v in internas if a.sujeita_a_iss), ZERO)
     pis_cofins = _pis_cofins_atual(nao_cumulativo)
     partes = []
     for atividade, valor in internas:
-        if atividade.vende_mercadoria:
+        if atividade.sujeita_a_icms:
             local = valor * perfil.aliquota_icms
+        elif not atividade.sujeita_a_iss:
+            local = ZERO  # locação de bens móveis: sem ISS nem ICMS
         elif perfil.sociedade_profissionais:
             local = perfil.iss_fixo_anual * (valor / servicos if servicos else ZERO)  # ISS fixo repartido entre as atividades de serviço
         else:
@@ -54,7 +56,7 @@ def _entrada(perfil: PerfilEmpresa, nao_cumulativo: bool) -> reforma.EntradaRefo
         reducao = reducao * base_principal / base_total
     return reforma.EntradaReforma(
         receita_bruta_anual=perfil.receita_interna_anual,
-        vende_mercadoria=perfil.receita_mercadorias_anual > 0,
+        vende_mercadoria=perfil.receita_icms_anual > 0,
         pis_cofins_nao_cumulativo=nao_cumulativo,
         compras_anual=perfil.compras_anual,
         despesas_creditaveis_anual=perfil.despesas_creditaveis_anual,

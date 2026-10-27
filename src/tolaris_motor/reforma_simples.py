@@ -133,6 +133,11 @@ def simular(e: EntradaSimplesReforma) -> list[CenarioAno]:
 
     for ano in e.anos:
         res = Resultado(f"Simples na Reforma — {ano}")
+        if e.atividade.tratamento_especial:
+            res.alerta(
+                "Atividade com partilha ajustada no Simples (locação de bens móveis, IPI com ISS, transporte intermunicipal ou comunicação): esta simulação usa a "
+                "partilha do Anexo sem o ajuste; o resultado é aproximado (Res. CGSN 140/2018, art. 25, § 1º, VI, VII e IX)."
+            )
         data = date(ano, 1, 1)
         n_faixa, _ = simples.faixa(anexo, receita, data)
         e_das = simples.aliquota_efetiva(anexo, receita, data)

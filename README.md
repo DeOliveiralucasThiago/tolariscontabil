@@ -255,6 +255,8 @@ sua presunção no Presumido, e o ICMS e o ISS incidem sobre mercadorias e servi
 
 **Natureza jurídica:** o cadastro do cliente guarda a natureza jurídica (vem da consulta de CNPJ ou se escolhe na tela). O Simples fica "não aplicável" para sociedade por ações e cooperativa (exceto de consumo), a Central de Avisos marca o cliente do Simples nessa situação e o MEI que não é empresário individual, e a simulação do cliente usa a natureza do cadastro (item 84 de `docs/premissas.md`).
 
+**Segregações do art. 25 (Res. CGSN 140/2018):** além das atividades comuns, o Tolaris calcula locação de bens móveis, indústria com IPI e ISS, transporte intermunicipal de cargas e de passageiros e comunicação, com a partilha do Anexo ajustada no Simples (tira o ISS ou o ICMS que não é devido e põe o outro) e ICMS ou ISS próprios nos demais regimes. A conta do ajuste é a leitura do Tolaris do texto da lei e vem com aviso (item 85 de `docs/premissas.md`).
+
 **Legislação lida:** LC 123/2006 (texto completo), LC 214/2025 (pontos do Simples), LC 227/2026 e LC 238/2026 (MEI de R$ 110 mil em 2027 e
 R$ 140 mil em 2028) e as Resoluções CGSN 190, 191, 194 e 195 (itens 71 a 75 de `docs/premissas.md`). `docs/fontes-da-legislacao.md` diz onde
 cada texto foi lido e o que cada fonte entrega. O feed de mudanças (`tabelas/mudancas.json`) marca o que ainda não entrou no cálculo
@@ -304,7 +306,7 @@ print(reforma.tabela_resumo(anos))
 
 ## Validação com contador
 
-`validacao/casos_validacao.xlsx` traz 115 casos (empresas, PF, sócios, reforma, Simples na reforma de 2027 a 2033, enquadramento do Anexo V ao III, sociedade de profissionais com ISS fixo, serviços hospitalares, autônomo × CNPJ, recuperação de tributos e avisos de fator R) com os
+`validacao/casos_validacao.xlsx` traz 127 casos (empresas, PF, sócios, reforma, Simples na reforma de 2027 a 2033, enquadramento do Anexo V ao III, sociedade de profissionais com ISS fixo, serviços hospitalares, autônomo × CNPJ, recuperação de tributos e avisos de fator R) com os
 valores do motor, a memória de cálculo e os alertas. O contador preenche a coluna
 amarela "Valor correto" e a planilha mostra a diferença. Para regenerar:
 

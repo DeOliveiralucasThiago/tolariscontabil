@@ -160,3 +160,9 @@ O fluxo da natureza jurídica usa a BrasilAPI falsa e a API apontando para ela (
 ```bash
 node fluxo_natureza_juridica.mjs saida
 ```
+
+O fluxo das segregações do art. 25 (locação de bens móveis, transporte intermunicipal e atividade mista) não usa rede externa:
+
+```bash
+node fluxo_segregacoes.mjs saida
+```

@@ -3,7 +3,12 @@ export type Atividade =
   | "industria"
   | "servico_anexo_iii"
   | "servico_anexo_iv"
-  | "servico_fator_r";
+  | "servico_fator_r"
+  | "locacao_bens_moveis"
+  | "industria_ipi_iss"
+  | "transporte_cargas_icms"
+  | "transporte_passageiros_icms"
+  | "comunicacao_icms";
 
 export type StatusCliente = "prospect" | "ativo" | "inativo";
 export type Regime = "mei" | "simples" | "presumido" | "real" | "outro";
@@ -59,6 +64,46 @@ export const ATIVIDADES: InfoAtividade[] = [
     ajuda: "Construção, vigilância, limpeza, advocacia",
     exemplos: "Construção civil, vigilância e segurança, limpeza e conservação, advocacia.",
     como: "Anexo IV do Simples Nacional: a contribuição previdenciária patronal (CPP) é paga à parte, fora do DAS.",
+  },
+  {
+    valor: "locacao_bens_moveis",
+    rotulo: "Locação de bens móveis",
+    rotuloLongo: "Locação de bens móveis — Anexo III sem ISS",
+    ajuda: "Aluguel de máquinas, equipamentos, veículos e outros bens móveis",
+    exemplos: "Locação de máquinas e equipamentos, de veículos sem motorista, de andaimes, de materiais de festa. Não é locação de imóveis nem cessão de mão de obra.",
+    como: "Anexo III do Simples, sem a parcela do ISS (a locação de bens móveis não paga ISS): LC 123, art. 18, § 4º, V. A receita é só a da locação, sem serviço da lista da LC 116.",
+  },
+  {
+    valor: "industria_ipi_iss",
+    rotulo: "Indústria com IPI e ISS",
+    rotuloLongo: "Indústria com IPI e ISS — Anexo II com ISS",
+    ajuda: "Industrialização que paga IPI e ISS ao mesmo tempo",
+    exemplos: "Industrialização por encomenda de terceiros (por exemplo, usinagem, confecção sob medida) em que o serviço sofre ISS e o produto, IPI.",
+    como: "Anexo II sem a parcela do ICMS e com a do ISS do Anexo III: LC 123, art. 18, § 4º, VI.",
+  },
+  {
+    valor: "transporte_cargas_icms",
+    rotulo: "Transporte de cargas (intermunicipal)",
+    rotuloLongo: "Transporte intermunicipal e interestadual de cargas — Anexo III com ICMS",
+    ajuda: "Frete entre municípios ou estados",
+    exemplos: "Transportadoras rodoviárias, fluviais e aéreas de carga que cruzam divisas de município ou estado.",
+    como: "Anexo III sem a parcela do ISS e com a do ICMS do Anexo I: LC 123, art. 18, § 5º-E. Transporte municipal de cargas é o Anexo III comum.",
+  },
+  {
+    valor: "transporte_passageiros_icms",
+    rotulo: "Transporte de passageiros (intermunicipal)",
+    rotuloLongo: "Transporte intermunicipal e interestadual de passageiros — Anexo III com ICMS",
+    ajuda: "Ônibus e vans entre municípios ou estados (nas situações permitidas)",
+    exemplos: "Transporte intermunicipal ou interestadual de passageiros nas hipóteses que a lei permite ao Simples (art. 17, VI, e art. 15, §§ 4º e 5º).",
+    como: "Mesmo cálculo do transporte de cargas: Anexo III sem ISS e com o ICMS do Anexo I (Res. CGSN 140, art. 25, § 1º, IX, b).",
+  },
+  {
+    valor: "comunicacao_icms",
+    rotulo: "Serviços de comunicação",
+    rotuloLongo: "Serviços de comunicação — Anexo III com ICMS",
+    ajuda: "Telefonia, provedores de acesso, rádio e TV por assinatura",
+    exemplos: "Serviços de comunicação sujeitos ao ICMS (provedores de acesso, telefonia, comunicação de dados).",
+    como: "Anexo III sem a parcela do ISS e com a do ICMS do Anexo I: LC 123, art. 18, § 5º-E.",
   },
 ];
 

@@ -234,6 +234,22 @@ def casos() -> list[Caso]:
             sigla = {"Simples Nacional": "SN", "Lucro Presumido": "LP", "Lucro Real": "LR"}[r.titulo]
             lista.append(Caso(f"{cod}-{sigla}", r.titulo, f"{desc}; {_perfil_desc(p)}", r))
 
+    # Segregações do art. 25, § 1º, da Res. CGSN 140/2018: partilha ajustada no Simples (ISS e ICMS trocados) e ICMS ou ISS próprios nos demais regimes
+    especiais = {
+        "SEG1": ("Locação de bens móveis: Anexo III sem a parcela do ISS", PerfilEmpresa(Atividade.LOCACAO_BENS_MOVEIS, 600_000, folha_clt_anual=100_000)),
+        "SEG2": ("Transporte intermunicipal de cargas: Anexo III sem ISS e com o ICMS do Anexo I",
+                 PerfilEmpresa(Atividade.TRANSPORTE_CARGAS_ICMS, 600_000, folha_clt_anual=100_000)),
+        "SEG3": ("Indústria com IPI e ISS: Anexo II sem ICMS e com o ISS do Anexo III", PerfilEmpresa(Atividade.INDUSTRIA_IPI_ISS, 600_000, folha_clt_anual=100_000)),
+        "SEG4": ("Comércio (R$ 600 mil) + comunicação (R$ 600 mil): cada parte com a sua partilha e a faixa da receita total",
+                 PerfilEmpresa(Atividade.COMERCIO, 1_200_000, folha_clt_anual=100_000, compras_anual=300_000,
+                               receitas_outras_atividades={"comunicacao_icms": 600_000})),
+    }
+    for cod, (desc, p) in especiais.items():
+        for mod in (simples, presumido, real):
+            r = mod.calcular(p)
+            sigla = {"Simples Nacional": "SN", "Lucro Presumido": "LP", "Lucro Real": "LR"}[r.titulo]
+            lista.append(Caso(f"{cod}-{sigla}", r.titulo, f"{desc}; {_perfil_desc(p)}", r))
+
     simples_b2b_intermediarios = {
         "SR4": ("Comércio, 80% B2B, compras de fornecedores do regime regular",
                 reforma_simples.EntradaSimplesReforma("comercio", 2_000_000, "0.8", compras_creditaveis_anual=1_200_000,

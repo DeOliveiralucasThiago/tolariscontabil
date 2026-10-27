@@ -23,6 +23,11 @@ ROTULO_ANEXO = {
     Atividade.SERVICO_ANEXO_III: "Anexo III",
     Atividade.SERVICO_ANEXO_IV: "Anexo IV",
     Atividade.SERVICO_FATOR_R: "Anexo III ou V (fator R)",
+    Atividade.LOCACAO_BENS_MOVEIS: "Anexo III sem ISS (locação de bens móveis)",
+    Atividade.INDUSTRIA_IPI_ISS: "Anexo II com ISS (IPI e ISS)",
+    Atividade.TRANSPORTE_CARGAS_ICMS: "Anexo III com ICMS (transporte de cargas)",
+    Atividade.TRANSPORTE_PASSAGEIROS_ICMS: "Anexo III com ICMS (transporte de passageiros)",
+    Atividade.COMUNICACAO_ICMS: "Anexo III com ICMS (comunicação)",
 }
 
 # Regras aproximadas, só para CNAEs fora da tabela de Anexos. Grupo (3 dígitos) vence divisão (2 dígitos).

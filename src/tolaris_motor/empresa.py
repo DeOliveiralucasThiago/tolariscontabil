@@ -19,11 +19,43 @@ class Atividade(str, Enum):
     """Construção civil, vigilância, limpeza, advocacia: CPP recolhida fora do DAS."""
     SERVICO_FATOR_R = "servico_fator_r"
     """Serviços intelectuais/técnicos: Anexo III se fator R >= 28%, senão Anexo V."""
+    LOCACAO_BENS_MOVEIS = "locacao_bens_moveis"
+    """Locação de bens móveis: Anexo III sem a parcela do ISS (LC 123, art. 18, § 4º, V; Res. CGSN 140, art. 25, § 1º, VI)."""
+    INDUSTRIA_IPI_ISS = "industria_ipi_iss"
+    """Atividade com IPI e ISS ao mesmo tempo: Anexo II sem a parcela do ICMS e com a do ISS do Anexo III (LC 123, art. 18, § 4º, VI)."""
+    TRANSPORTE_CARGAS_ICMS = "transporte_cargas_icms"
+    """Transporte intermunicipal e interestadual de cargas: Anexo III sem ISS e com o ICMS do Anexo I (LC 123, art. 18, § 5º-E)."""
+    TRANSPORTE_PASSAGEIROS_ICMS = "transporte_passageiros_icms"
+    """Transporte intermunicipal e interestadual de passageiros: mesmo cálculo do transporte de cargas (Res. CGSN 140, art. 25, § 1º, IX, b)."""
+    COMUNICACAO_ICMS = "comunicacao_icms"
+    """Serviços de comunicação: Anexo III sem ISS e com o ICMS do Anexo I (LC 123, art. 18, § 5º-E)."""
 
     @property
     def vende_mercadoria(self) -> bool:
         return self in (Atividade.COMERCIO, Atividade.INDUSTRIA)
 
+    @property
+    def sujeita_a_icms(self) -> bool:
+        """Receita que paga ICMS: mercadorias e os serviços de transporte intermunicipal/interestadual e de comunicação."""
+        return self.vende_mercadoria or self in (
+            Atividade.TRANSPORTE_CARGAS_ICMS, Atividade.TRANSPORTE_PASSAGEIROS_ICMS, Atividade.COMUNICACAO_ICMS
+        )
+
+    @property
+    def sujeita_a_iss(self) -> bool:
+        """Receita que paga ISS (a locação de bens móveis, o ICMS e as mercadorias ficam de fora)."""
+        return not self.sujeita_a_icms and self is not Atividade.LOCACAO_BENS_MOVEIS
+
+    @property
+    def tratamento_especial(self) -> bool:
+        """Atividades do art. 25, § 1º, VI, VII e IX, da Res. CGSN 140, que ajustam a partilha do Anexo no Simples."""
+        return self in ATIVIDADES_ESPECIAIS
+
+
+ATIVIDADES_ESPECIAIS = frozenset({
+    Atividade.LOCACAO_BENS_MOVEIS, Atividade.INDUSTRIA_IPI_ISS, Atividade.TRANSPORTE_CARGAS_ICMS,
+    Atividade.TRANSPORTE_PASSAGEIROS_ICMS, Atividade.COMUNICACAO_ICMS,
+})
 
 PRESUNCAO_PADRAO = {
     Atividade.COMERCIO: "comercio",
@@ -31,6 +63,11 @@ PRESUNCAO_PADRAO = {
     Atividade.SERVICO_ANEXO_III: "servicos_gerais",
     Atividade.SERVICO_ANEXO_IV: "servicos_gerais",
     Atividade.SERVICO_FATOR_R: "servicos_gerais",
+    Atividade.LOCACAO_BENS_MOVEIS: "servicos_gerais",
+    Atividade.INDUSTRIA_IPI_ISS: "industria",
+    Atividade.TRANSPORTE_CARGAS_ICMS: "transporte_cargas",
+    Atividade.TRANSPORTE_PASSAGEIROS_ICMS: "transporte_passageiros",
+    Atividade.COMUNICACAO_ICMS: "servicos_gerais",
 }
 
 ALIQUOTA_FGTS = D("0.08")
@@ -220,6 +257,15 @@ class PerfilEmpresa:
         return sum((v for a, v in self.partes_atividade if a.vende_mercadoria), ZERO)
 
     @property
+    def receita_icms_anual(self) -> Decimal:
+        """Receita que paga ICMS: mercadorias e os transportes intermunicipais e de comunicação."""
+        return sum((v for a, v in self.partes_atividade if a.sujeita_a_icms), ZERO)
+
+    @property
+    def receita_iss_anual(self) -> Decimal:
+        return sum((v for a, v in self.partes_atividade if a.sujeita_a_iss), ZERO)
+
+    @property
     def receita_servicos_anual(self) -> Decimal:
         return sum((v for a, v in self.partes_atividade if not a.vende_mercadoria), ZERO)
 
@@ -259,12 +305,19 @@ def tributo_sobre_receita_local(perfil: PerfilEmpresa, res: Resultado) -> None:
     """Lança ICMS (mercadorias) e ISS (serviços) no resultado do regime normal, já com a transição da Reforma.
 
     Na atividade mista o ICMS incide sobre a receita de mercadorias e o ISS sobre a de serviços, cada um no mercado interno."""
-    merc_interna = sum((v for a, v in perfil.partes_internas if a.vende_mercadoria), ZERO)
-    serv_interna = sum((v for a, v in perfil.partes_internas if not a.vende_mercadoria), ZERO)
-    if perfil.receita_mercadorias_anual > 0:
+    merc_interna = sum((v for a, v in perfil.partes_internas if a.sujeita_a_icms), ZERO)
+    serv_interna = sum((v for a, v in perfil.partes_internas if a.sujeita_a_iss), ZERO)
+    if perfil.receita_icms_anual > 0:
         res.tributos["ICMS"] = icms_liquido(perfil, res, merc_interna)
-    if perfil.receita_servicos_anual > 0:
+    if perfil.receita_iss_anual > 0:
         _lancar_iss(perfil, res, serv_interna)
+    if any(a is Atividade.LOCACAO_BENS_MOVEIS for a, _ in perfil.partes_atividade):
+        res.alerta("Locação de bens móveis: não paga ISS (Súmula Vinculante 31 do STF); a receita entra no PIS/Cofins, no IRPJ e na CSLL.")
+    if any(a.tratamento_especial and a is not Atividade.LOCACAO_BENS_MOVEIS for a, _ in perfil.partes_atividade):
+        res.alerta(
+            "Transporte intermunicipal, comunicação e atividade com IPI e ISS: o ICMS (ou o ISS e o IPI) foi calculado de forma simplificada, sem o crédito próprio "
+            "da atividade (combustível, energia) e sem o IPI; confira com o contador antes de comparar com o Simples."
+        )
     fracao = fracao_icms_iss(perfil.ano)
     if fracao != 1:
         for chave in ("ICMS", "ISS"):
