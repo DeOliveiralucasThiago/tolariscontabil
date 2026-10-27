@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from . import tabelas
+from . import consumo, tabelas
 from .base import ZERO, D, Resultado, brl, pct
 from .empresa import PerfilEmpresa, inss_patronal_regime_normal, tributo_sobre_receita_local
 from .simples import alerta_exportacao
@@ -72,7 +72,16 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
         )
 
     lc224 = tab.get("lc224")
-    receita_trim = receita / 4
+    novo = consumo.usa_ibs_cbs(perfil.ano)
+    base_receita = consumo.receita_base_irpj(perfil, nao_cumulativo=False) if novo else receita
+    if novo:
+        res.passo(
+            "Receita para IRPJ e CSLL",
+            f"{brl(receita)} sem PIS/Cofins, CBS e IBS (e sem o ICMS/ISS já retirado pela transição)",
+            base_receita,
+            "LC 214/2025, art. 12, § 2º, I",
+        )
+    receita_trim = base_receita / 4
     cambial_trim = max(ZERO, perfil.variacao_cambial_anual) / 4
     limite_adicional = D(tab["irpj_adicional_limite_trimestral"])
     irpj_total = csll_total = ZERO
@@ -98,21 +107,26 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
 
     res.tributos["IRPJ"] = irpj_total
     res.tributos["CSLL"] = csll_total
-    interna = perfil.receita_interna_anual
-    res.tributos["PIS"] = res.passo(
-        "PIS cumulativo", f"{brl(interna)} x {pct(tab['pis_cumulativo'])}",
-        interna * D(tab["pis_cumulativo"]),
-        "Lei 9.715/1998; exportação: Lei 10.637/2002, art. 5º" if perfil.receita_exterior_anual else "Lei 9.715/1998",
-    )
-    res.tributos["Cofins"] = res.passo(
-        "Cofins cumulativa", f"{brl(interna)} x {pct(tab['cofins_cumulativo'])}",
-        interna * D(tab["cofins_cumulativo"]),
-        "Lei 9.718/1998; exportação: Lei 10.833/2003, art. 6º" if perfil.receita_exterior_anual else "Lei 9.718/1998",
-    )
+    if novo:
+        consumo.lancar_ibs_cbs(perfil, res, nao_cumulativo=False)
+    else:
+        interna = perfil.receita_interna_anual
+        res.tributos["PIS"] = res.passo(
+            "PIS cumulativo", f"{brl(interna)} x {pct(tab['pis_cumulativo'])}",
+            interna * D(tab["pis_cumulativo"]),
+            "Lei 9.715/1998; exportação: Lei 10.637/2002, art. 5º" if perfil.receita_exterior_anual else "Lei 9.715/1998",
+        )
+        res.tributos["Cofins"] = res.passo(
+            "Cofins cumulativa", f"{brl(interna)} x {pct(tab['cofins_cumulativo'])}",
+            interna * D(tab["cofins_cumulativo"]),
+            "Lei 9.718/1998; exportação: Lei 10.833/2003, art. 6º" if perfil.receita_exterior_anual else "Lei 9.718/1998",
+        )
     tributo_sobre_receita_local(perfil, res)
     res.tributos["INSS patronal"] = inss_patronal_regime_normal(perfil, res)
 
     alerta_exportacao(perfil, res)
+    if novo:
+        consumo.alertas(perfil, res)
     if perfil.variacao_cambial_anual > 0:
         res.alerta(
             "Variação cambial ativa somada à base de IRPJ e CSLL (100%, sem a presunção). A Receita entende que o regime "

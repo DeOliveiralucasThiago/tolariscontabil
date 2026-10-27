@@ -167,6 +167,8 @@ def _entradas_legiveis(sim: Simulacao) -> list[tuple[str, str]]:
         linhas.append(("ISS fixo no Simples", "escritório de serviços contábeis: ISS recolhido ao Município, fora do DAS"))
     if e.get("servicos_hospitalares"):
         linhas.append(("Serviços hospitalares", "presunção reduzida no Lucro Presumido"))
+    if e.get("reducao_ibs_cbs"):
+        linhas.append(("Redução de IBS e CBS", f"{float(e['reducao_ibs_cbs']) * 100:.0f}%".replace(".", ",")))
     linhas.append(("Ano-calendário", str(e.get("ano", ""))))
     return linhas
 

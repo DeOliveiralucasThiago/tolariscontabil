@@ -136,3 +136,9 @@ atividade do cliente. O fluxo só roda até 30/10/2026; depois dessa data ele en
 ```bash
 node fluxo_regime_regular.mjs saida
 ```
+
+O fluxo do Presumido e do Real a partir de 2027 (CBS e IBS no lugar de PIS e Cofins, redução de 30% e ano na prospecção) não usa rede externa:
+
+```bash
+node fluxo_regimes_2027.mjs saida
+```

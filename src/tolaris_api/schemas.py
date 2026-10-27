@@ -204,7 +204,16 @@ class ExpressaEntrada(BaseModel):
     margem_lucro: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
     receita_exterior_mensal: Dinheiro = Field(default=Decimal(0), ge=0)
     """Parte do faturamento mensal que vem do exterior (exportação), em reais."""
-    ano: int = Field(default=2026, ge=2025, le=2026)
+    ano: int = Field(default=2026, ge=2025, le=2033)
+    reducao_ibs_cbs: Decimal = Field(default=Decimal(0), ge=0, le=1)
+    """Redução de IBS e CBS a partir de 2027: 0, 0,3 (profissões regulamentadas), 0,6 (saúde) ou 1."""
+
+    @field_validator("reducao_ibs_cbs")
+    @classmethod
+    def _reducao_valida(cls, v: Decimal) -> Decimal:
+        if v not in (Decimal(0), Decimal("0.3"), Decimal("0.6"), Decimal(1)):
+            raise ValueError("A redução de IBS e CBS deve ser 0%, 30%, 60% ou 100%")
+        return v
 
     @model_validator(mode="after")
     def _exterior_cabe_no_faturamento(self) -> "ExpressaEntrada":
@@ -240,7 +249,16 @@ class CompletaEntrada(BaseModel):
     """Escritório de serviços contábeis (Anexo III) que recolhe o ISS fixo ao Município também como optante do Simples."""
     servicos_hospitalares: bool = False
     """Presunção reduzida de serviços hospitalares no Lucro Presumido (IRPJ 8% e CSLL 12%)."""
-    ano: int = Field(default=2026, ge=2025, le=2026)
+    ano: int = Field(default=2026, ge=2025, le=2033)
+    reducao_ibs_cbs: Decimal = Field(default=Decimal(0), ge=0, le=1)
+    """Redução de IBS e CBS a partir de 2027: 0, 0,3 (profissões regulamentadas), 0,6 (saúde) ou 1."""
+
+    @field_validator("reducao_ibs_cbs")
+    @classmethod
+    def _reducao_valida(cls, v: Decimal) -> Decimal:
+        if v not in (Decimal(0), Decimal("0.3"), Decimal("0.6"), Decimal(1)):
+            raise ValueError("A redução de IBS e CBS deve ser 0%, 30%, 60% ou 100%")
+        return v
 
     @model_validator(mode="after")
     def _exterior_cabe_na_receita(self) -> "CompletaEntrada":

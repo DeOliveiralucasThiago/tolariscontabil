@@ -364,8 +364,8 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     para 4,5% (2029), 4% (2030), 3,5% (2031) e 3% (2032), e o ISS sai do DAS em 2033; o excesso acima do teto vai para todos os demais
     tributos da faixa, inclusive CBS e IBS (como na tabela da resolução). **Onde vale:** o Simples na Reforma compara por padrão os sete anos (2027 a 2033, ou os que
     a chamada informar) e usa a tabela do próprio ano para o DAS e para a fatia de CBS + IBS; o cálculo do Simples (`simples.calcular`) e a recuperação de PIS/Cofins
-    e ICMS-ST usam a tabela da data. **Onde não vale:** a simulação completa e o comparativo entre regimes seguem limitados a 2025 e
-    2026, porque Lucro Presumido e Lucro Real ainda calculam PIS/Cofins; a transição desses regimes está na calculadora da Reforma.
+    e ICMS-ST usam a tabela da data. **Atualizado no item 80:** o comparativo entre regimes aceita 2027 a 2033,
+    com CBS e IBS no Presumido e no Real.
     A RBT12 de 2027 (12 meses anteriores ao mês anterior) não muda o cálculo, que supõe faturamento constante. Conferir com a
     publicação oficial, pois parte do texto veio dos autógrafos (LC 214 e LC 227) e da resolução, sem o Planalto.
 
@@ -415,6 +415,21 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     de fornecedores no regime regular). O botão abre o "Simples na Reforma" já com a receita e a atividade do cliente. **Limites:** o Tolaris não conhece a
     proporção B2B real do cliente nem o regime dos fornecedores; o ponto de equilíbrio é referência com 50% de B2B, e a decisão é do contador.
 
+80. **Lucro Presumido e Lucro Real a partir de 2027: CBS e IBS no lugar de PIS e Cofins (27/10/2026):** o comparativo de regimes aceita o ano de
+    apuração de 2026 a 2033. De 2027 em diante o Presumido e o Real deixam de calcular PIS e Cofins e passam a pagar **CBS e IBS não cumulativos, com crédito sobre as
+    compras e despesas**, pelo mesmo modelo do simulador da Reforma (`src/tolaris_motor/consumo.py` reaproveita `reforma.py`): as vendas sem tributos ficam
+    iguais, CBS e IBS incidem "por fora" sobre elas e o crédito usa as aquisições informadas sem os tributos antigos. As alíquotas de referência são as estimativas da
+    tabela `reforma_tributaria.json` (CBS 8,8% e IBS 17,7%, a de 2027 depende de TCU e Senado); em 2027 a CBS é a de referência menos 0,1 ponto e o IBS é 0,1%.
+    **ICMS e ISS** seguem o ADCT, art. 128: 100% até 2028, 90%, 80%, 70% e 60% de 2029 a 2032 e extintos em 2033 (inclusive o ISS fixo da sociedade de profissionais, que
+    é tratado como ISS comum, o que pode divergir da regra própria da LC 214/2025; item pendente). **Base do IRPJ e da CSLL:** receita sem PIS/Cofins, CBS e IBS e sem o
+    ICMS/ISS que a transição já retirou do preço; no Lucro Real, a CBS e o IBS não são despesa e o crédito aproveitado reduz o custo. Fundamento: a LC 214/2025,
+    art. 12, § 2º, I, afasta IBS e CBS da base de outros tributos (lido em artigos de apoio, não no texto da lei); para o Presumido não há decisão judicial. **Redução de
+    alíquota:** campo opcional (0%, 30% profissões regulamentadas, 60% saúde, 100%); o Tolaris **não** aplica sozinho, porque o rol é taxativo (por exemplo, medicina humana
+    não está na lista de 30%) e a classificação depende do serviço; ele só avisa quando a sociedade de profissionais ou o serviço hospitalar não informou redução.
+    **Exportação:** CBS e IBS só sobre a receita interna; o saldo credor de créditos fica como alerta. **Limites:** sem Imposto Seletivo, sem crédito parcial de
+    fornecedores do Simples (crédito integral das compras informadas), sem cashback nem split payment, e a premissa de preço (vendas sem tributos mantidas) é do simulador da
+    Reforma; o resultado é uma estimativa para comparar regimes, não a apuração. Casos RG1 a RG4 na planilha de validação.
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias? A lei, art. 18, § 24, soma também a CPP efetivamente recolhida).
@@ -430,7 +445,8 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Percentuais de partilha do DAS (tabela em `simples_nacional.json`, campo `partilha`), inclusive as vigências de 2027 a 2033.
 - [ ] Modelo da decisão do Simples na Reforma (preços ajustados para o mesmo custo líquido do cliente).
 - [ ] Carnê-leão: livro-caixa × desconto simplificado (o motor usa o maior dos dois).
-- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (94 casos, incluindo ENQ*, ADV1, CONT1, HOSP1, SR* de 2027 a 2033, AU*, REC* e AV*).
+- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (102 casos, incluindo ENQ*, ADV1, CONT1, HOSP1, RG* (Presumido e Real de 2027 em diante), SR* de 2027 a 2033, AU*, REC* e AV*).
+- [ ] **Presumido e Real a partir de 2027 (premissa 80):** conferir a receita-base de IRPJ/CSLL sem CBS e IBS, o crédito integral das compras, o tratamento do ISS fixo na transição e as reduções de 30% e 60% (quais clientes se enquadram); conferir os casos RG1 a RG4 da planilha.
 - [ ] Importação: quais CFOPs excluir da receita (remessas, devoluções, transferências).
 - [ ] **Tabela de NCM monofásicos** (`src/tolaris_motor/tabelas/monofasico.json`): conferir cada prefixo e as
       exceções por subitem na tabela oficial da Receita; hoje é uma lista inicial montada sem acesso à fonte oficial.

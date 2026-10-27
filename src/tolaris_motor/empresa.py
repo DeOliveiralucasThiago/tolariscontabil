@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 
+from . import tabelas
 from .base import ZERO, D, Numero, Resultado, brl, pct
 
 
@@ -87,6 +88,8 @@ class PerfilEmpresa:
     art. 18, § 22-A; Res. CGSN 140/2018, art. 34): o DAS (Anexo III) deixa de incluir a parcela do ISS. Exige ``sociedade_profissionais``."""
     servicos_hospitalares: bool = False
     """Serviços hospitalares (e afins) com a presunção reduzida do Lucro Presumido: IRPJ 8% e CSLL 12%."""
+    reducao_ibs_cbs: Numero = 0
+    """Redução de alíquota de IBS e CBS a partir de 2027: 0, 0,3 (profissões regulamentadas), 0,6 (saúde) ou 1 (alíquota zero)."""
     ano: int = 2026
 
     def __post_init__(self) -> None:
@@ -137,6 +140,9 @@ class PerfilEmpresa:
             raise ValueError("O ISS fixo no Simples é do escritório de serviços contábeis (Anexo III) e exige a sociedade de profissionais com ISS fixo")
         if self.servicos_hospitalares and self.atividade.vende_mercadoria:
             raise ValueError("A presunção de serviços hospitalares só se aplica a serviços")
+        self.reducao_ibs_cbs = D(self.reducao_ibs_cbs)
+        if self.reducao_ibs_cbs not in (D(0), D("0.3"), D("0.6"), D(1)):
+            raise ValueError("reducao_ibs_cbs deve ser 0, 0.3, 0.6 ou 1")
         if self.presuncao is None:
             self.presuncao = "servicos_hospitalares" if self.servicos_hospitalares else PRESUNCAO_PADRAO[self.atividade]
 
@@ -176,8 +182,28 @@ def icms_liquido(perfil: PerfilEmpresa, res: Resultado) -> Decimal:
     return res.passo("ICMS a recolher", "máx(0; débito - crédito)", max(ZERO, debito - credito))
 
 
+def fracao_icms_iss(ano: int) -> Decimal:
+    """Parte do ICMS e do ISS ainda cobrada no ano: 100% até 2028, cai de 2029 a 2032 e acaba em 2033 (EC 132/2023, ADCT art. 128)."""
+    anos = tabelas.carregar("reforma_tributaria")["anos"]
+    return D(anos[str(ano)]["icms_iss"]) if str(ano) in anos else D(1)
+
+
 def tributo_sobre_receita_local(perfil: PerfilEmpresa, res: Resultado) -> None:
-    """Lança ICMS (mercadorias) ou ISS (serviços) no resultado do regime normal."""
+    """Lança ICMS (mercadorias) ou ISS (serviços) no resultado do regime normal, já com a transição da Reforma."""
+    _lancar_tributo_local(perfil, res)
+    fracao = fracao_icms_iss(perfil.ano)
+    if fracao != 1:
+        chave = "ICMS" if perfil.atividade.vende_mercadoria else "ISS"
+        antes = res.tributos[chave]
+        res.tributos[chave] = res.passo(
+            f"{chave} na transição da Reforma ({perfil.ano})",
+            f"{brl(antes)} x {pct(fracao, 0)}",
+            antes * fracao,
+            "EC 132/2023, ADCT art. 128",
+        )
+
+
+def _lancar_tributo_local(perfil: PerfilEmpresa, res: Resultado) -> None:
     if perfil.atividade.vende_mercadoria:
         res.tributos["ICMS"] = icms_liquido(perfil, res)
     elif perfil.sociedade_profissionais:

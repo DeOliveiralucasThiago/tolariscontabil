@@ -238,8 +238,11 @@ de 8% e 12%. Os valores do município e o enquadramento são informados pelo con
 
 **Simples de 2027 a 2033:** `simples_nacional.json` traz as tabelas da Resolução CGSN 190/2026 (CBS e IBS na partilha do DAS, teto de ISS
 decrescente de 5% a 3% até 2032 e fim do ISS em 2033), geradas por `scripts/gerar_simples_2027.py`; o Simples na Reforma e o cálculo do
-Simples usam a tabela da data. A simulação completa e o comparativo entre regimes seguem limitados a 2025 e 2026, porque Lucro Presumido e
-Lucro Real ainda calculam PIS/Cofins (a transição desses regimes está na calculadora da Reforma). Veja o item 75 de `docs/premissas.md`.
+Simples usam a tabela da data. Veja o item 75 de `docs/premissas.md`.
+
+**Presumido e Real de 2027 a 2033:** a simulação completa e a prospecção têm o campo "Ano de apuração" (2026 a 2033). De 2027 em diante o Lucro Presumido e o
+Lucro Real calculam CBS e IBS (não cumulativos, com crédito) no lugar de PIS e Cofins, com ICMS e ISS em transição até 2033 e uma redução opcional de 30% ou 60% nas
+alíquotas de IBS e CBS (`src/tolaris_motor/consumo.py`). As alíquotas de referência são estimativas. Veja o item 80 de `docs/premissas.md`.
 
 **Legislação lida:** LC 123/2006 (texto completo), LC 214/2025 (pontos do Simples), LC 227/2026 e LC 238/2026 (MEI de R$ 110 mil em 2027 e
 R$ 140 mil em 2028) e as Resoluções CGSN 190, 191, 194 e 195 (itens 71 a 75 de `docs/premissas.md`). `docs/fontes-da-legislacao.md` diz onde
@@ -290,7 +293,7 @@ print(reforma.tabela_resumo(anos))
 
 ## Validação com contador
 
-`validacao/casos_validacao.xlsx` traz 94 casos (empresas, PF, sócios, reforma, Simples na reforma de 2027 a 2033, enquadramento do Anexo V ao III, sociedade de profissionais com ISS fixo, serviços hospitalares, autônomo × CNPJ, recuperação de tributos e avisos de fator R) com os
+`validacao/casos_validacao.xlsx` traz 102 casos (empresas, PF, sócios, reforma, Simples na reforma de 2027 a 2033, enquadramento do Anexo V ao III, sociedade de profissionais com ISS fixo, serviços hospitalares, autônomo × CNPJ, recuperação de tributos e avisos de fator R) com os
 valores do motor, a memória de cálculo e os alertas. O contador preenche a coluna
 amarela "Valor correto" e a planilha mostra a diferença. Para regenerar:
 

@@ -142,16 +142,17 @@ def tributos_desconsiderados_exportacao(tipo: str, data: date) -> tuple[str, ...
 
 def alerta_exportacao(perfil: PerfilEmpresa, res: Resultado) -> None:
     """Avisos que acompanham qualquer cálculo com receita do exterior (iguais nos três regimes)."""
+    consumo = "CBS e IBS" if perfil.ano >= 2027 else "PIS/Cofins"
     if perfil.receita_exterior_anual:
         if perfil.atividade.vende_mercadoria:
             res.alerta(
                 f"Receita de exportação de mercadorias ({brl(perfil.receita_exterior_anual)}): tratada sem ICMS, IPI e "
-                "PIS/Cofins. Guarde a declaração de exportação (DU-E) e o contrato de câmbio."
+                f"{consumo}. Guarde a declaração de exportação (DU-E) e o contrato de câmbio."
             )
         else:
             res.alerta(
                 f"Receita de exportação de serviços ({brl(perfil.receita_exterior_anual)}): tratada sem ISS e sem "
-                "PIS/Cofins. Só vale se o serviço foi prestado a residente no exterior, o resultado se verifica no "
+                f"{consumo}. Só vale se o serviço foi prestado a residente no exterior, o resultado se verifica no "
                 "exterior e o pagamento representa ingresso de divisas (Res. CGSN 140/2018, art. 25, §4º; "
                 "LC 116/2003, art. 2º, parágrafo único). Guarde contrato, nota fiscal e contrato de câmbio."
             )

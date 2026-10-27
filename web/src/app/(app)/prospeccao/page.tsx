@@ -7,7 +7,7 @@ import { BuscaCnpj } from "@/components/BuscaCnpj";
 import { CampoMoeda } from "@/components/CampoMoeda";
 import { ResultadoComparativo } from "@/components/ResultadoComparativo";
 import { SelecaoAtividade } from "@/components/SelecaoAtividade";
-import { Botao, Campo, Cartao, MensagemErro, Titulo } from "@/components/ui";
+import { Botao, Campo, Cartao, MensagemErro, Selecao, Titulo } from "@/components/ui";
 import { api, ErroApi, urlProposta } from "@/lib/api";
 import { cnpjValido, soDigitos } from "@/lib/formato";
 import { type Atividade, type Cliente, type ClienteForm, type Comparativo, type DadosCnpj, type Simulacao } from "@/lib/tipos";
@@ -21,6 +21,7 @@ export default function Prospeccao() {
   const [folha, setFolha] = useState(0);
   const [proLabore, setProLabore] = useState(0);
   const [exterior, setExterior] = useState(0);
+  const [ano, setAno] = useState(2026);
   const [resultado, setResultado] = useState<Comparativo | null>(null);
   const [salvo, setSalvo] = useState<{ cliente: Cliente; simulacao: Simulacao } | null>(null);
   const [erro, setErro] = useState("");
@@ -33,6 +34,7 @@ export default function Prospeccao() {
     pro_labore_mensal: proLabore,
     atividade: atividade as Atividade,
     ...(exterior > 0 ? { receita_exterior_mensal: exterior } : {}),
+    ...(ano !== 2026 ? { ano } : {}),
   });
 
   function preencher(d: DadosCnpj) {
@@ -129,8 +131,20 @@ export default function Prospeccao() {
                 rotulo="Parte do faturamento vinda do exterior"
                 valor={exterior}
                 onChange={setExterior}
-                ajuda="Opcional: exportação de serviços ou mercadorias, em reais. Fica sem ISS/ICMS e PIS/Cofins."
+                ajuda="Opcional: exportação de serviços ou mercadorias, em reais. Fica sem ISS/ICMS e PIS/Cofins (CBS/IBS em 2027+)."
               />
+              <Selecao
+                id="ano_previa"
+                name="ano_previa"
+                rotulo="Ano de apuração"
+                value={String(ano)}
+                onChange={(e) => setAno(Number(e.target.value))}
+                ajuda="Padrão 2026. De 2027 a 2033, o Presumido e o Real pagam CBS e IBS no lugar de PIS e Cofins."
+              >
+                {[2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033].map((a) => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </Selecao>
             </div>
           </Cartao>
 

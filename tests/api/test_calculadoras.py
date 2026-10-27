@@ -169,3 +169,27 @@ def test_completa_do_escritorio_contabil_com_iss_fixo_no_simples(logado: TestCli
     assert logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "atividade": "servico_anexo_iv", "iss_fixo_no_simples": True}).status_code == 422
     sem_sociedade = {k: v for k, v in base.items() if k not in ("sociedade_profissionais", "profissionais", "iss_fixo_por_profissional_anual")}
     assert logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**sem_sociedade, "iss_fixo_no_simples": True}).status_code == 422
+
+
+def test_comparativo_a_partir_de_2027_com_cbs_ibs_e_reducao(logado: TestClient):
+    cid = logado.post("/api/clientes", json={"razao_social": "Consultoria 2027", "atividade": "servico_fator_r"}).json()["id"]
+    base = {"atividade": "servico_fator_r", "receita_bruta_anual": 900000, "folha_clt_anual": 200000, "pro_labore_anual": 60000}
+    tributos = lambda s, regime: {t["nome"]: t["valor"] for r in s["resultado"]["regimes"] if r["titulo"] == regime for t in r["tributos"]}  # noqa: E731
+    s26 = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json=base).json()
+    s27 = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "ano": 2027}).json()
+    assert "PIS" in tributos(s26, "Lucro Presumido") and "CBS" not in tributos(s26, "Lucro Presumido")
+    p27 = tributos(s27, "Lucro Presumido")
+    assert "CBS" in p27 and "IBS" in p27 and "PIS" not in p27 and "Cofins" not in p27
+    r27 = tributos(s27, "Lucro Real")
+    assert "CBS" in r27 and "PIS" not in r27
+    reduzida = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "ano": 2027, "reducao_ibs_cbs": 0.3}).json()
+    assert tributos(reduzida, "Lucro Presumido")["CBS"] == pytest.approx(p27["CBS"] * 0.7, abs=0.02)
+    pdf = logado.get(f"/api/simulacoes/{reduzida['id']}/proposta.pdf")
+    assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
+    # validações: ano até 2033 e reduções previstas na lei
+    assert logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "ano": 2034}).status_code == 422
+    assert logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "ano": 2027, "reducao_ibs_cbs": 0.5}).status_code == 422
+    expressa = {"faturamento_mensal": 50000, "folha_mensal": 10000, "atividade": "servico_fator_r"}
+    d = logado.post("/api/simulacoes/previa/expressa", json={**expressa, "ano": 2029}).json()
+    assert d["ano"] == 2029 and any(t["nome"] == "IBS" for r in d["regimes"] for t in r["tributos"])
+    assert logado.post("/api/simulacoes/previa/expressa", json={**expressa, "ano": 2034}).status_code == 422

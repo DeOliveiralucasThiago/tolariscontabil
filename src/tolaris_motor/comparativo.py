@@ -56,6 +56,7 @@ def simulacao_expressa(
     margem_lucro: Numero = "0.20",
     ano: int = 2026,
     receita_exterior_mensal: Numero = 0,
+    reducao_ibs_cbs: Numero = 0,
 ) -> Comparativo:
     """Previsão rápida com faturamento, folha e atividade.
 
@@ -78,6 +79,7 @@ def simulacao_expressa(
         compras_anual=custo_restante if atividade.vende_mercadoria else 0,
         outras_despesas_anual=0 if atividade.vende_mercadoria else custo_restante,
         receita_exterior_anual=D(receita_exterior_mensal) * 12,
+        reducao_ibs_cbs=reducao_ibs_cbs,
         ano=ano,
     )
     comp = comparar(perfil)

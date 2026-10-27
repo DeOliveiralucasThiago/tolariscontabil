@@ -103,6 +103,21 @@ def base_credito_sem_tributos(e: EntradaReforma) -> Decimal:
     return aquisicoes * (1 - e.tributos_embutidos_compras) * e.fracao_credito_compras
 
 
+def aliquotas_novas(e: EntradaReforma, cfg: dict) -> list[tuple[str, Decimal, Decimal]]:
+    """CBS e IBS do ano: (nome, alíquota de venda já com a redução setorial, alíquota de crédito)."""
+    fator_setor = 1 - e.reducao_setorial
+    novos: list[tuple[str, Decimal, Decimal]] = []
+    if cfg["cbs"] == "fixo":
+        novos.append(("CBS", D(cfg["cbs_fixo"]) * fator_setor, D(cfg["cbs_fixo"])))
+    elif cfg["cbs"] == "ref":
+        cheia = e.cbs_referencia - D(cfg["cbs_reducao_pp"])
+        novos.append(("CBS", cheia * fator_setor, cheia))
+    ibs_cheia = D(cfg["ibs_fixo"]) + e.ibs_referencia * D(cfg["ibs_fracao"])
+    if ibs_cheia:
+        novos.append(("IBS", ibs_cheia * fator_setor, ibs_cheia))
+    return novos
+
+
 def _ano(e: EntradaReforma, ano: int, base_venda: Decimal) -> AnoReforma:
     cfg = tabelas.carregar("reforma_tributaria")["anos"][str(ano)]
     res = Resultado(f"Tributos sobre consumo em {ano}")
@@ -144,16 +159,7 @@ def _ano(e: EntradaReforma, ano: int, base_venda: Decimal) -> AnoReforma:
                 "EC 132/2023, ADCT art. 128",
             )
 
-    fator_setor = 1 - e.reducao_setorial
-    novos: list[tuple[str, Decimal, Decimal]] = []  # (nome, alíquota de venda, alíquota de crédito)
-    if cfg["cbs"] == "fixo":
-        novos.append(("CBS", D(cfg["cbs_fixo"]) * fator_setor, D(cfg["cbs_fixo"])))
-    elif cfg["cbs"] == "ref":
-        cheia = e.cbs_referencia - D(cfg["cbs_reducao_pp"])
-        novos.append(("CBS", cheia * fator_setor, cheia))
-    ibs_cheia = D(cfg["ibs_fixo"]) + e.ibs_referencia * D(cfg["ibs_fracao"])
-    if ibs_cheia:
-        novos.append(("IBS", ibs_cheia * fator_setor, ibs_cheia))
+    novos = aliquotas_novas(e, cfg)
 
     for nome, aliq_venda, aliq_credito in novos:
         debito = base_venda * aliq_venda

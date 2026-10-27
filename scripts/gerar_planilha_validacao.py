@@ -55,6 +55,8 @@ def _perfil_desc(p: PerfilEmpresa) -> str:
         if v:
             partes.append(f"{rotulo} {brl(v)}")
     partes.append(f"ano {p.ano}")
+    if p.reducao_ibs_cbs:
+        partes.append(f"redução de {pct(p.reducao_ibs_cbs, 0)} no IBS e na CBS")
     if p.atividade.vende_mercadoria:
         partes.append(f"ICMS {pct(p.aliquota_icms, 0)}")
     else:
@@ -189,6 +191,24 @@ def casos() -> list[Caso]:
         for mod in (simples, presumido, real):
             r = mod.calcular(p)
             sigla = {"Simples Nacional": "SN", "Lucro Presumido": "LP", "Lucro Real": "LR"}[r.titulo]
+            lista.append(Caso(f"{cod}-{sigla}", r.titulo, f"{desc}; {_perfil_desc(p)}", r))
+
+    # Lucro Presumido e Lucro Real a partir de 2027: CBS e IBS no lugar de PIS/Cofins, ICMS/ISS em transição
+    regimes_novos = {
+        "RG1": ("Serviços (fator R) em 2027: CBS e IBS no lugar de PIS e Cofins, sem compras",
+                PerfilEmpresa(Atividade.SERVICO_FATOR_R, 900_000, folha_clt_anual=200_000, pro_labore_anual=60_000, ano=2027)),
+        "RG2": ("Comércio em 2027 com compras de R$ 400.000: crédito de CBS e IBS (e de ICMS) abate o pagamento",
+                PerfilEmpresa(Atividade.COMERCIO, 1_200_000, folha_clt_anual=120_000, pro_labore_anual=60_000, compras_anual=400_000, ano=2027)),
+        "RG3": ("Serviços (fator R) em 2030: ISS em 80% e IBS em 20% da alíquota final",
+                PerfilEmpresa(Atividade.SERVICO_FATOR_R, 900_000, folha_clt_anual=200_000, pro_labore_anual=60_000, ano=2030)),
+        "RG4": ("Serviços (fator R) em 2027 com redução de 30% nas alíquotas de IBS e CBS (profissão regulamentada listada na lei)",
+                PerfilEmpresa(Atividade.SERVICO_FATOR_R, 900_000, folha_clt_anual=200_000, pro_labore_anual=60_000, ano=2027,
+                              reducao_ibs_cbs="0.3")),
+    }
+    for cod, (desc, p) in regimes_novos.items():
+        for mod in (presumido, real):
+            r = mod.calcular(p)
+            sigla = {"Lucro Presumido": "LP", "Lucro Real": "LR"}[r.titulo]
             lista.append(Caso(f"{cod}-{sigla}", r.titulo, f"{desc}; {_perfil_desc(p)}", r))
 
     simples_b2b_intermediarios = {

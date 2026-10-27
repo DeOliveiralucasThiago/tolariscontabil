@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from . import consumo
 from .base import ZERO, D, Resultado, brl, pct
 from .empresa import PerfilEmpresa, inss_patronal_regime_normal, tributo_sobre_receita_local
 from .simples import alerta_exportacao
@@ -25,30 +26,44 @@ def calcular(
     interna = perfil.receita_interna_anual
     base_credito = perfil.compras_anual + perfil.despesas_creditaveis_anual
 
-    for nome, aliq, lei in (("PIS", PIS_NC, "Lei 10.637/2002"), ("Cofins", COFINS_NC, "Lei 10.833/2003")):
-        debito = res.passo(f"{nome} - débito", f"{brl(interna)} x {pct(aliq)}", interna * aliq, lei)
-        credito = res.passo(
-            f"{nome} - crédito",
-            f"({brl(perfil.compras_anual)} compras + {brl(perfil.despesas_creditaveis_anual)} despesas "
-            f"creditáveis) x {pct(aliq)}",
-            base_credito * aliq,
-            f"{lei}, art. 3º",
+    novo = consumo.usa_ibs_cbs(perfil.ano)
+    receita_lucro = receita
+    credito_ibs_cbs = ZERO
+    if novo:
+        credito_ibs_cbs = consumo.lancar_ibs_cbs(perfil, res, nao_cumulativo=True).credito_aproveitado
+        receita_lucro = res.passo(
+            "Receita para o lucro",
+            f"{brl(receita)} sem PIS/Cofins, CBS e IBS (e sem o ICMS/ISS já retirado pela transição)",
+            consumo.receita_base_irpj(perfil, nao_cumulativo=True),
+            "LC 214/2025, art. 12, § 2º, I",
         )
-        if credito > debito:
-            res.alerta(f"Créditos de {nome} superam os débitos: saldo credor não entra no total.")
-        res.tributos[nome] = max(ZERO, debito - credito)
+    else:
+        for nome, aliq, lei in (("PIS", PIS_NC, "Lei 10.637/2002"), ("Cofins", COFINS_NC, "Lei 10.833/2003")):
+            debito = res.passo(f"{nome} - débito", f"{brl(interna)} x {pct(aliq)}", interna * aliq, lei)
+            credito = res.passo(
+                f"{nome} - crédito",
+                f"({brl(perfil.compras_anual)} compras + {brl(perfil.despesas_creditaveis_anual)} despesas "
+                f"creditáveis) x {pct(aliq)}",
+                base_credito * aliq,
+                f"{lei}, art. 3º",
+            )
+            if credito > debito:
+                res.alerta(f"Créditos de {nome} superam os débitos: saldo credor não entra no total.")
+            res.tributos[nome] = max(ZERO, debito - credito)
 
     tributo_sobre_receita_local(perfil, res)
     res.tributos["INSS patronal"] = inss_patronal_regime_normal(perfil, res)
 
-    tributos_dedutiveis = sum(res.tributos.values(), ZERO)
+    tributos_dedutiveis = sum((v for k, v in res.tributos.items() if k not in ("CBS", "IBS")), ZERO)
     lucro_contabil = res.passo(
         "Lucro antes do IRPJ/CSLL",
-        f"{brl(receita)} receita - {brl(perfil.compras_anual)} compras - "
+        f"{brl(receita_lucro)} receita - {brl(perfil.compras_anual)} compras - "
         f"{brl(perfil.despesas_creditaveis_anual + perfil.outras_despesas_anual)} despesas - "
         f"{brl(perfil.folha_clt_anual + perfil.pro_labore_anual)} folha e pró-labore - "
-        f"{brl(perfil.fgts_anual)} FGTS - {brl(tributos_dedutiveis)} tributos dedutíveis",
-        receita
+        f"{brl(perfil.fgts_anual)} FGTS - {brl(tributos_dedutiveis)} tributos dedutíveis"
+        + (f" + {brl(credito_ibs_cbs)} de crédito de CBS e IBS" if novo else ""),
+        receita_lucro
+        + credito_ibs_cbs
         - perfil.compras_anual
         - perfil.despesas_creditaveis_anual
         - perfil.outras_despesas_anual
@@ -85,6 +100,8 @@ def calcular(
         "CSLL", f"{brl(lucro_real)} x {pct(CSLL, 0)}", lucro_real * CSLL, "Lei 7.689/1988, art. 3º"
     )
     alerta_exportacao(perfil, res)
+    if novo:
+        consumo.alertas(perfil, res)
     if variacao:
         res.alerta(
             "Variação cambial entra no lucro do Lucro Real (ganho soma, perda deduz). A regra geral é o reconhecimento "

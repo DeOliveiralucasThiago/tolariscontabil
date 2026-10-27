@@ -313,6 +313,7 @@ export interface ExpressaEntrada {
   pro_labore_mensal: number;
   atividade: Atividade;
   receita_exterior_mensal?: number;
+  reducao_ibs_cbs?: number;
   ano?: number;
 }
 
@@ -335,6 +336,8 @@ export interface CompletaEntrada {
   iss_fixo_por_profissional_anual?: number;
   iss_fixo_no_simples?: boolean;
   servicos_hospitalares?: boolean;
+  /** Redução de IBS e CBS a partir de 2027: 0, 0,3 (profissões regulamentadas), 0,6 (saúde) ou 1. */
+  reducao_ibs_cbs?: number;
   ano?: number;
 }
 

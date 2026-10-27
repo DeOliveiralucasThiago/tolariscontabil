@@ -45,6 +45,8 @@ export function FormCompleta({
     iss_fixo_por_profissional_anual: 0,
     iss_fixo_no_simples: false,
     servicos_hospitalares: false,
+    reducao_ibs_cbs: 0,
+    ano: 2026,
     ...inicial,
   });
   const [erro, setErro] = useState("");
@@ -73,6 +75,7 @@ export function FormCompleta({
           sociedade_profissionais: !mercadoria && !!f.sociedade_profissionais,
           iss_fixo_no_simples: !mercadoria && !!f.sociedade_profissionais && f.atividade === "servico_anexo_iii" && !!f.iss_fixo_no_simples,
           servicos_hospitalares: !mercadoria && !!f.servicos_hospitalares,
+          reducao_ibs_cbs: (f.ano ?? 2026) >= 2027 ? f.reducao_ibs_cbs ?? 0 : 0,
         });
       }}
     >
@@ -102,6 +105,49 @@ export function FormCompleta({
           <CampoPercentual id="iss" rotulo="Alíquota de ISS do município" valor={f.aliquota_iss} onChange={set("aliquota_iss")} max={5} ajuda="Entre 2% e 5%." />
         )}
       </div>
+      <details className="rounded-lg border border-borda p-3" open={(f.ano ?? 2026) >= 2027} data-testid="bloco-ano">
+        <summary className="cursor-pointer text-sm font-medium">
+          Ano de apuração e Reforma Tributária
+          <span className="ml-2 text-xs font-normal text-tinta-2">Padrão: 2026. Escolha 2027 a 2033 para ver CBS e IBS no Presumido e no Real</span>
+        </summary>
+        <div className="mt-3 flex flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Selecao
+              id="ano_apuracao"
+              name="ano_apuracao"
+              rotulo="Ano de apuração"
+              value={String(f.ano ?? 2026)}
+              onChange={(e) => set("ano")(Number(e.target.value))}
+              ajuda="O Simples usa a tabela do ano (Res. CGSN 190/2026)."
+            >
+              {[2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033].map((a) => (
+                <option key={a} value={a}>{a}</option>
+              ))}
+            </Selecao>
+            {(f.ano ?? 2026) >= 2027 && (
+              <Selecao
+                id="reducao_ibs_cbs"
+                name="reducao_ibs_cbs"
+                rotulo="Redução de alíquota do IBS e da CBS"
+                value={String(f.reducao_ibs_cbs ?? 0)}
+                onChange={(e) => set("reducao_ibs_cbs")(Number(e.target.value))}
+                ajuda="Só vale para o que a lei lista; confirme o enquadramento."
+              >
+                <option value="0">Nenhuma (alíquota cheia)</option>
+                <option value="0.3">30% (profissões regulamentadas listadas)</option>
+                <option value="0.6">60% (serviços de saúde listados)</option>
+                <option value="1">100% (alíquota zero)</option>
+              </Selecao>
+            )}
+          </div>
+          {(f.ano ?? 2026) >= 2027 && (
+            <p className="text-xs text-tinta-2">
+              Do Lucro Presumido e do Lucro Real, a CBS e o IBS entram no lugar de PIS e Cofins; ICMS e ISS caem de 2029 a 2032 e acabam
+              em 2033. As alíquotas de referência ainda são estimativas (CBS 8,8% e IBS 17,7%).
+            </p>
+          )}
+        </div>
+      </details>
       <details className="rounded-lg border border-borda p-3" open={(f.receita_exterior_anual ?? 0) > 0 || (f.variacao_cambial_anual ?? 0) !== 0} data-testid="bloco-exterior">
         <summary className="cursor-pointer text-sm font-medium">
           Receita do exterior (exportação) e variação cambial
