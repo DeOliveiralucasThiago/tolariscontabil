@@ -22,6 +22,7 @@ from .acompanhamento_servico import carregar_series, curta, perfil_da_simulacao
 from .honorarios import FUSO
 from .models import Cliente, DocumentoFiscal, ItemFiscal, PortalCliente, Simulacao
 from .recuperacao_servico import analisar
+from .regime_regular import aviso_regime_regular
 from .servicos import diferencas, pode_recalcular, recalcular_resultado
 
 ORDEM = {g: i for i, g in enumerate(avisos.GRAVIDADES)}
@@ -142,6 +143,10 @@ def reunir(db: Session, escritorio_id: int, hoje: date | None = None) -> dict[st
             rbt12, fonte = rbt12_das_notas({k: int(v * 100) for k, v in receita_real.items()}, origem)
         elif perfil is not None:
             rbt12, fonte = perfil.receita_bruta_anual, f"planejamento de {base.criado_em.strftime('%d/%m/%Y')}"
+        if c.regime_atual == "simples":  # prazo da opção pelo regime regular de IBS/CBS (até 30/10/2026)
+            regular = aviso_regime_regular(c, perfil, rbt12, fonte, hoje)
+            if regular is not None:
+                lista.append(_item(regular[0], c, regular[1]))
         ac = analisar_acompanhamento(c, base, series_por_cliente.get(c.id), hoje)
         proj = ac.get("projecao")
         cruzamentos = {x["codigo"]: x for x in (proj["cruzamentos"] if proj else [])}

@@ -593,7 +593,7 @@ export interface AvisoCarteira {
   base_legal: string;
   cliente_id: number;
   cliente: string;
-  acao: { tipo: "cliente" | "recalcular"; rotulo: string; aba?: string; simulacao_id?: number };
+  acao: { tipo: "cliente" | "recalcular" | "reforma"; rotulo: string; aba?: string; simulacao_id?: number; receita?: number; atividade?: Atividade };
 }
 
 export interface RespostaAvisos {

@@ -41,7 +41,11 @@ function CartaoAviso({ a, onRecalcular, ocupado }: { a: AvisoCarteira; onRecalcu
             </Botao>
           ) : (
             <Link
-              href={`/clientes/${a.cliente_id}${a.acao.aba ? `?aba=${a.acao.aba}` : ""}`}
+              href={
+                a.acao.tipo === "reforma"
+                  ? `/reforma?aba=${a.acao.aba ?? "simples"}&cliente=${a.cliente_id}${a.acao.receita ? `&receita=${Math.round(a.acao.receita)}` : ""}${a.acao.atividade ? `&atividade=${a.acao.atividade}` : ""}`
+                  : `/clientes/${a.cliente_id}${a.acao.aba ? `?aba=${a.acao.aba}` : ""}`
+              }
               className="inline-flex h-10 items-center rounded-lg border border-borda px-3 text-sm font-medium hover:bg-fundo"
             >
               {a.acao.rotulo}

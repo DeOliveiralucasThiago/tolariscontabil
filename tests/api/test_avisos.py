@@ -22,10 +22,11 @@ def _planejar(c: TestClient, cid: int, dados: dict) -> dict:
     return r.json()
 
 
-def _avisos(c: TestClient) -> list[dict]:
+def _avisos(c: TestClient, com_prazo: bool = False) -> list[dict]:
+    """Avisos da carteira. O aviso do prazo do regime regular (até 30/10/2026) depende da data de hoje e fica de fora, salvo ``com_prazo``."""
     r = c.get("/api/avisos")
     assert r.status_code == 200, r.text
-    return r.json()["avisos"]
+    return [a for a in r.json()["avisos"] if com_prazo or a["codigo"] != "regime_regular_prazo"]
 
 
 def _por_codigo(c: TestClient) -> dict[str, dict]:
@@ -202,3 +203,56 @@ def test_feed_traz_as_mudancas_publicadas_em_2026(logado: TestClient):
     assert "R$ 110" in ids["mei-lc238"]["titulo"] and "LC 238/2026" in ids["mei-lc238"]["base_legal"]
     assert ids["mei-lc238"]["observacao"].startswith("Incorporado") and "R$ 110.000 em 2027" in ids["mei-lc238"]["observacao"]
     assert ids["simples-regime-regular-ibs-cbs-prazo"]["data"] == "2026-10-30"
+
+
+# --- Prazo da opção pelo regime regular de IBS/CBS (até 30/10/2026) ---------------------------------------------------
+import datetime as _dt  # noqa: E402
+
+from tolaris_api import avisos_servico  # noqa: E402
+
+
+def _fixar_hoje(monkeypatch: pytest.MonkeyPatch, dia: _dt.date) -> None:
+    class DataFixa(_dt.date):
+        @classmethod
+        def today(cls):
+            return dia
+
+    monkeypatch.setattr(avisos_servico, "date", DataFixa)
+
+
+def test_aviso_do_prazo_do_regime_regular(logado: TestClient, monkeypatch: pytest.MonkeyPatch):
+    cid = _cliente(logado, regime_atual="simples")
+    _planejar(logado, cid, {"atividade": "comercio", "receita_bruta_anual": 2000000, "compras_anual": 1200000})
+    _fixar_hoje(monkeypatch, _dt.date(2026, 10, 27))
+    a = next(x for x in _avisos(logado, com_prazo=True) if x["codigo"] == "regime_regular_prazo")
+    # com as compras do planejamento (R$ 1,2 mi) todas de fornecedores do regime regular, o ponto de equilíbrio cai para 10%
+    assert "Com as compras de R$ 1.200.000,00 do planejamento" in a["detalhe"] and "compensa a partir de 10% de vendas a empresas (B2B)" in a["detalhe"]
+    assert a["gravidade"] == "critico" and "até 30/10/2026 (em 3 dias)" in a["titulo"]
+    # comércio, R$ 2 mi, sem compras com crédito: por fora só compensa com quase tudo vendido a empresas (98%); com compras de fornecedores
+    # do regime regular a vantagem sobe (o aviso lembra disso)
+    assert "a partir de 98% de vendas a empresas (B2B)" in a["detalhe"] and "sem contar compras de fornecedores do regime regular" in a["detalhe"]
+    assert "03/11 a 20/12/2026" in a["detalhe"]
+    assert "Res. CGSN 194/2026" in a["base_legal"]
+    assert a["acao"] == {"tipo": "reforma", "rotulo": "Simular o Simples na Reforma", "aba": "simples", "receita": 2000000.0, "atividade": "comercio"}
+
+
+def test_aviso_do_prazo_gravidade_e_fim_do_prazo(logado: TestClient, monkeypatch: pytest.MonkeyPatch):
+    cid = _cliente(logado, regime_atual="simples")
+    _planejar(logado, cid, {"atividade": "comercio", "receita_bruta_anual": 2000000})
+    _fixar_hoje(monkeypatch, _dt.date(2026, 10, 20))
+    antes = next(x for x in _avisos(logado, com_prazo=True) if x["codigo"] == "regime_regular_prazo")
+    assert antes["gravidade"] == "atencao" and "(em 10 dias)" in antes["titulo"]
+    _fixar_hoje(monkeypatch, _dt.date(2026, 10, 30))
+    assert "(hoje)" in next(x for x in _avisos(logado, com_prazo=True) if x["codigo"] == "regime_regular_prazo")["titulo"]
+    _fixar_hoje(monkeypatch, _dt.date(2026, 10, 31))
+    assert not [x for x in _avisos(logado, com_prazo=True) if x["codigo"] == "regime_regular_prazo"]
+
+
+def test_aviso_do_prazo_so_para_o_simples_e_sem_dados(logado: TestClient, monkeypatch: pytest.MonkeyPatch):
+    _fixar_hoje(monkeypatch, _dt.date(2026, 10, 27))
+    presumido = _cliente(logado, regime_atual="presumido")
+    _planejar(logado, presumido, {"atividade": "comercio", "receita_bruta_anual": 2000000})
+    assert not [x for x in _avisos(logado, com_prazo=True) if x["codigo"] == "regime_regular_prazo"]
+    sem_dados = logado.post("/api/clientes", json={"razao_social": "Sem dados", "cnpj": "11444777000161", "regime_atual": "simples"}).json()["id"]
+    a = next(x for x in _avisos(logado, com_prazo=True) if x["codigo"] == "regime_regular_prazo" and x["cliente_id"] == sem_dados)
+    assert "Informe a receita e a atividade" in a["detalhe"] and a["acao"] == {"tipo": "reforma", "rotulo": "Simular o Simples na Reforma", "aba": "simples"}

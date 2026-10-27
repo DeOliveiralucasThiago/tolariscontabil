@@ -407,12 +407,20 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     informação do ISS fixo no PGDAS-D é do contador; valor, condições e autorização são da lei municipal e não foram lidos; sublimite (ICMS/ISS fora do DAS
     acima de R$ 3,6 mi) e retenção de ISS não são combinados com o ISS fixo.
 
+79. **Aviso do prazo do regime regular de IBS/CBS (27/10/2026):** a Central de Avisos mostra, para cada cliente do Simples com dados de receita e
+    atividade, o aviso "Regime regular de IBS/CBS em 2027: a opção vai até 30/10/2026". A opção para jan-jun/2027 vai de 01/09 a 30/10/2026 e o
+    cancelamento, irretratável, de 03/11 a 20/12/2026 (Res. CGSN 194/2026; LC 214/2025, art. 41; LC 123/2006, art. 13, §§ 9º a 11). O aviso é "crítico" quando faltam
+    3 dias ou menos e "atenção" antes disso; some depois de 30/10/2026. Traz o **ponto de equilíbrio** (parcela de vendas B2B a partir da qual o regime regular
+    compensa) calculado pelo Simples na Reforma de 2027 sem compras e, quando o planejamento tem compras, também com elas (o crédito do adquirente depende
+    de fornecedores no regime regular). O botão abre o "Simples na Reforma" já com a receita e a atividade do cliente. **Limites:** o Tolaris não conhece a
+    proporção B2B real do cliente nem o regime dos fornecedores; o ponto de equilíbrio é referência com 50% de B2B, e a decisão é do contador.
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias? A lei, art. 18, § 24, soma também a CPP efetivamente recolhida).
 - [ ] RAT/terceiros padrão (2% e 5,8%) para os clientes típicos do escritório.
 - [ ] MEI: a LC 238/2026 muda os limites a partir de 2027 (R$ 110 mil em 2027, R$ 140 mil em 2028); conferir os avisos de limite de 2027 e avisar os clientes MEI perto do limite de R$ 81 mil em 2026.
-- [ ] **Prazo:** decisão sobre o regime regular de IBS/CBS (jan-jun/2027) até 30/10/2026; cancelamento irretratável de 03/11 a 20/12/2026 (Res. CGSN 194/2026). Rodar o "Simples na Reforma" dos clientes B2B antes.
+- [ ] **Prazo:** decisão sobre o regime regular de IBS/CBS (jan-jun/2027) até 30/10/2026; cancelamento irretratável de 03/11 a 20/12/2026 (Res. CGSN 194/2026). Rodar o "Simples na Reforma" dos clientes B2B antes (a Central de Avisos já lista o prazo por cliente e o ponto de equilíbrio; conferir se o ponto de equilíbrio com 50% de B2B é uma referência útil).
 - [ ] NFS-e nacional obrigatória a partir de 01/11/2026 para os optantes que prestam serviços (Res. CGSN 191/2026): conferir os clientes ainda em emissor municipal.
 - [ ] Enquadramento: conferir o Anexo de cada CNAE do cliente na descrição da atividade (Res. CGSN 140/2018, art. 25, § 1º), já que a tabela por CNAE é comercial, e se há atividade real que justifique segregar receita no Anexo III.
 - [ ] Pró-labore elevado para o fator R: custo do INSS (11% do sócio) e do IRRF, e se a retirada total já comporta o valor.

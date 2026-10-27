@@ -129,3 +129,10 @@ não usa rede externa:
 ```bash
 node fluxo_profissionais.mjs saida
 ```
+
+O aviso do prazo da opção pelo regime regular de IBS/CBS (até 30/10/2026) aparece na Central de Avisos e abre o Simples na Reforma com a receita e a
+atividade do cliente. O fluxo só roda até 30/10/2026; depois dessa data ele encerra sem testar nada:
+
+```bash
+node fluxo_regime_regular.mjs saida
+```

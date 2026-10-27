@@ -172,11 +172,19 @@ function SeletorDeAnos({ anos, onChange }: { anos: number[]; onChange: (a: numbe
   );
 }
 
-function SimplesNaReforma({ clienteInicial }: { clienteInicial?: number }) {
+function SimplesNaReforma({
+  clienteInicial,
+  receitaInicial,
+  atividadeInicial,
+}: {
+  clienteInicial?: number;
+  receitaInicial?: number;
+  atividadeInicial?: Atividade;
+}) {
   const [f, setF] = useState({
     anos: ANOS_SIMPLES,
-    atividade: "comercio" as Atividade,
-    receita_bruta_anual: 0,
+    atividade: (atividadeInicial ?? "comercio") as Atividade,
+    receita_bruta_anual: receitaInicial ?? 0,
     percentual_b2b: 0.5,
     compras_creditaveis_anual: 0,
     folha_fator_r_anual: 0,
@@ -259,6 +267,10 @@ function SimplesNaReforma({ clienteInicial }: { clienteInicial?: number }) {
 function PaginaReforma() {
   const params = useSearchParams();
   const clienteInicial = params.get("cliente") ? Number(params.get("cliente")) : undefined;
+  const receitaInicial = Number(params.get("receita")) > 0 ? Number(params.get("receita")) : undefined;
+  const atividadeInicial = ["comercio", "industria", "servico_anexo_iii", "servico_anexo_iv", "servico_fator_r"].includes(params.get("atividade") ?? "")
+    ? (params.get("atividade") as Atividade)
+    : undefined;
   const [aba, setAba] = useState<"transicao" | "simples">(params.get("aba") === "simples" ? "simples" : "transicao");
   return (
     <>
@@ -273,7 +285,7 @@ function PaginaReforma() {
         ativa={aba}
         onChange={setAba}
       />
-      {aba === "transicao" ? <Transicao clienteInicial={clienteInicial} /> : <SimplesNaReforma clienteInicial={clienteInicial} />}
+      {aba === "transicao" ? <Transicao clienteInicial={clienteInicial} /> : <SimplesNaReforma clienteInicial={clienteInicial} receitaInicial={receitaInicial} atividadeInicial={atividadeInicial} />}
     </>
   );
 }
