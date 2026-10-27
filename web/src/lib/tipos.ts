@@ -330,6 +330,10 @@ export interface CompletaEntrada {
   variacao_cambial_anual?: number;
   receita_anexo_iii_anual?: number;
   folha_fator_r_anual?: number | null;
+  sociedade_profissionais?: boolean;
+  profissionais?: number;
+  iss_fixo_por_profissional_anual?: number;
+  servicos_hospitalares?: boolean;
   ano?: number;
 }
 

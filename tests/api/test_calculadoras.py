@@ -123,3 +123,32 @@ def test_folha_do_fator_r_informada_pelo_contador(logado: TestClient):
     sim = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**ENTRADAS["enquadramento"], "folha_fator_r_anual": 250000}).json()
     passo = next(p for r in sim["resultado"]["regimes"] if r["titulo"] == "Simples Nacional" for p in r["memoria"] if p["descricao"].startswith("Fator R"))
     assert "(informada)" in passo["formula"]
+
+
+def test_completa_com_iss_fixo_e_servicos_hospitalares(logado: TestClient):
+    cid = logado.post("/api/clientes", json={"razao_social": "Advocacia Exemplo", "atividade": "servico_anexo_iv"}).json()["id"]
+    base = {"atividade": "servico_anexo_iv", "receita_bruta_anual": 600000, "pro_labore_anual": 36000, "outras_despesas_anual": 60000}
+    normal = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json=base).json()
+    fixo = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={
+        **base, "sociedade_profissionais": True, "profissionais": 3, "iss_fixo_por_profissional_anual": 1800}).json()
+    iss = lambda s: next(t["valor"] for r in s["resultado"]["regimes"] if r["titulo"] == "Lucro Presumido" for t in r["tributos"] if t["nome"] == "ISS")  # noqa: E731
+    assert iss(normal) == 30000 and iss(fixo) == 5400
+    pdf = logado.get(f"/api/simulacoes/{fixo['id']}/proposta.pdf")
+    assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
+    # validações
+    invalido = {**base, "sociedade_profissionais": True}
+    assert logado.post(f"/api/clientes/{cid}/simulacoes/completa", json=invalido).status_code == 422
+    assert logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={
+        **base, "atividade": "comercio", "sociedade_profissionais": True, "profissionais": 1, "iss_fixo_por_profissional_anual": 900}).status_code == 422
+    assert logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**base, "atividade": "comercio", "servicos_hospitalares": True}).status_code == 422
+    # serviços hospitalares: presunção de 8% e 12% no Presumido
+    h = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={
+        "atividade": "servico_fator_r", "receita_bruta_anual": 1200000, "folha_clt_anual": 300000, "pro_labore_anual": 60000,
+        "servicos_hospitalares": True}).json()
+    p = next(r for r in h["resultado"]["regimes"] if r["titulo"] == "Lucro Presumido")
+    assert {t["nome"]: t["valor"] for t in p["tributos"]}["IRPJ"] == 14400
+    # o Enquadramento aceita os mesmos campos
+    d = logado.post("/api/calculadoras/enquadramento", json={
+        "atividade": "servico_fator_r", "receita_bruta_anual": 600000, "pro_labore_anual": 36000, "outras_despesas_anual": 60000,
+        "sociedade_profissionais": True, "profissionais": 2, "iss_fixo_por_profissional_anual": 1500}).json()
+    assert d["cenarios"][0]["anexos_simples"] == ["V"]

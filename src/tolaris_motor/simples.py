@@ -289,6 +289,14 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             "Vedações a conferir para quem exporta (LC 123/2006, art. 17, II e art. 3º, § 4º, XII): titular ou sócio domiciliado no "
             "exterior, ou filial, sucursal, agência ou representação no exterior, impedem o Simples Nacional."
         )
+    if perfil.sociedade_profissionais:
+        res.alerta(
+            "Sociedade de profissionais com ISS fixo: no Simples Nacional o ISS é calculado sobre a receita e vai no DAS; o ISS fixo da "
+            "sociedade uniprofissional não vale para o optante. A exceção legal é o escritório de serviços contábeis, que pode recolher o ISS fixo "
+            "ao Município se a lei municipal permitir (LC 123/2006, art. 18, § 22-A), e este cálculo não trata esse caso."
+        )
+    if perfil.servicos_hospitalares:
+        res.alerta("A presunção de serviços hospitalares é do Lucro Presumido e não muda o cálculo do Simples Nacional.")
     res.alerta("Estimativa com faturamento mensal constante; o DAS real varia mês a mês com o RBT12.")
     return res
 

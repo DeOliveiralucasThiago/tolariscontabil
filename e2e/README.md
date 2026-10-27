@@ -122,3 +122,10 @@ node fluxo_enquadramento.mjs saida
 
 As capturas da apresentação saem de `capturas_apresentacao.mjs` (escritório fictício completo) e de `capturas_apresentacao_extra.mjs`
 (Simples na Reforma de 2027 a 2033, Pessoa física e Mudanças na legislação). Ambas pedem o site sem `TOLARIS_AMBIENTE_TESTE` e um banco novo.
+
+O fluxo das sociedades de profissionais (ISS fixo no Presumido e no Real, serviços hospitalares e o bloco que não aparece para comércio)
+não usa rede externa:
+
+```bash
+node fluxo_profissionais.mjs saida
+```

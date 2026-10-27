@@ -158,8 +158,13 @@ def _entradas_legiveis(sim: Simulacao) -> list[tuple[str, str]]:
         linhas.append(("Variação cambial líquida", brl(e["variacao_cambial_anual"])))
     if e.get("atividade") in ("comercio", "industria"):
         linhas.append(("ICMS", pct(e.get("aliquota_icms", 0))))
+    elif e.get("sociedade_profissionais"):
+        linhas.append(("ISS fixo (sociedade de profissionais)",
+                       f"{e.get('profissionais', 0)} profissional(is) x {brl(e.get('iss_fixo_por_profissional_anual', 0))}/ano"))
     else:
         linhas.append(("ISS", pct(e.get("aliquota_iss", 0))))
+    if e.get("servicos_hospitalares"):
+        linhas.append(("Serviços hospitalares", "presunção reduzida no Lucro Presumido"))
     linhas.append(("Ano-calendário", str(e.get("ano", ""))))
     return linhas
 

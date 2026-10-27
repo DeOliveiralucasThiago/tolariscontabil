@@ -64,6 +64,12 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
         p_irpj,
         "Lei 9.249/1995, art. 15, §1º e art. 20",
     )
+    if perfil.presuncao == "servicos_hospitalares":
+        res.alerta(
+            "Serviços hospitalares (IRPJ 8% e CSLL 12%): a presunção reduzida só vale para quem presta serviços hospitalares e afins na forma da lei "
+            "(Lei 9.249/1995, art. 15, § 1º, III, a), em geral por sociedade empresária que atende às exigências da Anvisa. Consultório e clínica "
+            "sem esse enquadramento usam 32%. Confirme o enquadramento antes de adotar o percentual."
+        )
 
     lc224 = tab.get("lc224")
     receita_trim = receita / 4

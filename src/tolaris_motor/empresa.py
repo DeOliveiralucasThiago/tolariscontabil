@@ -75,6 +75,15 @@ class PerfilEmpresa:
     receita_anexo_iii_anual: Numero = 0
     """Parte de ``receita_bruta_anual`` de uma atividade que tributa direto no Anexo III (CNAE realmente exercido),
     para empresa cuja atividade principal é do fator R. Só afeta o Simples Nacional."""
+    sociedade_profissionais: bool = False
+    """Sociedade uniprofissional (advocacia, contabilidade, medicina etc.) que paga ISS fixo por profissional no Lucro Presumido e no
+    Lucro Real. No Simples Nacional o ISS segue a receita, dentro do DAS."""
+    profissionais: int = 0
+    """Quantidade de profissionais habilitados da sociedade, para o ISS fixo."""
+    iss_fixo_por_profissional_anual: Numero = 0
+    """ISS fixo anual de cada profissional, conforme a lei do município (Decreto-Lei 406/1968, art. 9º, §§ 1º e 3º)."""
+    servicos_hospitalares: bool = False
+    """Serviços hospitalares (e afins) com a presunção reduzida do Lucro Presumido: IRPJ 8% e CSLL 12%."""
     ano: int = 2026
 
     def __post_init__(self) -> None:
@@ -113,12 +122,29 @@ class PerfilEmpresa:
             raise ValueError("receita_anexo_iii_anual não pode passar da receita bruta anual")
         if self.receita_anexo_iii_anual and self.atividade is not Atividade.SERVICO_FATOR_R:
             raise ValueError("A receita separada do Anexo III só se aplica a quem tem atividade principal do fator R")
+        self.iss_fixo_por_profissional_anual = D(self.iss_fixo_por_profissional_anual)
+        if self.iss_fixo_por_profissional_anual < 0 or self.profissionais < 0:
+            raise ValueError("profissionais e iss_fixo_por_profissional_anual não podem ser negativos")
+        if self.sociedade_profissionais:
+            if self.atividade.vende_mercadoria:
+                raise ValueError("ISS fixo de sociedade de profissionais só se aplica a serviços")
+            if self.profissionais < 1 or self.iss_fixo_por_profissional_anual <= 0:
+                raise ValueError("Informe a quantidade de profissionais e o ISS fixo anual de cada um")
+        if self.servicos_hospitalares and self.atividade.vende_mercadoria:
+            raise ValueError("A presunção de serviços hospitalares só se aplica a serviços")
         if self.presuncao is None:
-            self.presuncao = PRESUNCAO_PADRAO[self.atividade]
+            self.presuncao = "servicos_hospitalares" if self.servicos_hospitalares else PRESUNCAO_PADRAO[self.atividade]
 
     @property
     def fgts_anual(self) -> Decimal:
         return self.folha_clt_anual * ALIQUOTA_FGTS
+
+    @property
+    def iss_fixo_anual(self) -> Decimal:
+        """ISS fixo anual total da sociedade de profissionais (zero quando não se aplica)."""
+        if not self.sociedade_profissionais:
+            return ZERO
+        return Decimal(self.profissionais) * self.iss_fixo_por_profissional_anual
 
     @property
     def receita_interna_anual(self) -> Decimal:
@@ -149,6 +175,18 @@ def tributo_sobre_receita_local(perfil: PerfilEmpresa, res: Resultado) -> None:
     """Lança ICMS (mercadorias) ou ISS (serviços) no resultado do regime normal."""
     if perfil.atividade.vende_mercadoria:
         res.tributos["ICMS"] = icms_liquido(perfil, res)
+    elif perfil.sociedade_profissionais:
+        res.tributos["ISS"] = res.passo(
+            "ISS fixo da sociedade de profissionais",
+            f"{perfil.profissionais} profissional(is) x {brl(perfil.iss_fixo_por_profissional_anual)}/ano",
+            perfil.iss_fixo_anual,
+            "Decreto-Lei 406/1968, art. 9º, §§ 1º e 3º, e lei municipal",
+        )
+        res.alerta(
+            "ISS fixo: vale para a sociedade uniprofissional que atende às condições da lei do município (profissionais habilitados, "
+            "responsabilidade pessoal e sem caráter empresarial), e o valor anual por profissional é o do município. Confirme o enquadramento "
+            "e o valor com a prefeitura. O ISS fixo é devido mesmo que a receita varie."
+        )
     else:
         res.tributos["ISS"] = res.passo(
             "ISS",

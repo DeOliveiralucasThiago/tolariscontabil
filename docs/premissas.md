@@ -378,6 +378,24 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     (o MEI é medido pela receita do ano-calendário); o limite proporcional de quem inicia a atividade, a regra de até dois empregados a partir de 2027
     e o novo valor do DAS-MEI (Anexo XIII da Res. CGSN 190/2026) não entram no cálculo. Confirme o texto na versão publicada.
 
+77. **Sociedades de profissionais (ISS fixo) e serviços hospitalares (26-27/10/2026):**
+    - **Advocacia e sociedade individual de advocacia (SIA):** entram no Simples Nacional pelo Anexo IV (CPP fora do DAS, LC 123, art. 18, § 5º-C),
+      já tratado. A SIA e a sociedade de advogados não podem ser MEI. O cadastro não distingue a natureza jurídica (SIA, sociedade simples, LTDA);
+      isso não muda os números do Simples.
+    - **ISS fixo:** o planejamento completo e o Enquadramento ganharam o bloco "Sociedade de profissionais (ISS fixo)", com a quantidade de
+      profissionais e o ISS fixo anual de cada um (valor do município). No **Lucro Presumido e no Lucro Real** o ISS passa a ser esse valor fixo
+      (quantidade x valor), no lugar de uma porcentagem da receita (Decreto-Lei 406/1968, art. 9º, §§ 1º e 3º). **No Simples Nacional nada muda:** o
+      ISS é calculado sobre a receita e vai no DAS, e o ISS fixo da sociedade uniprofissional não vale para o optante (a exceção legal é o escritório
+      de serviços contábeis, LC 123, art. 18, § 22-A, com a lei municipal permitindo; este cálculo **não** trata essa exceção). Os campos ficam no
+      planejamento (e vão para o PDF e para o acompanhamento do cliente), não no cadastro do cliente. O Tolaris não sabe se a sociedade cumpre as
+      condições da lei municipal (habilitação, responsabilidade pessoal, sem caráter empresarial) nem o valor do município: o contador informa.
+    - **Serviços hospitalares:** o bloco traz a opção de usar a presunção de 8% (IRPJ) e 12% (CSLL) no Presumido, que já existia no motor mas não
+      tinha acesso na tela. Só vale para quem presta serviços hospitalares e afins na forma da lei (Lei 9.249/1995, art. 15, § 1º, III, a), em geral
+      sociedade empresária com as exigências da Anvisa; o aviso diz isso. Consultório e clínica sem esse enquadramento usam 32%. A citação da
+      norma e o alcance do conceito de "serviços hospitalares" precisam de conferência.
+    - **Não lido:** o Decreto-Lei 406/1968 e as leis municipais; a LC 214/2025 só nos pontos do Simples. Como a advocacia e as sociedades
+      uniprofissionais ficam na Reforma (redução de 30% de IBS e CBS, ISS fixo durante a transição) não foi modelado além da opção de redução de 30%.
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias? A lei, art. 18, § 24, soma também a CPP efetivamente recolhida).
@@ -393,7 +411,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Percentuais de partilha do DAS (tabela em `simples_nacional.json`, campo `partilha`), inclusive as vigências de 2027 a 2033.
 - [ ] Modelo da decisão do Simples na Reforma (preços ajustados para o mesmo custo líquido do cliente).
 - [ ] Carnê-leão: livro-caixa × desconto simplificado (o motor usa o maior dos dois).
-- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (85 casos, incluindo ENQ*, SR* de 2027 a 2033, AU*, REC* e AV*).
+- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (91 casos, incluindo ENQ*, ADV1, HOSP1, SR* de 2027 a 2033, AU*, REC* e AV*).
 - [ ] Importação: quais CFOPs excluir da receita (remessas, devoluções, transferências).
 - [ ] **Tabela de NCM monofásicos** (`src/tolaris_motor/tabelas/monofasico.json`): conferir cada prefixo e as
       exceções por subitem na tabela oficial da Receita; hoje é uma lista inicial montada sem acesso à fonte oficial.
@@ -433,3 +451,6 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - Envio automático pela API oficial do WhatsApp Business, rastreio de abertura de e-mail e assinatura com certificado.
 - Aviso por e-mail ou WhatsApp (resumo semanal da carteira) e avisos por projeção de crescimento da receita.
 - DIFAL e benefícios fiscais estaduais (a segregação de ST do Simples está na recuperação de tributos).
+- [ ] ISS fixo de sociedade uniprofissional: valor anual por profissional e condições da lei do município; confirmar que o Presumido e o Real do cliente (advocacia, contabilidade, medicina etc.) passam a usar o valor fixo e que o Simples segue pela receita.
+- [ ] Presunção de serviços hospitalares (8% e 12%): requisitos legais, aplicação a clínicas e laboratórios e a citação da norma.
+- [ ] Reforma Tributária para sociedades uniprofissionais: redução de 30% de IBS/CBS e ISS fixo na transição (não modelados além da redução).

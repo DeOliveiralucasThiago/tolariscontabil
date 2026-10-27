@@ -7,7 +7,7 @@ import { type Atividade, type CompletaEntrada } from "@/lib/tipos";
 import { CampoMoeda, CampoPercentual } from "./CampoMoeda";
 import { ConversorDeMoeda } from "./ConversorDeMoeda";
 import { SelecaoAtividade } from "./SelecaoAtividade";
-import { Botao, MensagemErro, Selecao } from "./ui";
+import { Botao, Campo, MensagemErro, Selecao } from "./ui";
 
 /** Planejamento completo: valores anuais com compras, despesas e alíquotas locais. */
 export function FormCompleta({
@@ -40,6 +40,10 @@ export function FormCompleta({
     variacao_cambial_anual: 0,
     receita_anexo_iii_anual: 0,
     folha_fator_r_anual: null,
+    sociedade_profissionais: false,
+    profissionais: 0,
+    iss_fixo_por_profissional_anual: 0,
+    servicos_hospitalares: false,
     ...inicial,
   });
   const [erro, setErro] = useState("");
@@ -59,7 +63,15 @@ export function FormCompleta({
         if ((f.receita_anexo_iii_anual ?? 0) > f.receita_bruta_anual) {
           return setErro("A receita do Anexo III não pode passar da receita bruta anual (ela é uma parte dela).");
         }
-        onCalcular({ ...f, folha_fator_r_anual: f.folha_fator_r_anual || null });
+        if (!mercadoria && f.sociedade_profissionais && ((f.profissionais ?? 0) < 1 || (f.iss_fixo_por_profissional_anual ?? 0) <= 0)) {
+          return setErro("Informe a quantidade de profissionais e o ISS fixo anual de cada um.");
+        }
+        onCalcular({
+          ...f,
+          folha_fator_r_anual: f.folha_fator_r_anual || null,
+          sociedade_profissionais: !mercadoria && !!f.sociedade_profissionais,
+          servicos_hospitalares: !mercadoria && !!f.servicos_hospitalares,
+        });
       }}
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -133,6 +145,73 @@ export function FormCompleta({
           <ConversorDeMoeda onUsar={(reais) => set("receita_exterior_anual")(reais)} />
         </div>
       </details>
+      {!mercadoria && (
+        <details
+          className="rounded-lg border border-borda p-3"
+          open={!!f.sociedade_profissionais || !!f.servicos_hospitalares}
+          data-testid="bloco-profissionais"
+        >
+          <summary className="cursor-pointer text-sm font-medium">
+            Sociedade de profissionais (ISS fixo) e serviços hospitalares
+            <span className="ml-2 text-xs font-normal text-tinta-2">Opcional: advocacia, contabilidade, medicina, clínicas</span>
+          </summary>
+          <div className="mt-3 flex flex-col gap-4">
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                id="sociedade_profissionais"
+                type="checkbox"
+                className="mt-1"
+                checked={!!f.sociedade_profissionais}
+                onChange={(e) => set("sociedade_profissionais")(e.target.checked)}
+              />
+              <span>
+                Sociedade uniprofissional com ISS fixo por profissional
+                <span className="block text-xs text-tinta-2">
+                  No Lucro Presumido e no Lucro Real o ISS passa a ser o valor fixo anual de cada profissional (Decreto-Lei 406/1968, art. 9º),
+                  em vez de uma porcentagem da receita. No Simples Nacional o ISS segue a receita, dentro do DAS.
+                </span>
+              </span>
+            </label>
+            {f.sociedade_profissionais && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Campo
+                  id="profissionais"
+                  name="profissionais"
+                  rotulo="Profissionais da sociedade"
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={f.profissionais ? String(f.profissionais) : ""}
+                  onChange={(e) => set("profissionais")(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
+                  ajuda="Sócios e profissionais habilitados que a lei do município conta para o ISS fixo."
+                />
+                <CampoMoeda
+                  id="iss_fixo_profissional"
+                  rotulo="ISS fixo anual de cada profissional"
+                  valor={f.iss_fixo_por_profissional_anual ?? 0}
+                  onChange={set("iss_fixo_por_profissional_anual")}
+                  ajuda="Valor da lei do seu município; varia de cidade para cidade."
+                />
+              </div>
+            )}
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                id="servicos_hospitalares"
+                type="checkbox"
+                className="mt-1"
+                checked={!!f.servicos_hospitalares}
+                onChange={(e) => set("servicos_hospitalares")(e.target.checked)}
+              />
+              <span>
+                Serviços hospitalares (presunção de 8% no IRPJ e 12% na CSLL)
+                <span className="block text-xs text-tinta-2">
+                  Só vale para quem presta serviços hospitalares e afins na forma da lei; consultório e clínica sem esse enquadramento usam 32%.
+                </span>
+              </span>
+            </label>
+          </div>
+        </details>
+      )}
       {f.atividade === "servico_fator_r" && (
         <details className="rounded-lg border border-borda p-3" open={(f.folha_fator_r_anual ?? 0) > 0} data-testid="bloco-folha-fator-r">
           <summary className="cursor-pointer text-sm font-medium">

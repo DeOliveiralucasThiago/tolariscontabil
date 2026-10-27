@@ -172,6 +172,21 @@ def casos() -> list[Caso]:
         lista.append(Caso(cod, "Enquadramento: Anexo V ao III (2026)", f"{desc}; {_perfil_desc(p)}{extra}",
                           _resultado_enquadramento(p, percentual)))
 
+    # Sociedade de profissionais (ISS fixo no Presumido e no Real) e serviços hospitalares (presunção de 8% e 12%)
+    profissionais_casos = {
+        "ADV1": ("Advocacia (Anexo IV), 3 advogados com ISS fixo de R$ 1.800 por ano cada (valor de exemplo: use o do seu município)",
+                 PerfilEmpresa(Atividade.SERVICO_ANEXO_IV, 600_000, pro_labore_anual=36_000, outras_despesas_anual=60_000,
+                               sociedade_profissionais=True, profissionais=3, iss_fixo_por_profissional_anual=1_800)),
+        "HOSP1": ("Serviços hospitalares (fator R): presunção de 8% no IRPJ e 12% na CSLL no Presumido",
+                  PerfilEmpresa(Atividade.SERVICO_FATOR_R, 1_200_000, folha_clt_anual=300_000, pro_labore_anual=60_000,
+                                servicos_hospitalares=True)),
+    }
+    for cod, (desc, p) in profissionais_casos.items():
+        for mod in (simples, presumido, real):
+            r = mod.calcular(p)
+            sigla = {"Simples Nacional": "SN", "Lucro Presumido": "LP", "Lucro Real": "LR"}[r.titulo]
+            lista.append(Caso(f"{cod}-{sigla}", r.titulo, f"{desc}; {_perfil_desc(p)}", r))
+
     simples_b2b_intermediarios = {
         "SR4": ("Comércio, 80% B2B, compras de fornecedores do regime regular",
                 reforma_simples.EntradaSimplesReforma("comercio", 2_000_000, "0.8", compras_creditaveis_anual=1_200_000,

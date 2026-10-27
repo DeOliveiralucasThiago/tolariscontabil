@@ -232,10 +232,24 @@ class CompletaEntrada(BaseModel):
     """Variação cambial líquida do ano, em reais: positiva é ganho, negativa é perda."""
     receita_anexo_iii_anual: Dinheiro = Field(default=Decimal(0), ge=0)
     """Parte da receita de serviços em atividade que tributa direto no Anexo III (só para a atividade do fator R)."""
+    sociedade_profissionais: bool = False
+    """Sociedade uniprofissional com ISS fixo por profissional (Lucro Presumido e Lucro Real)."""
+    profissionais: int = Field(default=0, ge=0, le=1000)
+    iss_fixo_por_profissional_anual: Dinheiro = Field(default=Decimal(0), ge=0)
+    servicos_hospitalares: bool = False
+    """Presunção reduzida de serviços hospitalares no Lucro Presumido (IRPJ 8% e CSLL 12%)."""
     ano: int = Field(default=2026, ge=2025, le=2026)
 
     @model_validator(mode="after")
     def _exterior_cabe_na_receita(self) -> "CompletaEntrada":
+        mercadoria = self.atividade in (Atividade.COMERCIO, Atividade.INDUSTRIA)
+        if self.sociedade_profissionais:
+            if mercadoria:
+                raise ValueError("O ISS fixo de sociedade de profissionais só vale para serviços")
+            if self.profissionais < 1 or self.iss_fixo_por_profissional_anual <= 0:
+                raise ValueError("Informe a quantidade de profissionais e o ISS fixo anual de cada um")
+        if self.servicos_hospitalares and mercadoria:
+            raise ValueError("A presunção de serviços hospitalares só vale para serviços")
         if self.receita_exterior_anual > self.receita_bruta_anual:
             raise ValueError("A receita do exterior não pode passar da receita bruta anual")
         if self.receita_anexo_iii_anual > self.receita_bruta_anual:
