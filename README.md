@@ -253,6 +253,8 @@ decide o enquadramento. Veja o item 81 de `docs/premissas.md`.
 sua presunção no Presumido, e o ICMS e o ISS incidem sobre mercadorias e serviços respectivamente. O Enquadramento mostra a receita por Anexo. A repartição da CPP com Anexo IV é uma estimativa
 (item 82 de `docs/premissas.md`).
 
+**Natureza jurídica:** o cadastro do cliente guarda a natureza jurídica (vem da consulta de CNPJ ou se escolhe na tela). O Simples fica "não aplicável" para sociedade por ações e cooperativa (exceto de consumo), a Central de Avisos marca o cliente do Simples nessa situação e o MEI que não é empresário individual, e a simulação do cliente usa a natureza do cadastro (item 84 de `docs/premissas.md`).
+
 **Legislação lida:** LC 123/2006 (texto completo), LC 214/2025 (pontos do Simples), LC 227/2026 e LC 238/2026 (MEI de R$ 110 mil em 2027 e
 R$ 140 mil em 2028) e as Resoluções CGSN 190, 191, 194 e 195 (itens 71 a 75 de `docs/premissas.md`). `docs/fontes-da-legislacao.md` diz onde
 cada texto foi lido e o que cada fonte entrega. O feed de mudanças (`tabelas/mudancas.json`) marca o que ainda não entrou no cálculo

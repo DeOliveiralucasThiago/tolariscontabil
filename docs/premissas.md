@@ -472,6 +472,19 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     Decreto-Lei 406/1968, art. 9º, §§ 1º e 3º, é a base do ISS fixo e a LC 116, art. 8º-B, reduz o ISS de 2029 a 2032 (premissa 81); (c) a CPP do Anexo IV (premissa 82). **Limite:** a pasta é cópia de
     apoio, não a publicação oficial; confira no Diário Oficial quando a decisão depender do texto.
 
+84. **Natureza jurídica no cadastro (27/10/2026; LC 123/2006 lida na pasta `legislação/`):** o cliente tem a natureza jurídica (descrição e código de 4 dígitos), preenchida pela consulta de CNPJ
+    (BrasilAPI: `natureza_juridica` e `codigo_natureza_juridica`) ou escolhida à mão, e guardada também ao completar clientes importados em lote. **Classificação:** pela descrição (palavras que não mudam
+    entre as versões da tabela) e, sem descrição, pelo primeiro dígito do código (1 administração pública, 3 entidades sem fins lucrativos, 4 pessoas físicas); o código sozinho não separa os tipos de
+    entidade empresarial, e a tabela oficial de códigos (IBGE/Concla) **não foi lida** porque o site do IBGE exige verificação de robô e a tabela da IN RFB 2.119/2022 só existe como imagem em PDF.
+    **Regras aplicadas:** (a) o Simples Nacional é **vedado** à sociedade por ações (art. 3º, § 4º, X) e à cooperativa que não é de consumo (art. 3º, § 4º, VI); (b) **não se aplica** a associação, fundação,
+    órgão público e pessoa física equiparada, que não são microempresa nem empresa de pequeno porte (art. 3º, caput); (c) pode optar a sociedade empresária, a sociedade simples (inclusive de advogados), a
+    EIRELI e o empresário individual (art. 3º, caput); (d) só o empresário individual pode ser MEI (art. 18-A, § 1º), e mudar de natureza desenquadra o MEI (art. 18-A, § 16, I). **No Tolaris:** o Simples
+    fica "não aplicável" no comparativo quando a natureza veda; o Presumido e o Real seguem (a S.A. pode usá-los) e avisam quando a natureza não é a de uma empresa com fins lucrativos; a Central de Avisos
+    dá aviso crítico ao cliente no Simples cuja natureza veda e ao MEI que não é empresário individual, e deixa de sugerir fator R e regime regular de IBS/CBS para quem não pode ser do Simples; a
+    simulação do cliente usa a natureza do cadastro (a tela pode informar outra para estudar uma mudança societária). **Limites:** os demais impedimentos do art. 3º, § 4º (sócio pessoa jurídica,
+    participação em outra empresa, atividade financeira etc.) dependem de dados que o Tolaris não tem e seguem como lista de conferência; a EIRELI foi extinta em 2021 e as que restam viraram sociedades
+    limitadas unipessoais; o registro na Junta ou no cartório (art. 3º, caput) não é verificado.
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias? A lei, art. 18, § 24, soma também a CPP efetivamente recolhida).
@@ -491,6 +504,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] **Presumido e Real a partir de 2027 (premissa 80):** conferir a receita-base de IRPJ/CSLL sem CBS e IBS, o crédito integral das compras, o tratamento do ISS fixo na transição e as reduções de 30% e 60% (quais clientes se enquadram); conferir os casos RG1 a RG4 da planilha.
 - [ ] **Sociedades uniprofissionais (premissa 81):** conferir a leitura do ISS fixo na transição (redução de 2029 a 2032 e fim em 2033), a lista de 18 profissões e os requisitos do art. 127, § 1º, II, e o caso RT5 da planilha.
 - [ ] **Atividades mistas (premissa 82):** a divisão da folha entre os Anexos para a CPP do Anexo IV (IN RFB 2.110/2022), a presunção por atividade no Presumido, o ICMS sobre as mercadorias e o ISS sobre os serviços, e os casos MIX1 a MIX3 da planilha.
+- [ ] **Natureza jurídica (premissa 84):** conferir a classificação por descrição (por exemplo, "Sociedade Simples Pura" e "Sociedade Unipessoal de Advogados" como sociedade simples) e os clientes do Simples que o Tolaris marcar como vedados.
 - [ ] Importação: quais CFOPs excluir da receita (remessas, devoluções, transferências).
 - [ ] **Tabela de NCM monofásicos** (`src/tolaris_motor/tabelas/monofasico.json`): conferir cada prefixo e as
       exceções por subitem na tabela oficial da Receita; hoje é uma lista inicial montada sem acesso à fonte oficial.

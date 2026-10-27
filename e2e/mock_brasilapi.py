@@ -7,6 +7,7 @@ DADOS = {
         "descricao_situacao_cadastral": "ATIVA", "cnae_fiscal": 6201501, "cnae_fiscal_descricao": "Desenvolvimento de programas de computador sob encomenda",
         "municipio": "CAMPINAS", "uf": "SP", "email": "FINANCEIRO@TECHSOL.COM.BR", "ddd_telefone_1": "1932221111",
         "opcao_pelo_simples": True, "opcao_pelo_mei": False,
+        "codigo_natureza_juridica": 2062, "natureza_juridica": "Sociedade Empresária Limitada",
         "cnaes_secundarios": [{"codigo": 8599604, "descricao": "Treinamento em desenvolvimento profissional e gerencial"},
                               {"codigo": 6209100, "descricao": "Suporte técnico, manutenção e outros serviços em tecnologia da informação"}]},
 }

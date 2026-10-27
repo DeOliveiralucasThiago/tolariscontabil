@@ -203,6 +203,9 @@ export interface Cliente {
   cnae_principal: string | null;
   cnae_descricao: string | null;
   cnaes_secundarios: CnaeSecundario[] | null;
+  natureza_juridica: string | null;
+  natureza_juridica_codigo: string | null;
+  natureza_info: NaturezaInfo | null;
   municipio: string | null;
   uf: string | null;
   atividade: Atividade | null;
@@ -219,7 +222,17 @@ export interface Cliente {
   ultima_simulacao_em: string | null;
 }
 
-export type ClienteForm = Partial<Omit<Cliente, "id" | "criado_em" | "atualizado_em" | "total_simulacoes" | "ultima_simulacao_em" | "cadastro_pendente">> & {
+/** Natureza jurídica classificada pelo motor: o Simples é permitido (sim), vedado, não se aplica ou a conferir; só o empresário individual é MEI. */
+export interface NaturezaInfo {
+  tipo: string;
+  rotulo: string;
+  simples: "sim" | "vedado" | "nao_se_aplica" | "conferir";
+  mei: boolean;
+  explicacao: string;
+  base_legal: string;
+}
+
+export type ClienteForm = Partial<Omit<Cliente, "id" | "criado_em" | "atualizado_em" | "total_simulacoes" | "ultima_simulacao_em" | "cadastro_pendente" | "natureza_info">> & {
   razao_social: string;
 };
 
@@ -240,6 +253,9 @@ export interface DadosCnpj {
   regime_sugerido: Regime | null;
   atividade_sugerida: Atividade | null;
   atividade_justificativa: string;
+  natureza_juridica: string | null;
+  natureza_juridica_codigo: string | null;
+  natureza_info: NaturezaInfo | null;
   cnaes_classificados: CnaesDoCliente;
 }
 
@@ -314,6 +330,7 @@ export interface ExpressaEntrada {
   atividade: Atividade;
   receita_exterior_mensal?: number;
   reducao_ibs_cbs?: number;
+  natureza_juridica?: string | null;
   ano?: number;
 }
 

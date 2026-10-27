@@ -134,6 +134,8 @@ class ClienteBase(BaseModel):
     cnae_principal: str | None = Field(default=None, max_length=7)
     cnae_descricao: str | None = Field(default=None, max_length=300)
     cnaes_secundarios: list[CnaeItem] | None = Field(default=None, max_length=200)
+    natureza_juridica: str | None = Field(default=None, max_length=150)
+    natureza_juridica_codigo: str | None = Field(default=None, pattern=r"^\d{4}$")
     municipio: str | None = Field(default=None, max_length=120)
     uf: str | None = Field(default=None, max_length=2)
     atividade: Atividade | None = None
@@ -172,6 +174,8 @@ class ClienteSaida(ClienteBase):
     atualizado_em: datetime
     total_simulacoes: int = 0
     ultima_simulacao_em: datetime | None = None
+    natureza_info: dict[str, Any] | None = None
+    """Natureza jurídica classificada (tipo, rótulo, Simples permitido?, MEI?, explicação)."""
 
 
 # --- CNPJ -------------------------------------------------------------------
@@ -192,6 +196,9 @@ class CnpjSaida(BaseModel):
     regime_sugerido: Regime | None
     atividade_sugerida: Atividade | None
     atividade_justificativa: str
+    natureza_juridica: str | None = None
+    natureza_juridica_codigo: str | None = None
+    natureza_info: dict[str, Any] | None = None
     cnaes_classificados: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -204,6 +211,8 @@ class ExpressaEntrada(BaseModel):
     margem_lucro: Decimal = Field(default=Decimal("0.20"), ge=0, le=1)
     receita_exterior_mensal: Dinheiro = Field(default=Decimal(0), ge=0)
     """Parte do faturamento mensal que vem do exterior (exportação), em reais."""
+    natureza_juridica: str | None = Field(default=None, max_length=150)
+    """Natureza jurídica do cadastro; impede o Simples quando a lei veda (sociedade por ações, cooperativa)."""
     ano: int = Field(default=2026, ge=2025, le=2033)
     reducao_ibs_cbs: Decimal = Field(default=Decimal(0), ge=0, le=1)
     """Redução de IBS e CBS a partir de 2027: 0, 0,3 (profissões regulamentadas), 0,6 (saúde) ou 1."""
@@ -255,6 +264,8 @@ class CompletaEntrada(BaseModel):
     """Escritório de serviços contábeis (Anexo III) que recolhe o ISS fixo ao Município também como optante do Simples."""
     servicos_hospitalares: bool = False
     """Presunção reduzida de serviços hospitalares no Lucro Presumido (IRPJ 8% e CSLL 12%)."""
+    natureza_juridica: str | None = Field(default=None, max_length=150)
+    """Natureza jurídica do cadastro; impede o Simples quando a lei veda (sociedade por ações, cooperativa)."""
     ano: int = Field(default=2026, ge=2025, le=2033)
     reducao_ibs_cbs: Decimal = Field(default=Decimal(0), ge=0, le=1)
     """Redução de IBS e CBS a partir de 2027: 0, 0,3 (profissões regulamentadas), 0,6 (saúde) ou 1."""

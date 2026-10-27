@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from . import consumo, tabelas
+from . import consumo, natureza_juridica, tabelas
 from .base import ZERO, D, Resultado, brl, pct
 from .empresa import PRESUNCAO_PADRAO, PerfilEmpresa, inss_patronal_regime_normal, tributo_sobre_receita_local
 from .simples import alerta_exportacao
@@ -142,6 +142,8 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
     tributo_sobre_receita_local(perfil, res)
     res.tributos["INSS patronal"] = inss_patronal_regime_normal(perfil, res)
 
+    if aviso := natureza_juridica.aviso_regime_normal(perfil.natureza):
+        res.alerta(aviso)
     alerta_exportacao(perfil, res)
     if novo:
         consumo.alertas(perfil, res)

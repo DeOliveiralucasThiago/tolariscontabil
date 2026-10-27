@@ -10,6 +10,7 @@ import httpx
 
 from tolaris_motor import Atividade
 from tolaris_motor import cnae as cnae_motor
+from tolaris_motor import natureza_juridica as nj_motor
 
 from .config import get_settings
 
@@ -114,6 +115,8 @@ class DadosCnpj:
     opcao_simples: bool | None
     opcao_mei: bool | None
     cnaes_secundarios: list[dict[str, str]] = field(default_factory=list)
+    natureza_juridica: str | None = None
+    natureza_juridica_codigo: str | None = None
 
     def como_dict(self) -> dict[str, Any]:
         atividade, motivo = sugerir_atividade(self.cnae_principal)
@@ -123,11 +126,23 @@ class DadosCnpj:
             "regime_sugerido": regime,
             "atividade_sugerida": atividade,
             "atividade_justificativa": motivo,
+            "natureza_info": info_natureza(self.natureza_juridica, self.natureza_juridica_codigo),
             "cnaes_classificados": classificar_cnaes(
                 self.cnae_principal, self.cnae_descricao, self.cnaes_secundarios,
                 atividade.value if atividade else None,
             ),
         }
+
+
+def info_natureza(descricao: str | None, codigo: str | None = None) -> dict[str, Any] | None:
+    """Natureza jurídica classificada pelo motor, para a tela: tipo, rótulo, se o Simples e o MEI são possíveis e a explicação."""
+    n = nj_motor.classificar(descricao, codigo)
+    if n is None:
+        return None
+    return {
+        "tipo": n.tipo, "rotulo": n.rotulo, "simples": n.simples, "mei": n.mei, "explicacao": n.explicacao,
+        "base_legal": nj_motor.BASE_LEGAL_ELEGIBILIDADE,
+    }
 
 
 def _texto(v: Any) -> str | None:
@@ -150,6 +165,15 @@ def _cnaes_secundarios(bruto: Any) -> list[dict[str, str]]:
     return [{"codigo": c, "descricao": d} for c, d in achados.items()]
 
 
+def _codigo_natureza(bruto: Any) -> str | None:
+    """Código de 4 dígitos da natureza jurídica (a BrasilAPI manda número; o 0 significa "sem informação")."""
+    try:
+        codigo = str(int(bruto)).zfill(4)
+    except (TypeError, ValueError):
+        return None
+    return codigo if len(codigo) == 4 and codigo != "0000" else None
+
+
 def interpretar_brasilapi(dados: dict[str, Any]) -> DadosCnpj:
     cnae = dados.get("cnae_fiscal")
     cnae_txt = str(cnae).zfill(7) if cnae not in (None, "", 0) else None
@@ -168,6 +192,8 @@ def interpretar_brasilapi(dados: dict[str, Any]) -> DadosCnpj:
         opcao_simples=dados.get("opcao_pelo_simples"),
         opcao_mei=dados.get("opcao_pelo_mei"),
         cnaes_secundarios=_cnaes_secundarios(dados.get("cnaes_secundarios")),
+        natureza_juridica=_texto(dados.get("natureza_juridica")),
+        natureza_juridica_codigo=_codigo_natureza(dados.get("codigo_natureza_juridica")),
     )
 
 

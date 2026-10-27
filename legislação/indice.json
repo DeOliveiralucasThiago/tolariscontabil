@@ -280,5 +280,15 @@
     "url": "https://normasinternet2.receita.fazenda.gov.br/api/consulta-externa/ato/126687/visao/multivigente",
     "baixado_em": "2026-10-27",
     "caracteres": 496118
+  },
+  {
+    "arquivo": "RFB-IN-2119-2022.txt",
+    "norma": "Instrução Normativa RFB nº 2119, de 6 de dezembro de 2022",
+    "urn": "",
+    "versao": "multivigente (Receita Federal)",
+    "ementa": "Dispõe sobre o Cadastro Nacional da Pessoa Jurídica no âmbito da Secretaria Especial da Receita Federal do Brasil.",
+    "url": "https://normasinternet2.receita.fazenda.gov.br/api/consulta-externa/ato/127567/visao/multivigente",
+    "baixado_em": "2026-10-27",
+    "caracteres": 88400
   }
 ]

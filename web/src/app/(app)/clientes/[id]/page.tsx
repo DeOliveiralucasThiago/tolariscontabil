@@ -189,6 +189,14 @@ function DetalheClienteConteudo() {
             {cliente.atividade && <span>· {ROTULO_ATIVIDADE[cliente.atividade]}</span>}
             {cliente.regime_atual && <span>· hoje no {ROTULO_REGIME[cliente.regime_atual]}</span>}
             {cliente.municipio && <span>· {cliente.municipio}/{cliente.uf}</span>}
+            {cliente.natureza_info && (
+              <span data-testid="natureza-do-cliente">
+                · {cliente.natureza_info.rotulo}
+                {cliente.natureza_info.simples !== "sim" && cliente.natureza_info.simples !== "conferir" && (
+                  <> <Etiqueta tom="perigo">Simples não permitido</Etiqueta></>
+                )}
+              </span>
+            )}
           </span>
         }
       >

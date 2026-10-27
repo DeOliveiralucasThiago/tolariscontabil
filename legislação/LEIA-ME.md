@@ -32,3 +32,4 @@ Diário Oficial quando a decisão depender dela. Para acrescentar uma norma: `py
 | `LEI-9718-1998.txt` | Lei nº 9.718 de 27/11/1998 | CompilacaoMonoVigenteNaCD | 2026-10-27 |
 | `RFB-IN-1700-2017.txt` | Instrução Normativa RFB nº 1700, de 14 de março de 2017 | multivigente (Receita Federal) | 2026-10-27 |
 | `RFB-IN-2110-2022.txt` | Instrução Normativa RFB nº 2110, de 17 de outubro de 2022 | multivigente (Receita Federal) | 2026-10-27 |
+| `RFB-IN-2119-2022.txt` | Instrução Normativa RFB nº 2119, de 6 de dezembro de 2022 | multivigente (Receita Federal) | 2026-10-27 |

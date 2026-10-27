@@ -178,6 +178,8 @@ def _entradas_legiveis(sim: Simulacao) -> list[tuple[str, str]]:
         linhas.append(("Serviços hospitalares", "presunção reduzida no Lucro Presumido"))
     if e.get("reducao_ibs_cbs"):
         linhas.append(("Redução de IBS e CBS", f"{float(e['reducao_ibs_cbs']) * 100:.0f}%".replace(".", ",")))
+    if e.get("natureza_juridica"):
+        linhas.append(("Natureza jurídica", str(e["natureza_juridica"])))
     linhas.append(("Ano-calendário", str(e.get("ano", ""))))
     return linhas
 

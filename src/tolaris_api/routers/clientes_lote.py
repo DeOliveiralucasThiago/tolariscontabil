@@ -186,6 +186,7 @@ def completar(
             ("municipio", dados.municipio), ("uf", dados.uf), ("email", dados.email), ("telefone", dados.telefone),
             ("atividade", sugerida.value if sugerida else None), ("regime_atual", regime),
             ("cnaes_secundarios", dados.cnaes_secundarios or None),
+            ("natureza_juridica", dados.natureza_juridica), ("natureza_juridica_codigo", dados.natureza_juridica_codigo),
         ):
             if valor and not getattr(c, campo):
                 setattr(c, campo, valor)

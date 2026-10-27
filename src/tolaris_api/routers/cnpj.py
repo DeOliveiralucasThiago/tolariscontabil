@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Any
 
-from ..cnpj import CnpjIndisponivel, CnpjNaoEncontrado, DadosCnpj, cnpj_valido, consultar_brasilapi, so_digitos
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from ..cnpj import CnpjIndisponivel, CnpjNaoEncontrado, DadosCnpj, cnpj_valido, consultar_brasilapi, info_natureza, so_digitos
 from ..models import Usuario
 from ..schemas import CnpjSaida
 from ..seguranca import usuario_atual
@@ -17,6 +19,14 @@ ConsultaCnpj = Callable[[str], DadosCnpj]
 def get_consulta_cnpj() -> ConsultaCnpj:
     """Dependência substituível nos testes (sem rede)."""
     return consultar_brasilapi
+
+
+@router.get("/natureza/classificar")
+def classificar_natureza(
+    descricao: str = Query(default="", max_length=150), codigo: str = Query(default="", max_length=4), _: Usuario = Depends(usuario_atual)
+) -> dict[str, Any] | None:
+    """Natureza jurídica classificada (tipo, se o Simples e o MEI são possíveis, explicação e base legal); ``null`` sem dados."""
+    return info_natureza(descricao or None, codigo or None)
 
 
 @router.get("/{cnpj}", response_model=CnpjSaida)

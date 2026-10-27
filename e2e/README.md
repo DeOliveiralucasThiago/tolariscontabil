@@ -154,3 +154,9 @@ O fluxo das atividades mistas (receita por Anexo no planejamento e no Enquadrame
 ```bash
 node fluxo_atividades_mistas.mjs saida
 ```
+
+O fluxo da natureza jurídica usa a BrasilAPI falsa e a API apontando para ela (como o fluxo principal):
+
+```bash
+node fluxo_natureza_juridica.mjs saida
+```

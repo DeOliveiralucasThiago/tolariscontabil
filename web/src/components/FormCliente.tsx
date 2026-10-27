@@ -16,6 +16,7 @@ import {
 } from "@/lib/tipos";
 
 import { BuscaCnpj } from "./BuscaCnpj";
+import { SeletorNatureza } from "./SeletorNatureza";
 import { SelecaoAtividade } from "./SelecaoAtividade";
 import { Botao, Campo, MensagemErro, Rotulo, Selecao, classeCampo } from "./ui";
 
@@ -46,6 +47,7 @@ export function FormCliente({
     telefone: inicial?.telefone ?? "",
     observacoes: inicial?.observacoes ?? "",
   });
+  const [natureza, setNatureza] = useState({ descricao: inicial?.natureza_juridica ?? "", codigo: inicial?.natureza_juridica_codigo ?? "" });
   const [secundarios, setSecundarios] = useState<CnaeSecundario[] | null>(inicial?.cnaes_secundarios ?? null);
   const [dica, setDica] = useState("");
   const [erro, setErro] = useState("");
@@ -68,6 +70,7 @@ export function FormCliente({
       regime_atual: d.regime_sugerido ?? x.regime_atual,
     }));
     setSecundarios(d.cnaes_secundarios);
+    if (d.natureza_juridica) setNatureza({ descricao: d.natureza_juridica, codigo: d.natureza_juridica_codigo ?? "" });
     setDica(d.atividade_justificativa);
   }
 
@@ -84,6 +87,8 @@ export function FormCliente({
         cnae_principal: vazio(f.cnae_principal),
         cnae_descricao: vazio(f.cnae_descricao),
         cnaes_secundarios: secundarios,
+        natureza_juridica: natureza.descricao || null,
+        natureza_juridica_codigo: natureza.descricao && natureza.codigo ? natureza.codigo : null,
         municipio: vazio(f.municipio),
         uf: vazio(f.uf)?.toUpperCase() ?? null,
         atividade: f.atividade || null,
@@ -126,6 +131,7 @@ export function FormCliente({
             <option key={v} value={v}>{r}</option>
           ))}
         </Selecao>
+        <SeletorNatureza valor={natureza.descricao} onChange={(descricao) => setNatureza((n) => ({ descricao, codigo: descricao === n.descricao ? n.codigo : "" }))} />
         <Campo rotulo="CNAE principal" name="cnae_principal" maxLength={7} value={f.cnae_principal} onChange={muda("cnae_principal")} ajuda={[f.cnae_descricao, secundarios?.length ? `${secundarios.length} CNAE(s) secundário(s) da Receita guardados` : ""].filter(Boolean).join(" · ") || undefined} />
         <div className="grid grid-cols-[1fr_80px] gap-2">
           <Campo rotulo="Município" name="municipio" value={f.municipio} onChange={muda("municipio")} />

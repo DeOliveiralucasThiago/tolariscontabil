@@ -141,6 +141,8 @@ const coresEtiqueta: Record<string, string> = {
   prospect: "bg-sky-50 text-sky-800 border-sky-200",
   ativo: "bg-emerald-50 text-emerald-800 border-emerald-200",
   inativo: "bg-zinc-100 text-zinc-700 border-zinc-200",
+  atencao: "bg-amber-50 text-amber-900 border-amber-200",
+  perigo: "bg-red-50 text-red-800 border-red-200",
 };
 
 export function Etiqueta({ tom = "inativo", children }: { tom?: string; children: ReactNode }) {

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from . import consumo
+from . import consumo, natureza_juridica
 from .base import ZERO, D, Resultado, brl, pct
 from .empresa import PerfilEmpresa, inss_patronal_regime_normal, tributo_sobre_receita_local
 from .simples import alerta_exportacao
@@ -99,6 +99,8 @@ def calcular(
     res.tributos["CSLL"] = res.passo(
         "CSLL", f"{brl(lucro_real)} x {pct(CSLL, 0)}", lucro_real * CSLL, "Lei 7.689/1988, art. 3º"
     )
+    if aviso := natureza_juridica.aviso_regime_normal(perfil.natureza):
+        res.alerta(aviso)
     alerta_exportacao(perfil, res)
     if novo:
         consumo.alertas(perfil, res)

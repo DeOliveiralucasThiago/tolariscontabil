@@ -74,6 +74,9 @@ class Cliente(Base):
     cnae_descricao: Mapped[str | None] = mapped_column(String(300))
     cnaes_secundarios: Mapped[list[dict[str, str]] | None] = mapped_column(JSON)
     """CNAEs secundários do cadastro na Receita: lista de ``{"codigo": "6209100", "descricao": "..."}``."""
+    natureza_juridica: Mapped[str | None] = mapped_column(String(150))
+    """Descrição da natureza jurídica do CNPJ (ex.: "Sociedade Empresária Limitada"); decide, por exemplo, se o Simples Nacional é permitido."""
+    natureza_juridica_codigo: Mapped[str | None] = mapped_column(String(4))
     municipio: Mapped[str | None] = mapped_column(String(120))
     uf: Mapped[str | None] = mapped_column(String(2))
     atividade: Mapped[str | None] = mapped_column(String(30))

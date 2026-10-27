@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..auditoria import auditar
-from ..cnpj import classificar_cnaes
+from ..cnpj import classificar_cnaes, info_natureza
 from ..db import get_db
 from ..models import Cliente, RegistroAuditoria, Simulacao, Usuario
 from ..schemas import ClienteAtualizar, ClienteEntrada, ClienteSaida
@@ -28,6 +28,7 @@ def cliente_saida(db: Session, cliente: Cliente) -> ClienteSaida:
     ).one()
     saida = ClienteSaida.model_validate(cliente)
     saida.total_simulacoes, saida.ultima_simulacao_em = total, ultima
+    saida.natureza_info = info_natureza(cliente.natureza_juridica, cliente.natureza_juridica_codigo)
     return saida
 
 

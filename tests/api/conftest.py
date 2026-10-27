@@ -23,6 +23,7 @@ def consulta_falsa(cnpj: str) -> DadosCnpj:
         cnae_principal="7020400", cnae_descricao="Atividades de consultoria em gestão empresarial",
         municipio="SAO PAULO", uf="SP", email="contato@acme.com.br", telefone="1133334444",
         opcao_simples=True, opcao_mei=False,
+        natureza_juridica="Sociedade Empresária Limitada", natureza_juridica_codigo="2062",
     )
 
 

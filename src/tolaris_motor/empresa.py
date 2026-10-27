@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
 
-from . import tabelas
+from . import natureza_juridica, tabelas
 from .base import ZERO, D, Numero, Resultado, brl, pct
 
 
@@ -98,6 +98,8 @@ class PerfilEmpresa:
     folha_so_outros_anexos_pct: Numero = 0
     """Parcela da folha de quem trabalha só nas atividades dos Anexos I, II, III ou V (CPP já dentro do DAS). O resto da folha é de quem atua nas
     duas (exercício concomitante), com a CPP fora do DAS na proporção da receita do Anexo IV."""
+    natureza_juridica: str | None = None
+    """Descrição da natureza jurídica do cadastro (ex.: "Sociedade Empresária Limitada"); veja ``natureza_juridica.classificar``."""
     reducao_ibs_cbs: Numero = 0
     """Redução de alíquota de IBS e CBS a partir de 2027: 0, 0,3 (profissões regulamentadas), 0,6 (saúde) ou 1 (alíquota zero)."""
     ano: int = 2026
@@ -173,6 +175,11 @@ class PerfilEmpresa:
             raise ValueError("reducao_ibs_cbs deve ser 0, 0.3, 0.6 ou 1")
         if self.presuncao is None:
             self.presuncao = "servicos_hospitalares" if self.servicos_hospitalares else PRESUNCAO_PADRAO[self.atividade]
+
+    @property
+    def natureza(self) -> natureza_juridica.Natureza | None:
+        """Natureza jurídica classificada (``None`` quando não informada)."""
+        return natureza_juridica.classificar(self.natureza_juridica)
 
     @property
     def fgts_anual(self) -> Decimal:

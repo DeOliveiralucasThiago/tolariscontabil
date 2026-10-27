@@ -15,12 +15,15 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from tolaris_motor import PerfilEmpresa, avisos, brl, pct, tabelas
+from tolaris_motor.natureza_juridica import classificar as classificar_natureza
+from tolaris_motor.natureza_juridica import impede_simples
 
 from .acesso import _aware, agora
 from .acompanhamento_servico import analisar as analisar_acompanhamento
 from .acompanhamento_servico import carregar_series, curta, perfil_da_simulacao
 from .honorarios import FUSO
 from .models import Cliente, DocumentoFiscal, ItemFiscal, PortalCliente, Simulacao
+from .natureza_aviso import aviso_natureza
 from .recuperacao_servico import analisar
 from .regime_regular import aviso_regime_regular
 from .servicos import diferencas, pode_recalcular, recalcular_resultado
@@ -129,8 +132,13 @@ def reunir(db: Session, escritorio_id: int, hoje: date | None = None) -> dict[st
         base = do_cliente.get("completa") or do_cliente.get("expressa")
         perfil = perfil_da_simulacao(base) if base else None
 
+        natureza = aviso_natureza(c)  # natureza jurídica x regime (S.A. e cooperativa no Simples, MEI que não é empresário individual)
+        if natureza is not None:
+            lista.append(_item(natureza[0], c, natureza[1]))
+        sem_simples = impede_simples(classificar_natureza(c.natureza_juridica, c.natureza_juridica_codigo))  # fator R e regime regular são do Simples
+
         # Fator R (só quem está no Simples)
-        if perfil is not None and c.regime_atual == "simples":
+        if perfil is not None and c.regime_atual == "simples" and not sem_simples:
             a = avisos.avaliar_fator_r(perfil)
             if a is not None:
                 lista.append(_item(a, c, {"tipo": "cliente", "rotulo": "Abrir cliente", "aba": "simulacoes"}))
@@ -143,7 +151,7 @@ def reunir(db: Session, escritorio_id: int, hoje: date | None = None) -> dict[st
             rbt12, fonte = rbt12_das_notas({k: int(v * 100) for k, v in receita_real.items()}, origem)
         elif perfil is not None:
             rbt12, fonte = perfil.receita_bruta_anual, f"planejamento de {base.criado_em.strftime('%d/%m/%Y')}"
-        if c.regime_atual == "simples":  # prazo da opção pelo regime regular de IBS/CBS (até 30/10/2026)
+        if c.regime_atual == "simples" and not sem_simples:  # prazo da opção pelo regime regular de IBS/CBS (até 30/10/2026)
             regular = aviso_regime_regular(c, perfil, rbt12, fonte, hoje)
             if regular is not None:
                 lista.append(_item(regular[0], c, regular[1]))

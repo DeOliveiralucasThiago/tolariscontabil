@@ -8,6 +8,7 @@ import { BuscaCnpj } from "@/components/BuscaCnpj";
 import { CnaesDaEmpresa } from "@/components/CnaesDaEmpresa";
 import { FormCompleta } from "@/components/FormCompleta";
 import { ResultadoEnquadramento } from "@/components/ResultadosFase2";
+import { SeletorNatureza } from "@/components/SeletorNatureza";
 import { SalvarNoCliente } from "@/components/SalvarNoCliente";
 import { Cartao, Selecao, Titulo } from "@/components/ui";
 import { api } from "@/lib/api";
@@ -32,6 +33,7 @@ function PaginaEnquadramento() {
   const [cnaes, setCnaes] = useState<CnaesDoCliente | null>(null);
   const [empresa, setEmpresa] = useState("");
   const [atividade, setAtividade] = useState<Atividade | null>(null);
+  const [natureza, setNatureza] = useState("");
   const [formKey, setFormKey] = useState(0);
 
   async function escolherCliente(id: number | "", lista: Cliente[] = clientes) {
@@ -40,6 +42,7 @@ function PaginaEnquadramento() {
     if (!c) return;
     setEmpresa(c.razao_social);
     setAtividade(c.atividade);
+    setNatureza(c.natureza_juridica ?? "");
     setFormKey((k) => k + 1);
     api<CnaesDoCliente>(`/clientes/${c.id}/cnaes`).then(setCnaes).catch(() => setCnaes(null));
   }
@@ -58,6 +61,7 @@ function PaginaEnquadramento() {
     setCnaes(d.cnaes_classificados);
     setEmpresa(d.razao_social);
     setAtividade(d.atividade_sugerida);
+    setNatureza(d.natureza_juridica ?? "");
     setFormKey((k) => k + 1);
     setClienteId(clientes.find((c) => c.cnpj === soDigitos(d.cnpj))?.id ?? "");
   }
@@ -89,6 +93,7 @@ function PaginaEnquadramento() {
               ))}
             </Selecao>
             <BuscaCnpj id="enq_cnpj" valor={cnpj} onChange={setCnpj} onEncontrado={aoEncontrarCnpj} />
+            <SeletorNatureza id="natureza_enquadramento" valor={natureza} onChange={setNatureza} />
           </div>
         </Cartao>
       </div>
@@ -97,7 +102,7 @@ function PaginaEnquadramento() {
         <FormCompleta
           key={formKey}
           atividadeInicial={atividade ?? "servico_fator_r"}
-          onCalcular={(e) => calc.calcular({ ...e, ...personalizado } as CompletaEntrada)}
+          onCalcular={(e) => calc.calcular({ ...e, ...personalizado, ...(natureza ? { natureza_juridica: natureza } : {}) } as CompletaEntrada)}
           carregando={calc.calculando}
           rotuloBotao="Analisar enquadramento"
           mostrarAnexoIII={false}

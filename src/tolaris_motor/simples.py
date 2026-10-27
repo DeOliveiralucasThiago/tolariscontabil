@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from . import tabelas
+from . import natureza_juridica, tabelas
 from .base import ZERO, D, Numero, Resultado, brl, pct
 from .empresa import ALIQUOTA_CPP, Atividade, PerfilEmpresa
 
@@ -178,6 +178,12 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
     exterior = perfil.receita_exterior_anual
     interna = perfil.receita_interna_anual
     limite = D(tab["limite_receita_anual"])
+
+    natureza = perfil.natureza
+    if natureza_juridica.impede_simples(natureza):
+        res.aplicavel = False
+        res.alerta(f"Natureza jurídica \"{natureza.rotulo}\": {natureza.explicacao} ({natureza_juridica.BASE_LEGAL_ELEGIBILIDADE}).")
+        return res
 
     # Mercado interno e exportação têm, cada um, o limite de R$ 4,8 mi (Res. CGSN 140/2018, art. 2º, §1º)
     if interna > limite or exterior > limite:

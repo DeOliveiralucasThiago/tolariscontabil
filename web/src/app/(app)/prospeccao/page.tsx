@@ -7,6 +7,7 @@ import { BuscaCnpj } from "@/components/BuscaCnpj";
 import { CampoMoeda } from "@/components/CampoMoeda";
 import { ResultadoComparativo } from "@/components/ResultadoComparativo";
 import { SelecaoAtividade } from "@/components/SelecaoAtividade";
+import { SeletorNatureza } from "@/components/SeletorNatureza";
 import { Botao, Campo, Cartao, MensagemErro, Selecao, Titulo } from "@/components/ui";
 import { api, ErroApi, urlProposta } from "@/lib/api";
 import { cnpjValido, soDigitos } from "@/lib/formato";
@@ -35,6 +36,7 @@ export default function Prospeccao() {
     atividade: atividade as Atividade,
     ...(exterior > 0 ? { receita_exterior_mensal: exterior } : {}),
     ...(ano !== 2026 ? { ano } : {}),
+    ...(cliente.natureza_juridica ? { natureza_juridica: cliente.natureza_juridica } : {}),
   });
 
   function preencher(d: DadosCnpj) {
@@ -44,6 +46,8 @@ export default function Prospeccao() {
       cnae_principal: d.cnae_principal,
       cnae_descricao: d.cnae_descricao,
       cnaes_secundarios: d.cnaes_secundarios,
+      natureza_juridica: d.natureza_juridica,
+      natureza_juridica_codigo: d.natureza_juridica_codigo,
       municipio: d.municipio,
       uf: d.uf,
       email: d.email,
@@ -117,6 +121,11 @@ export default function Prospeccao() {
                 onChange={setAtividade}
                 vazio="Selecione…"
                 ajuda={justificativa || undefined}
+              />
+              <SeletorNatureza
+                id="natureza_prospeccao"
+                valor={cliente.natureza_juridica ?? ""}
+                onChange={(d) => setCliente((c) => ({ ...c, natureza_juridica: d || null, natureza_juridica_codigo: null }))}
               />
             </div>
           </Cartao>

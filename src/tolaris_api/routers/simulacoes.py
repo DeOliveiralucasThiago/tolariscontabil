@@ -40,6 +40,13 @@ def _salvar(db: Session, usuario: Usuario, cliente: Cliente, tipo: str, entrada:
     return sim
 
 
+def _com_natureza(dados: Any, cliente: Cliente) -> Any:
+    """Leva a natureza jurídica do cadastro para a simulação quando a tela não a informou."""
+    if dados.natureza_juridica is None and cliente.natureza_juridica:
+        return dados.model_copy(update={"natureza_juridica": cliente.natureza_juridica})
+    return dados
+
+
 def _obter_simulacao(db: Session, usuario: Usuario, simulacao_id: int) -> Simulacao:
     sim = db.get(Simulacao, simulacao_id)
     if sim is None or sim.escritorio_id != usuario.escritorio_id:
@@ -63,7 +70,6 @@ def previa_completa(dados: CompletaEntrada, _: Usuario = Depends(usuario_atual))
 def prospeccao(
     dados: ProspeccaoEntrada, usuario: Usuario = Depends(usuario_atual), db: Session = Depends(get_db)
 ) -> ProspeccaoSaida:
-    resultado = executar_expressa(dados.simulacao)
     cliente = None
     if dados.cliente.cnpj:
         cliente = db.scalar(
@@ -80,7 +86,8 @@ def prospeccao(
                 setattr(cliente, campo, valor)
     if cliente.atividade is None:
         cliente.atividade = dados.simulacao.atividade.value
-    sim = _salvar(db, usuario, cliente, "expressa", dados.simulacao, resultado)
+    simulacao = _com_natureza(dados.simulacao, cliente)
+    sim = _salvar(db, usuario, cliente, "expressa", simulacao, executar_expressa(simulacao))
     db.commit()
     return ProspeccaoSaida(cliente=cliente_saida(db, cliente), simulacao=SimulacaoSaida.model_validate(sim))
 
@@ -98,6 +105,7 @@ def salvar_expressa(
     cliente_id: int, dados: ExpressaEntrada, usuario: Usuario = Depends(usuario_atual), db: Session = Depends(get_db)
 ) -> Simulacao:
     cliente = obter_cliente(db, usuario, cliente_id)
+    dados = _com_natureza(dados, cliente)
     sim = _salvar(db, usuario, cliente, "expressa", dados, executar_expressa(dados))
     db.commit()
     return sim
@@ -110,6 +118,7 @@ def salvar_completa(
     cliente_id: int, dados: CompletaEntrada, usuario: Usuario = Depends(usuario_atual), db: Session = Depends(get_db)
 ) -> Simulacao:
     cliente = obter_cliente(db, usuario, cliente_id)
+    dados = _com_natureza(dados, cliente)
     sim = _salvar(db, usuario, cliente, "completa", dados, executar_completa(dados))
     db.commit()
     return sim
