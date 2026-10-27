@@ -92,6 +92,12 @@ class PerfilEmpresa:
     """Partes de ``receita_bruta_anual`` em atividades diferentes da principal ({atividade: valor}); cada uma tributa no Anexo da sua atividade
     no Simples (LC 123/2006, art. 18, § 4º), com a presunção própria no Presumido e ICMS ou ISS conforme mercadoria ou serviço. A receita da
     atividade principal é o que sobra."""
+    folha_so_anexo_iv_pct: Numero = 0
+    """Parcela da folha e do pró-labore de quem trabalha só na atividade do Anexo IV (fração de 0 a 1). Vale só com atividades mistas: a CPP
+    fora do DAS incide integralmente sobre essa parcela (IN RFB 2.110/2022, arts. 168 a 171)."""
+    folha_so_outros_anexos_pct: Numero = 0
+    """Parcela da folha de quem trabalha só nas atividades dos Anexos I, II, III ou V (CPP já dentro do DAS). O resto da folha é de quem atua nas
+    duas (exercício concomitante), com a CPP fora do DAS na proporção da receita do Anexo IV."""
     reducao_ibs_cbs: Numero = 0
     """Redução de alíquota de IBS e CBS a partir de 2027: 0, 0,3 (profissões regulamentadas), 0,6 (saúde) ou 1 (alíquota zero)."""
     ano: int = 2026
@@ -156,6 +162,12 @@ class PerfilEmpresa:
             raise ValueError("O ISS fixo no Simples é do escritório de serviços contábeis (Anexo III) e exige a sociedade de profissionais com ISS fixo")
         if self.servicos_hospitalares and self.atividade.vende_mercadoria:
             raise ValueError("A presunção de serviços hospitalares só se aplica a serviços")
+        self.folha_so_anexo_iv_pct = D(self.folha_so_anexo_iv_pct)
+        self.folha_so_outros_anexos_pct = D(self.folha_so_outros_anexos_pct)
+        if not (0 <= self.folha_so_anexo_iv_pct <= 1 and 0 <= self.folha_so_outros_anexos_pct <= 1):
+            raise ValueError("As parcelas da folha por atividade devem estar entre 0 e 1")
+        if self.folha_so_anexo_iv_pct + self.folha_so_outros_anexos_pct > 1:
+            raise ValueError("A soma das parcelas da folha por atividade não pode passar de 100%")
         self.reducao_ibs_cbs = D(self.reducao_ibs_cbs)
         if self.reducao_ibs_cbs not in (D(0), D("0.3"), D("0.6"), D(1)):
             raise ValueError("reducao_ibs_cbs deve ser 0, 0.3, 0.6 ou 1")

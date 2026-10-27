@@ -274,23 +274,38 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
     if receita_iv > 0:
         aliq_folha = ALIQUOTA_CPP + perfil.rat
         parte_iv = receita_iv / receita if receita else D(1)
+        cpp_cheia = perfil.folha_clt_anual * aliq_folha + perfil.pro_labore_anual * ALIQUOTA_CPP
         formula_cpp = (
             f"{brl(perfil.folha_clt_anual)} x ({pct(ALIQUOTA_CPP)} + {pct(perfil.rat)} RAT) + "
             f"{brl(perfil.pro_labore_anual)} x {pct(ALIQUOTA_CPP)}"
         )
+        fracao_cpp = D(1)
         if multiplas:
-            formula_cpp = f"({formula_cpp}) x {pct(parte_iv, 2)} da receita no Anexo IV"
+            # IN RFB 2.110/2022, arts. 168 a 171: empregados só do Anexo IV pagam a CPP integral; os que atuam nas duas atividades, na proporção
+            # da receita do Anexo IV; os que atuam só nas outras já estão com a CPP dentro do DAS.
+            so_iv, so_outros = perfil.folha_so_anexo_iv_pct, perfil.folha_so_outros_anexos_pct
+            concomitante = 1 - so_iv - so_outros
+            fracao_cpp = so_iv + concomitante * parte_iv
+            formula_cpp = (
+                f"({formula_cpp}) x ({pct(so_iv, 0)} da folha só do Anexo IV + {pct(concomitante, 0)} nas duas atividades x "
+                f"{pct(parte_iv, 2)} da receita no Anexo IV) = x {pct(fracao_cpp, 2)}"
+            )
         res.tributos["INSS patronal (fora do DAS)"] = res.passo(
             "CPP fora do DAS (Anexo IV)",
             formula_cpp,
-            (perfil.folha_clt_anual * aliq_folha + perfil.pro_labore_anual * ALIQUOTA_CPP) * parte_iv,
-            "LC 123/2006, art. 18, §5º-C e art. 13, VI",
+            cpp_cheia * fracao_cpp,
+            "LC 123/2006, art. 18, § 5º-C e art. 13, VI" + ("; Res. CGSN 140/2018, art. 147; IN RFB 2.110/2022, arts. 168 a 171" if multiplas else ""),
         )
         if multiplas:
             res.alerta(
-                "Atividade do Anexo IV junto com outras: a CPP patronal sai do DAS só na atividade do Anexo IV, mas o texto que reparte a folha entre "
-                "as atividades não foi lido (portais oficiais indisponíveis em 27/10/2026). O Tolaris estima a CPP fora do DAS na proporção da "
-                "receita do Anexo IV. Confirme com o contador como a folha é apropriada."
+                "Atividade do Anexo IV junto com outras: a CPP patronal sai do DAS só para a folha ligada ao Anexo IV (IN RFB 2.110/2022, arts. 168 a 171): "
+                "empregados só do Anexo IV pagam a CPP inteira, os que atuam nas duas atividades pagam na proporção da receita do Anexo IV e os que atuam só nas "
+                "outras já estão cobertos pelo DAS. "
+                + (
+                    "Foi usada a divisão da folha informada."
+                    if perfil.folha_so_anexo_iv_pct or perfil.folha_so_outros_anexos_pct
+                    else "Sem a divisão da folha por atividade, o Tolaris tratou todos os empregados como atuando nas duas atividades (CPP na proporção da receita do Anexo IV)."
+                )
             )
 
     if interna > D(tab["sublimite_icms_iss"]):

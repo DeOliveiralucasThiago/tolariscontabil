@@ -155,6 +155,9 @@ def _entradas_legiveis(sim: Simulacao) -> list[tuple[str, str]]:
     linhas = [("Atividade", atividade)]
     outras = {k: v for k, v in (e.get("receitas_outras_atividades") or {}).items() if float(v or 0)}
     linhas += [(f"Receita em outra atividade: {ROTULOS_ATIVIDADE.get(k, k)}", brl(v)) for k, v in outras.items()]
+    if float(e.get("folha_so_anexo_iv_pct") or 0) or float(e.get("folha_so_outros_anexos_pct") or 0):
+        linhas.append(("Folha só do Anexo IV / só dos outros Anexos",
+                       f"{float(e.get('folha_so_anexo_iv_pct') or 0) * 100:.0f}% / {float(e.get('folha_so_outros_anexos_pct') or 0) * 100:.0f}%"))
     linhas += [(r, brl(e[c])) for c, r in rotulos if float(e.get(c) or 0)]
     if float(e.get("variacao_cambial_anual") or 0):
         linhas.append(("Variação cambial líquida", brl(e["variacao_cambial_anual"])))

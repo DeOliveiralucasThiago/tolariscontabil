@@ -61,8 +61,24 @@ def test_anexo_iv_com_outra_atividade_estima_a_cpp_na_proporcao_da_receita():
     r, r_iv = simples.calcular(p), simples.calcular(so_iv)
     chave = "INSS patronal (fora do DAS)"
     assert r.tributos[chave] == pytest.approx(r_iv.tributos[chave] / 2, abs=D("0.01"))
-    assert any("não foi lido" in a for a in r.alertas)
-    assert not any("não foi lido" in a for a in r_iv.alertas)
+    assert any("IN RFB 2.110/2022" in a and "todos os empregados como atuando nas duas atividades" in a for a in r.alertas)
+    assert not any("IN RFB 2.110/2022" in a for a in r_iv.alertas)
+
+
+def test_cpp_do_anexo_iv_usa_a_divisao_da_folha_por_atividade():
+    base = dict(atividade=Atividade.SERVICO_ANEXO_IV, receita_bruta_anual=600_000, folha_clt_anual=120_000,
+                receitas_outras_atividades={"comercio": 300_000})  # metade da receita no Anexo IV
+    chave = "INSS patronal (fora do DAS)"
+    cheia = 120_000 * (D("0.20") + D("0.02"))
+    # 50% da folha só do Anexo IV, 25% só das outras, 25% nas duas atividades: 0,50 + 0,25 x 1/2
+    r = simples.calcular(PerfilEmpresa(**base, folha_so_anexo_iv_pct="0.5", folha_so_outros_anexos_pct="0.25"))
+    assert r.tributos[chave] == pytest.approx(cheia * (D("0.5") + D("0.25") * D("0.5")), abs=D("0.01"))
+    assert any("divisão da folha informada" in a for a in r.alertas)
+    # folha só nas outras atividades: nenhuma CPP fora do DAS
+    r = simples.calcular(PerfilEmpresa(**base, folha_so_outros_anexos_pct=1))
+    assert r.tributos[chave] == 0
+    with pytest.raises(ValueError, match="não pode passar de 100%"):
+        PerfilEmpresa(**base, folha_so_anexo_iv_pct="0.7", folha_so_outros_anexos_pct="0.5")
 
 
 def test_exportacao_de_atividade_mista_usa_os_tributos_de_cada_anexo():

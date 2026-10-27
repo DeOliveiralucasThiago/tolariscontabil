@@ -229,3 +229,17 @@ def test_completa_e_enquadramento_com_receitas_de_outras_atividades(logado: Test
     for invalido in ({"comercio": 100}, {"servico_fator_r": 2000000}, {"servico_fator_r": 0}, {"padaria": 100}):
         r = logado.post(f"/api/clientes/{cid}/simulacoes/completa", json={**corpo, "receitas_outras_atividades": invalido})
         assert r.status_code == 422, invalido
+
+
+def test_cpp_do_anexo_iv_com_divisao_da_folha_pela_api(logado: TestClient):
+    base = {"atividade": "servico_anexo_iv", "receita_bruta_anual": 600000, "folha_clt_anual": 120000,
+            "receitas_outras_atividades": {"comercio": 300000}}
+    cpp = lambda corpo: next(t["valor"] for r in logado.post("/api/simulacoes/previa/completa", json=corpo).json()["regimes"] if r["titulo"] == "Simples Nacional" for t in r["tributos"] if t["nome"].startswith("INSS patronal"))  # noqa: E731
+    padrao = logado.post("/api/simulacoes/previa/completa", json=base)
+    assert padrao.status_code == 200, padrao.text
+    todos_nas_duas = cpp(base)
+    so_iv = cpp({**base, "folha_so_anexo_iv_pct": 1})
+    assert round(so_iv) == 26400 and round(todos_nas_duas) == 13200
+    assert cpp({**base, "folha_so_outros_anexos_pct": 1}) == 0
+    r = logado.post("/api/simulacoes/previa/completa", json={**base, "folha_so_anexo_iv_pct": 0.7, "folha_so_outros_anexos_pct": 0.5})
+    assert r.status_code == 422

@@ -455,10 +455,22 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     IRPJ e CSLL é a soma de cada receita pela presunção da sua atividade (média ponderada na memória de cálculo); o ICMS incide sobre a receita de mercadorias (com o crédito das compras) e o
     ISS sobre a de serviços; o ISS fixo da sociedade de profissionais não muda. **Lucro Real:** ICMS e ISS por parte e, de 2027 em diante, CBS e IBS sobre as vendas sem tributos de cada parte.
     **Reforma:** a redução de IBS e CBS vale só para a receita da atividade principal. **Enquadramento:** os caminhos para o Anexo III valem para a receita do fator R, seja a principal ou uma das
-    outras; a tela mostra a receita por Anexo. **Não lido:** (a) como a CPP patronal é repartida quando há atividade do Anexo IV com outra: o Tolaris a estima **na proporção da receita do
-    Anexo IV** e avisa em todo resultado (LC 123/2006, art. 18, § 5º-C, e Res. CGSN 140/2018, arts. 25 a 27, não puderam ser relidos em 27/10/2026, quando os portais oficiais recusaram o acesso);
-    (b) a regra de apropriação das compras por atividade no ICMS (todas as compras abatem o ICMS das mercadorias); (c) a presunção de cada atividade seguiu a tabela padrão (comércio 8% e 12%,
-    indústria 8% e 12%, serviços 32%), sem as presunções especiais (transporte, serviços hospitalares nas outras atividades etc.).
+    outras; a tela mostra a receita por Anexo. **CPP do Anexo IV com outra atividade (lida em 27/10/2026 na IN RFB 2.110/2022, arts. 168 a 171, e na Res. CGSN 140/2018, art. 147):** empregados que trabalham só em atividades dos
+    Anexos I, II, III e V têm a CPP dentro do DAS; os que trabalham só no Anexo IV pagam a CPP (20% + RAT) sobre a remuneração, fora do DAS; os que atuam nas duas (exercício concomitante) pagam a CPP
+    fora do DAS na proporção da receita do Anexo IV sobre a receita total (a mesma proporção para o 13º). O Tolaris aceita a divisão da folha ("só do Anexo IV" e "só dos outros Anexos"; o resto é
+    concomitante) e, sem ela, trata todos como concomitantes e avisa. A divisão vale também para o pró-labore. **Não modelado, previsto no art. 25 da Res. CGSN 140:** transporte intermunicipal e
+    interestadual e comunicação (Anexo III sem ISS e com o ICMS do Anexo I), locação de bens móveis (Anexo III sem ISS), atividade com IPI e ISS simultâneos (Anexo II sem ICMS e com o ISS do Anexo
+    III), medicamentos manipulados, venda de veículos em consignação e agência de viagem. **Não lido:** (a) a apropriação das compras por atividade no ICMS (todas as compras abatem o ICMS das
+    mercadorias); (b) a presunção de cada atividade seguiu a tabela padrão (comércio 8% e 12%, indústria 8% e 12%, serviços 32%), sem as presunções especiais (transporte, serviços hospitalares nas
+    outras atividades etc.).
+
+83. **Pasta `legislação/` (27/10/2026):** os textos das normas que o Tolaris usa ficam no repositório, baixados por `scripts/baixar_legislacao.py` das APIs abertas do Senado (Normas.leg.br), da
+    Receita Federal (portal de normas) e da Câmara, para não depender de colar texto a cada conversa. O índice (`legislação/LEIA-ME.md`) traz a versão de cada arquivo. **Versões:** leis e decretos pela
+    compilação vigente da Câmara quando existe (com notas "Vide" de alterações posteriores, por exemplo as da LC 214, 227 e 238 na LC 123); a LC 214 vem em duas versões (a publicação original e a
+    consolidada com a LC 227, do PDF da Fazenda de Minas Gerais); a LC 227 e a LC 238 pela publicação original; atos da Receita pela visão multivigente (os anexos em PDF, como as tabelas do Simples,
+    ficam de fora). **O que a leitura corrigiu ou confirmou:** (a) o art. 12, § 2º, I, da LC 214 não tira IBS e CBS da base do IRPJ (premissa 80); (b) a LC 214 não tem regra própria para o ISS fixo; o
+    Decreto-Lei 406/1968, art. 9º, §§ 1º e 3º, é a base do ISS fixo e a LC 116, art. 8º-B, reduz o ISS de 2029 a 2032 (premissa 81); (c) a CPP do Anexo IV (premissa 82). **Limite:** a pasta é cópia de
+    apoio, não a publicação oficial; confira no Diário Oficial quando a decisão depender do texto.
 
 ## Pontos para o contador validar
 
@@ -478,7 +490,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Casos da planilha `validacao/casos_validacao.xlsx` (115 casos, incluindo ENQ*, ADV1, CONT1, HOSP1, RG* (Presumido e Real de 2027 em diante), RT5 (sociedade de advogados), MIX* (atividades mistas), SR* de 2027 a 2033, AU*, REC* e AV*).
 - [ ] **Presumido e Real a partir de 2027 (premissa 80):** conferir a receita-base de IRPJ/CSLL sem CBS e IBS, o crédito integral das compras, o tratamento do ISS fixo na transição e as reduções de 30% e 60% (quais clientes se enquadram); conferir os casos RG1 a RG4 da planilha.
 - [ ] **Sociedades uniprofissionais (premissa 81):** conferir a leitura do ISS fixo na transição (redução de 2029 a 2032 e fim em 2033), a lista de 18 profissões e os requisitos do art. 127, § 1º, II, e o caso RT5 da planilha.
-- [ ] **Atividades mistas (premissa 82):** conferir a repartição da CPP quando há Anexo IV com outra atividade (hoje, proporcional à receita), a presunção por atividade no Presumido, o ICMS sobre as mercadorias e o ISS sobre os serviços, e os casos MIX1 a MIX3 da planilha.
+- [ ] **Atividades mistas (premissa 82):** a divisão da folha entre os Anexos para a CPP do Anexo IV (IN RFB 2.110/2022), a presunção por atividade no Presumido, o ICMS sobre as mercadorias e o ISS sobre os serviços, e os casos MIX1 a MIX3 da planilha.
 - [ ] Importação: quais CFOPs excluir da receita (remessas, devoluções, transferências).
 - [ ] **Tabela de NCM monofásicos** (`src/tolaris_motor/tabelas/monofasico.json`): conferir cada prefixo e as
       exceções por subitem na tabela oficial da Receita; hoje é uma lista inicial montada sem acesso à fonte oficial.

@@ -332,6 +332,9 @@ export interface CompletaEntrada {
   receita_anexo_iii_anual?: number;
   /** Partes da receita bruta em outras atividades; cada uma segue o seu Anexo no Simples. */
   receitas_outras_atividades?: Partial<Record<Atividade, number>>;
+  /** Atividade do Anexo IV com outra: fração da folha só do Anexo IV e só dos outros Anexos (o resto atua nas duas). */
+  folha_so_anexo_iv_pct?: number;
+  folha_so_outros_anexos_pct?: number;
   folha_fator_r_anual?: number | null;
   sociedade_profissionais?: boolean;
   profissionais?: number;

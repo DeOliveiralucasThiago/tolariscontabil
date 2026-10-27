@@ -41,6 +41,8 @@ export function FormCompleta({
     variacao_cambial_anual: 0,
     receita_anexo_iii_anual: 0,
     receitas_outras_atividades: {},
+    folha_so_anexo_iv_pct: 0,
+    folha_so_outros_anexos_pct: 0,
     folha_fator_r_anual: null,
     sociedade_profissionais: false,
     profissionais: 0,
@@ -76,6 +78,9 @@ export function FormCompleta({
           Object.entries(f.receitas_outras_atividades ?? {}).filter(([k, v]) => k !== f.atividade && (v ?? 0) > 0),
         ) as CompletaEntrada["receitas_outras_atividades"];
         const somaOutras = Object.values(outras ?? {}).reduce((t, v) => t + (v ?? 0), 0) + (f.receita_anexo_iii_anual ?? 0);
+        if ((f.folha_so_anexo_iv_pct ?? 0) + (f.folha_so_outros_anexos_pct ?? 0) > 1) {
+          return setErro("As parcelas da folha por atividade somam mais de 100%.");
+        }
         if (somaOutras > f.receita_bruta_anual) {
           return setErro("A soma das receitas das outras atividades não pode passar da receita bruta anual (elas são partes dela).");
         }
@@ -346,9 +351,19 @@ export function FormCompleta({
               />
             ))}
           </div>
-          <p className="text-xs text-tinta-2">
-            Se a empresa tem atividade do Anexo IV com outra, a CPP fora do DAS é estimada na proporção da receita do Anexo IV: confirme com o contador.
-          </p>
+          {(f.atividade === "servico_anexo_iv" || (f.receitas_outras_atividades?.servico_anexo_iv ?? 0) > 0) && (
+            <div className="flex flex-col gap-3" data-testid="folha-por-atividade">
+              <p className="text-xs text-tinta-2">
+                Atividade do Anexo IV junto com outra: a CPP patronal fora do DAS incide sobre a folha de quem trabalha só no Anexo IV e, para quem atua nas
+                duas atividades, na proporção da receita do Anexo IV (IN RFB 2.110/2022, arts. 168 a 171). Divida a folha: o que sobra é de quem atua nas duas.
+                Sem informar, o Tolaris trata todos como atuando nas duas.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <CampoPercentual id="folha_so_iv" rotulo="Folha só do Anexo IV" valor={f.folha_so_anexo_iv_pct ?? 0} onChange={set("folha_so_anexo_iv_pct")} max={100} />
+                <CampoPercentual id="folha_so_outros" rotulo="Folha só dos outros Anexos" valor={f.folha_so_outros_anexos_pct ?? 0} onChange={set("folha_so_outros_anexos_pct")} max={100} />
+              </div>
+            </div>
+          )}
         </div>
       </details>
       {mostrarAnexoIII && f.atividade === "servico_fator_r" && (

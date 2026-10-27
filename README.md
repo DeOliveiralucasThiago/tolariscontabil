@@ -18,6 +18,7 @@ receitas do exterior, enquadramento do Simples (Anexo V ao III) com busca de CNA
 | `web/` | Site em Next.js (React + TypeScript + Tailwind) |
 | `e2e/` | Teste ponta a ponta no navegador (Playwright) |
 | `tests/` | Testes do motor e da API (pytest) |
+| `legislação/` | Texto das leis, resoluções e instruções normativas que o motor usa (baixado das APIs do Senado, da Receita e da Câmara por `scripts/baixar_legislacao.py`; índice em `legislação/LEIA-ME.md`) |
 | `docs/` | Premissas e pontos para o contador validar, fontes da legislação, publicação na nuvem e teste na rede local |
 | `scripts/` | Geradores: tabela de CNAEs, tabelas do Simples de 2027 a 2033, kit de teste e planilha de validação |
 | `kit-de-teste/` | Arquivos fictícios para os testadores (clientes, dados contábeis, notas XML, SPED e apoio ao Enquadramento) |
