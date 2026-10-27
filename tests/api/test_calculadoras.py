@@ -193,3 +193,18 @@ def test_comparativo_a_partir_de_2027_com_cbs_ibs_e_reducao(logado: TestClient):
     d = logado.post("/api/simulacoes/previa/expressa", json={**expressa, "ano": 2029}).json()
     assert d["ano"] == 2029 and any(t["nome"] == "IBS" for r in d["regimes"] for t in r["tributos"])
     assert logado.post("/api/simulacoes/previa/expressa", json={**expressa, "ano": 2034}).status_code == 422
+
+
+def test_reforma_de_sociedade_uniprofissional_com_iss_fixo(logado: TestClient):
+    corpo = {"receita_bruta_anual": 600000, "vende_mercadoria": False, "reducao_setorial": 0.3, "iss_fixo_anual": 3000}
+    d = logado.post("/api/calculadoras/reforma", json=corpo).json()
+    iss = {a["ano"]: next((t["valor"] for t in a["tributos"] if t["nome"] == "ISS"), 0) for a in d["anos"]}
+    assert iss[2027] == 3000 and iss[2030] == 2400 and iss[2033] == 0
+    assert any("não traz regra própria" in x for x in d["alertas"])
+    # salva no cliente e gera o PDF com o ISS fixo nas entradas
+    cid = logado.post("/api/clientes", json={"razao_social": "Advocacia Reforma", "atividade": "servico_anexo_iv"}).json()["id"]
+    sim = logado.post(f"/api/clientes/{cid}/simulacoes/reforma", json=corpo)
+    assert sim.status_code == 201, sim.text
+    pdf = logado.get(f"/api/simulacoes/{sim.json()['id']}/proposta.pdf")
+    assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
+    assert logado.post("/api/calculadoras/reforma", json={**corpo, "vende_mercadoria": True}).status_code == 422

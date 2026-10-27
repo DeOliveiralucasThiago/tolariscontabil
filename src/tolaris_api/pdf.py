@@ -343,7 +343,9 @@ def _rel_reforma(sim: Simulacao, cor: str) -> dict[str, Any]:
             ("PIS/Cofins hoje", "Não cumulativo" if e.get("pis_cofins_nao_cumulativo") else "Cumulativo"),
             ("Compras com crédito", brl(e.get("compras_anual", 0))),
             ("Outras aquisições com crédito", brl(e.get("despesas_creditaveis_anual", 0))),
-            ("ICMS" if e["vende_mercadoria"] else "ISS", pct(e["aliquota_icms"] if e["vende_mercadoria"] else e["aliquota_iss"])),
+            ("ICMS" if e["vende_mercadoria"] else "ISS",
+             f"fixo de {brl(e['iss_fixo_anual'])}/ano (sociedade uniprofissional)" if e.get("iss_fixo_anual")
+             else pct(e["aliquota_icms"] if e["vende_mercadoria"] else e["aliquota_iss"])),
             ("IPI", pct(e.get("aliquota_ipi", 0))),
             ("Redução setorial", pct(e.get("reducao_setorial", 0), 0)),
         ],

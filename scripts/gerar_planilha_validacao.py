@@ -127,6 +127,8 @@ def casos() -> list[Caso]:
         "RT3": ("Escritório contábil (redução de 30%)",
                 reforma.EntradaReforma(600_000, vende_mercadoria=False, despesas_creditaveis_anual=60_000,
                                        reducao_setorial="0.3")),
+        "RT5": ("Sociedade de advogados: 3 sócios com ISS fixo de R$ 1.000 por ano cada (valor de exemplo) e redução de 30% do art. 127",
+                reforma.EntradaReforma(600_000, vende_mercadoria=False, reducao_setorial="0.3", iss_fixo_anual=3_000)),
         "RT4": ("Indústria no Lucro Real",
                 reforma.EntradaReforma(3_000_000, vende_mercadoria=True, pis_cofins_nao_cumulativo=True,
                                        compras_anual=1_500_000, despesas_creditaveis_anual=200_000,

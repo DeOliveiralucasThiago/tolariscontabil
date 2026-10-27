@@ -7,6 +7,7 @@ import { type Atividade, type CompletaEntrada } from "@/lib/tipos";
 import { CampoMoeda, CampoPercentual } from "./CampoMoeda";
 import { ConversorDeMoeda } from "./ConversorDeMoeda";
 import { SelecaoAtividade } from "./SelecaoAtividade";
+import { SeletorProfissao } from "./SeletorProfissao";
 import { Botao, Campo, MensagemErro, Selecao } from "./ui";
 
 /** Planejamento completo: valores anuais com compras, despesas e alíquotas locais. */
@@ -50,6 +51,7 @@ export function FormCompleta({
     ...inicial,
   });
   const [erro, setErro] = useState("");
+  const [profissao, setProfissao] = useState("");
   const mercadoria = f.atividade === "comercio" || f.atividade === "industria";
   const set = <K extends keyof CompletaEntrada>(k: K) => (v: CompletaEntrada[K]) => setF((x) => ({ ...x, [k]: v }));
 
@@ -241,6 +243,19 @@ export function FormCompleta({
                   ajuda="Valor da lei do seu município; varia de cidade para cidade."
                 />
               </div>
+            )}
+            {f.sociedade_profissionais && (
+              <SeletorProfissao
+                id="profissao"
+                valor={profissao}
+                onChange={(p, reducao) => {
+                  setProfissao(p);
+                  setF((x) => ({ ...x, reducao_ibs_cbs: reducao }));
+                }}
+              />
+            )}
+            {f.sociedade_profissionais && (f.ano ?? 2026) < 2027 && (f.reducao_ibs_cbs ?? 0) > 0 && (
+              <p className="text-xs text-tinta-2">A redução de IBS e CBS só aparece a partir de 2027: escolha o ano em &ldquo;Ano de apuração e Reforma Tributária&rdquo;.</p>
             )}
             {f.sociedade_profissionais && f.atividade === "servico_anexo_iii" && (
               <label className="flex items-start gap-2 text-sm">

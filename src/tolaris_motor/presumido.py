@@ -79,7 +79,7 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
             "Receita para IRPJ e CSLL",
             f"{brl(receita)} sem PIS/Cofins, CBS e IBS (e sem o ICMS/ISS já retirado pela transição)",
             base_receita,
-            "LC 214/2025, art. 12, § 2º, I",
+            "Lei 9.249/1995, art. 15 (receita bruta); IBS e CBS fora da receita bruta é tese, sem decisão judicial",
         )
     receita_trim = base_receita / 4
     cambial_trim = max(ZERO, perfil.variacao_cambial_anual) / 4

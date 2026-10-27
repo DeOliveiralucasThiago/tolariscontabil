@@ -7,7 +7,8 @@ import { CampoMoeda, CampoPercentual } from "@/components/CampoMoeda";
 import { ResultadoReforma, ResultadoSimplesReforma } from "@/components/ResultadosFase2";
 import { SalvarNoCliente } from "@/components/SalvarNoCliente";
 import { SelecaoAtividade } from "@/components/SelecaoAtividade";
-import { Abas, Botao, Cartao, MensagemErro, Selecao, Titulo } from "@/components/ui";
+import { SeletorProfissao } from "@/components/SeletorProfissao";
+import { Abas, Botao, Campo, Cartao, MensagemErro, Selecao, Titulo } from "@/components/ui";
 import { type Atividade, type ResultadoReforma as TReforma, type ResultadoSimplesReforma as TSimples } from "@/lib/tipos";
 import { useCalculo } from "@/lib/useCalculo";
 
@@ -69,12 +70,15 @@ function Transicao({ clienteInicial }: { clienteInicial?: number }) {
     aliquota_icms: 0.18,
     aliquota_iss: 0.05,
     aliquota_ipi: 0,
+    iss_fixo_anual: 0,
     reducao_setorial: 0,
     cbs_referencia: 0.088,
     ibs_referencia: 0.177,
   });
+  const [uni, setUni] = useState({ ativa: false, profissao: "", profissionais: 0, issFixoPorProfissional: 0 });
   const set = <K extends keyof typeof f>(k: K) => (v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
   const calc = useCalculo<typeof f, TReforma>("reforma");
+  const issFixoAnual = f.vende_mercadoria || !uni.ativa ? 0 : uni.profissionais * uni.issFixoPorProfissional;
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
@@ -83,7 +87,8 @@ function Transicao({ clienteInicial }: { clienteInicial?: number }) {
         onSubmit={(e) => {
           e.preventDefault();
           if (f.receita_bruta_anual <= 0) return calc.setErro("Informe a receita bruta anual.");
-          calc.calcular(f);
+          if (!f.vende_mercadoria && uni.ativa && issFixoAnual <= 0) return calc.setErro("Informe a quantidade de profissionais e o ISS fixo anual de cada um.");
+          calc.calcular({ ...f, iss_fixo_anual: issFixoAnual });
         }}
       >
         <Cartao titulo="Empresa (Lucro Presumido ou Real)">
@@ -108,11 +113,61 @@ function Transicao({ clienteInicial }: { clienteInicial?: number }) {
                 <CampoPercentual id="ipi_ref" rotulo="IPI" valor={f.aliquota_ipi} onChange={set("aliquota_ipi")} max={50} />
               </div>
             ) : (
-              <CampoPercentual id="iss_ref" rotulo="ISS" valor={f.aliquota_iss} onChange={set("aliquota_iss")} max={5} />
+              !uni.ativa && <CampoPercentual id="iss_ref" rotulo="ISS" valor={f.aliquota_iss} onChange={set("aliquota_iss")} max={5} />
             )}
             <SelecaoReducao id="reducao_ref" valor={f.reducao_setorial} onChange={set("reducao_setorial")} />
           </div>
         </Cartao>
+        {!f.vende_mercadoria && (
+          <Cartao titulo="Sociedade uniprofissional (advocacia, contabilidade, engenharia…)">
+            <div className="flex flex-col gap-4" data-testid="bloco-uniprofissional">
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  id="uni_ativa"
+                  type="checkbox"
+                  className="mt-1"
+                  checked={uni.ativa}
+                  onChange={(e) => setUni((u) => ({ ...u, ativa: e.target.checked }))}
+                />
+                <span>
+                  Paga ISS fixo por profissional
+                  <span className="block text-xs text-tinta-2">
+                    Hoje o ISS é o valor anual de cada profissional (Decreto-Lei 406/1968, art. 9º). A lei da Reforma não traz regra própria para ele: o Tolaris o reduz
+                    de 2029 a 2032 como o ISS e o encerra em 2033, quando o decreto-lei é revogado. Depois disso, a sociedade paga IBS e CBS sobre a receita.
+                  </span>
+                </span>
+              </label>
+              {uni.ativa && (
+                <div className="grid grid-cols-2 gap-3">
+                  <Campo
+                    id="uni_profissionais"
+                    name="uni_profissionais"
+                    rotulo="Profissionais"
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={uni.profissionais ? String(uni.profissionais) : ""}
+                    onChange={(e) => setUni((u) => ({ ...u, profissionais: Math.max(0, Math.floor(Number(e.target.value) || 0)) }))}
+                  />
+                  <CampoMoeda
+                    id="uni_iss_fixo"
+                    rotulo="ISS fixo anual de cada um"
+                    valor={uni.issFixoPorProfissional}
+                    onChange={(v) => setUni((u) => ({ ...u, issFixoPorProfissional: v }))}
+                  />
+                </div>
+              )}
+              <SeletorProfissao
+                id="uni_profissao"
+                valor={uni.profissao}
+                onChange={(profissao, reducao) => {
+                  setUni((u) => ({ ...u, profissao }));
+                  set("reducao_setorial")(reducao);
+                }}
+              />
+            </div>
+          </Cartao>
+        )}
         <Cartao titulo="Aquisições que geram crédito">
           <div className="flex flex-col gap-4">
             <CampoMoeda

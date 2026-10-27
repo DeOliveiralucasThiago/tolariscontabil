@@ -341,10 +341,18 @@ class ReformaEntrada(BaseModel):
     aliquota_icms: Fracao = Field(default=Decimal("0.18"), ge=0, le=Decimal("0.35"))
     aliquota_iss: Fracao = Field(default=Decimal("0.05"), ge=0, le=Decimal("0.05"))
     aliquota_ipi: Fracao = Field(default=Decimal(0), ge=0, le=Decimal("0.5"))
+    iss_fixo_anual: Dinheiro = Field(default=Decimal(0), ge=0)
+    """ISS fixo anual total da sociedade uniprofissional (profissionais x valor de cada um); só para serviços."""
     reducao_setorial: Fracao = Field(default=Decimal(0), ge=0, le=1)
     fracao_credito_compras: Fracao = Field(default=Decimal(1), ge=0, le=1)
     cbs_referencia: Fracao | None = Field(default=None, ge=0, le=Decimal("0.2"))
     ibs_referencia: Fracao | None = Field(default=None, ge=0, le=Decimal("0.3"))
+
+    @model_validator(mode="after")
+    def _iss_fixo_so_em_servicos(self) -> "ReformaEntrada":
+        if self.iss_fixo_anual and self.vende_mercadoria:
+            raise ValueError("O ISS fixo de sociedade uniprofissional só vale para serviços")
+        return self
 
 
 class SimplesReformaEntrada(BaseModel):

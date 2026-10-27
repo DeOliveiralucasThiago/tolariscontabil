@@ -35,7 +35,7 @@ def calcular(
             "Receita para o lucro",
             f"{brl(receita)} sem PIS/Cofins, CBS e IBS (e sem o ICMS/ISS já retirado pela transição)",
             consumo.receita_base_irpj(perfil, nao_cumulativo=True),
-            "LC 214/2025, art. 12, § 2º, I",
+            "Lei 9.249/1995, art. 15 (receita bruta); IBS e CBS fora da receita bruta é tese, sem decisão judicial",
         )
     else:
         for nome, aliq, lei in (("PIS", PIS_NC, "Lei 10.637/2002"), ("Cofins", COFINS_NC, "Lei 10.833/2003")):

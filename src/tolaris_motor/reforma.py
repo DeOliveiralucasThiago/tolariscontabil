@@ -24,6 +24,12 @@ from .base import ZERO, D, Numero, Resultado, brl, pct
 PIS_COFINS_CUMULATIVO = D("0.0365")
 PIS_COFINS_NAO_CUMULATIVO = D("0.0925")
 BASE_LEGAL = "EC 132/2023 (ADCT, arts. 125 a 133); LC 214/2025"
+ALERTA_ISS_FIXO = (
+    "ISS fixo da sociedade uniprofissional na transição: a LC 214/2025 (lida na versão atualizada até a LC 227/2026) não traz regra própria para o ISS "
+    "fixo. O Tolaris aplica a ele a redução gradual do ISS de 2029 a 2032 (LC 116/2003, art. 8º-B, incluído pelo art. 508 da LC 214, cujo § 1º reduz os "
+    "benefícios na mesma proporção das alíquotas) e o zera em 2033, quando o Decreto-Lei 406/1968 é revogado (LC 214, art. 543, I). É uma leitura, não "
+    "uma regra expressa: confirme com o contador e com a lei do município."
+)
 
 
 @dataclass
@@ -40,6 +46,8 @@ class EntradaReforma:
     aliquota_icms_credito: Numero | None = None
     aliquota_iss: Numero = "0.05"
     aliquota_ipi: Numero = 0
+    iss_fixo_anual: Numero = 0
+    """ISS fixo anual total da sociedade uniprofissional (DL 406/1968, art. 9º, §§ 1º e 3º); substitui ``aliquota_iss`` nos serviços."""
     reducao_setorial: Numero = 0
     """0 (padrão), 0.3 (profissões regulamentadas), 0.6 (saúde, educação...) ou 1 (alíquota zero)."""
     fracao_credito_compras: Numero = 1
@@ -61,6 +69,11 @@ class EntradaReforma:
         )
         self.aliquota_iss = D(self.aliquota_iss)
         self.aliquota_ipi = D(self.aliquota_ipi)
+        self.iss_fixo_anual = D(self.iss_fixo_anual)
+        if self.iss_fixo_anual < 0:
+            raise ValueError("iss_fixo_anual não pode ser negativo")
+        if self.iss_fixo_anual and self.vende_mercadoria:
+            raise ValueError("O ISS fixo de sociedade uniprofissional só se aplica a serviços")
         self.reducao_setorial = D(self.reducao_setorial)
         self.fracao_credito_compras = D(self.fracao_credito_compras)
         if self.tributos_embutidos_compras is None:
@@ -93,8 +106,15 @@ class AnoReforma:
 def base_venda_sem_tributos(e: EntradaReforma) -> Decimal:
     """Receita bruta menos PIS/Cofins e ICMS/ISS embutidos (alíquotas nominais)."""
     pis_cofins = PIS_COFINS_NAO_CUMULATIVO if e.pis_cofins_nao_cumulativo else PIS_COFINS_CUMULATIVO
-    local = e.aliquota_icms if e.vende_mercadoria else e.aliquota_iss
+    local = e.aliquota_icms if e.vende_mercadoria else aliquota_iss_efetiva(e)
     return e.receita_bruta_anual * (1 - pis_cofins - local)
+
+
+def aliquota_iss_efetiva(e: EntradaReforma) -> Decimal:
+    """ISS como fração da receita: a alíquota do município ou, no ISS fixo, o valor fixo dividido pela receita."""
+    if e.iss_fixo_anual and e.receita_bruta_anual > 0:
+        return e.iss_fixo_anual / e.receita_bruta_anual
+    return e.aliquota_iss
 
 
 def base_credito_sem_tributos(e: EntradaReforma) -> Decimal:
@@ -151,12 +171,19 @@ def _ano(e: EntradaReforma, ano: int, base_venda: Decimal) -> AnoReforma:
                 liquido * f_local,
                 "EC 132/2023, ADCT art. 128",
             )
+        elif e.iss_fixo_anual:
+            res.tributos["ISS"] = res.passo(
+                "ISS fixo da sociedade uniprofissional",
+                f"{brl(e.iss_fixo_anual)} x {pct(f_local, 0)} (redução gradual do ISS)",
+                e.iss_fixo_anual * f_local,
+                "DL 406/1968, art. 9º; LC 116/2003, art. 8º-B (LC 214/2025, art. 508); EC 132/2023, ADCT art. 128",
+            )
         else:
             res.tributos["ISS"] = res.passo(
                 "ISS",
                 f"{brl(receita)} x {pct(e.aliquota_iss)} x {pct(f_local, 0)} da alíquota",
                 receita * e.aliquota_iss * f_local,
-                "EC 132/2023, ADCT art. 128",
+                "EC 132/2023, ADCT art. 128; LC 116/2003, art. 8º-B",
             )
 
     novos = aliquotas_novas(e, cfg)
@@ -188,6 +215,8 @@ def simular(e: EntradaReforma) -> list[AnoReforma]:
             f"referência CBS {pct(e.cbs_referencia, 1)} e IBS {pct(e.ibs_referencia, 1)} (estimativas — "
             "a de 2027 depende de TCU/Senado); Imposto Seletivo não incluído."
         )
+        if e.iss_fixo_anual:
+            anos[0].resultado.alerta(ALERTA_ISS_FIXO)
     return anos
 
 

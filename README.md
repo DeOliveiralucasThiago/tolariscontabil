@@ -244,6 +244,10 @@ Simples usam a tabela da data. Veja o item 75 de `docs/premissas.md`.
 Lucro Real calculam CBS e IBS (não cumulativos, com crédito) no lugar de PIS e Cofins, com ICMS e ISS em transição até 2033 e uma redução opcional de 30% ou 60% nas
 alíquotas de IBS e CBS (`src/tolaris_motor/consumo.py`). As alíquotas de referência são estimativas. Veja o item 80 de `docs/premissas.md`.
 
+**Sociedades uniprofissionais na Reforma:** a calculadora da Reforma e o planejamento completo aceitam o ISS fixo por profissional, que cai de 2029 a 2032 e termina em 2033, e o seletor de
+profissão da redução de IBS e CBS (30% para as 18 profissões do art. 127 da LC 214/2025, 60% para serviços de saúde do Anexo III). O Tolaris lista os requisitos do art. 127, § 1º, II, mas não
+decide o enquadramento. Veja o item 81 de `docs/premissas.md`.
+
 **Legislação lida:** LC 123/2006 (texto completo), LC 214/2025 (pontos do Simples), LC 227/2026 e LC 238/2026 (MEI de R$ 110 mil em 2027 e
 R$ 140 mil em 2028) e as Resoluções CGSN 190, 191, 194 e 195 (itens 71 a 75 de `docs/premissas.md`). `docs/fontes-da-legislacao.md` diz onde
 cada texto foi lido e o que cada fonte entrega. O feed de mudanças (`tabelas/mudancas.json`) marca o que ainda não entrou no cálculo
@@ -293,7 +297,7 @@ print(reforma.tabela_resumo(anos))
 
 ## Validação com contador
 
-`validacao/casos_validacao.xlsx` traz 102 casos (empresas, PF, sócios, reforma, Simples na reforma de 2027 a 2033, enquadramento do Anexo V ao III, sociedade de profissionais com ISS fixo, serviços hospitalares, autônomo × CNPJ, recuperação de tributos e avisos de fator R) com os
+`validacao/casos_validacao.xlsx` traz 106 casos (empresas, PF, sócios, reforma, Simples na reforma de 2027 a 2033, enquadramento do Anexo V ao III, sociedade de profissionais com ISS fixo, serviços hospitalares, autônomo × CNPJ, recuperação de tributos e avisos de fator R) com os
 valores do motor, a memória de cálculo e os alertas. O contador preenche a coluna
 amarela "Valor correto" e a planilha mostra a diferença. Para regenerar:
 

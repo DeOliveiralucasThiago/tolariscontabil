@@ -142,3 +142,9 @@ O fluxo do Presumido e do Real a partir de 2027 (CBS e IBS no lugar de PIS e Cof
 ```bash
 node fluxo_regimes_2027.mjs saida
 ```
+
+O fluxo das sociedades uniprofissionais na Reforma (ISS fixo na transição, profissão do art. 127 e planejamento de 2027) também não usa rede externa:
+
+```bash
+node fluxo_uniprofissional.mjs saida
+```

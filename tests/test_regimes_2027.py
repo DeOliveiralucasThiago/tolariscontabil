@@ -109,7 +109,7 @@ def test_sociedade_de_profissionais_sem_reducao_recebe_aviso():
         perfil(2027, sociedade_profissionais=True, profissionais=2, iss_fixo_por_profissional_anual=1500)
     )
     assert any("Sem redução de alíquota" in a for a in r.alertas)
-    assert any("ISS fixo da sociedade de profissionais foi tratado" in a for a in r.alertas)
+    assert any("não traz regra própria para o ISS" in a for a in r.alertas)
     assert r.tributos["ISS"] == D(3000)
 
 

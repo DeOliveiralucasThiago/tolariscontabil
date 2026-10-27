@@ -394,7 +394,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
       sociedade empresária com as exigências da Anvisa; o aviso diz isso. Consultório e clínica sem esse enquadramento usam 32%. A citação da
       norma e o alcance do conceito de "serviços hospitalares" precisam de conferência.
     - **Não lido:** o Decreto-Lei 406/1968 e as leis municipais; a LC 214/2025 só nos pontos do Simples. Como a advocacia e as sociedades
-      uniprofissionais ficam na Reforma (redução de 30% de IBS e CBS, ISS fixo durante a transição) não foi modelado além da opção de redução de 30%.
+      uniprofissionais ficam na Reforma (redução de 30% de IBS e CBS, ISS fixo durante a transição); isso foi modelado no item 81.
 
 78. **Escritório de serviços contábeis com ISS fixo no Simples (Res. CGSN 140/2018 lida no portal da Receita; 27/10/2026):** o escritório de serviços contábeis
     é tributado pelo Anexo III e, quando a lei do município prevê, **recolhe o ISS em valor fixo diretamente ao Município**, e o DAS é calculado
@@ -420,15 +420,33 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     compras e despesas**, pelo mesmo modelo do simulador da Reforma (`src/tolaris_motor/consumo.py` reaproveita `reforma.py`): as vendas sem tributos ficam
     iguais, CBS e IBS incidem "por fora" sobre elas e o crédito usa as aquisições informadas sem os tributos antigos. As alíquotas de referência são as estimativas da
     tabela `reforma_tributaria.json` (CBS 8,8% e IBS 17,7%, a de 2027 depende de TCU e Senado); em 2027 a CBS é a de referência menos 0,1 ponto e o IBS é 0,1%.
-    **ICMS e ISS** seguem o ADCT, art. 128: 100% até 2028, 90%, 80%, 70% e 60% de 2029 a 2032 e extintos em 2033 (inclusive o ISS fixo da sociedade de profissionais, que
-    é tratado como ISS comum, o que pode divergir da regra própria da LC 214/2025; item pendente). **Base do IRPJ e da CSLL:** receita sem PIS/Cofins, CBS e IBS e sem o
-    ICMS/ISS que a transição já retirou do preço; no Lucro Real, a CBS e o IBS não são despesa e o crédito aproveitado reduz o custo. Fundamento: a LC 214/2025,
-    art. 12, § 2º, I, afasta IBS e CBS da base de outros tributos (lido em artigos de apoio, não no texto da lei); para o Presumido não há decisão judicial. **Redução de
+    **ICMS e ISS** seguem o ADCT, art. 128: 100% até 2028, 90%, 80%, 70% e 60% de 2029 a 2032 e extintos em 2033 (inclusive o ISS fixo da sociedade de profissionais; veja o item 81). **Base do IRPJ e da CSLL:** receita sem PIS/Cofins, CBS e IBS e sem o
+    ICMS/ISS que a transição já retirou do preço; no Lucro Real, a CBS e o IBS não são despesa e o crédito aproveitado reduz o custo. Fundamento: é uma **tese** de que IBS
+    e CBS não compõem a receita bruta, como o IPI destacado; **corrigido em 27/10/2026:** o art. 12, § 2º, I, da LC 214/2025 (lido no texto atualizado até a LC 227) tira o IBS e a CBS só da base
+    do próprio IBS e da CBS, não de outros tributos, e não há decisão judicial sobre o Lucro Presumido. O art. 12, § 2º, V, tira ICMS, ISS e PIS/Cofins da base do IBS e da CBS de 2026 a
+    2032, o que combina com o modelo de vendas sem tributos. **Redução de
     alíquota:** campo opcional (0%, 30% profissões regulamentadas, 60% saúde, 100%); o Tolaris **não** aplica sozinho, porque o rol é taxativo (por exemplo, medicina humana
     não está na lista de 30%) e a classificação depende do serviço; ele só avisa quando a sociedade de profissionais ou o serviço hospitalar não informou redução.
     **Exportação:** CBS e IBS só sobre a receita interna; o saldo credor de créditos fica como alerta. **Limites:** sem Imposto Seletivo, sem crédito parcial de
     fornecedores do Simples (crédito integral das compras informadas), sem cashback nem split payment, e a premissa de preço (vendas sem tributos mantidas) é do simulador da
     Reforma; o resultado é uma estimativa para comparar regimes, não a apuração. Casos RG1 a RG4 na planilha de validação.
+
+81. **Reforma para sociedades uniprofissionais (LC 214/2025 lida no texto atualizado até a LC 227/2026, publicado pela Fazenda de Minas Gerais; 27/10/2026):**
+    - **Redução de 30% (art. 127):** vale para 18 profissões regulamentadas (administradores, advogados, arquitetos e urbanistas, assistentes sociais, bibliotecários, biólogos,
+      contabilistas, economistas, economistas domésticos, profissionais de educação física, engenheiros e agrônomos, estatísticos, médicos veterinários e zootecnistas, museólogos,
+      químicos, profissionais de relações públicas, técnicos industriais e técnicos agrícolas). O rol é fechado: **medicina humana, odontologia e psicologia não estão nele.** Para a
+      pessoa jurídica, o § 1º, II, exige cumulativamente: (a) sócios com habilitação ligada ao objeto e sob conselho profissional; (b) nenhum sócio pessoa jurídica; (c) não ser sócia de
+      outra pessoa jurídica; (d) nenhuma atividade diversa das habilitações dos sócios; (e) serviços da atividade-fim prestados diretamente pelos sócios, com auxiliares. O § 2º diz que a
+      natureza jurídica, a união de profissionais de profissões listadas e a forma de distribuição de lucros não impedem. O § 3º exclui a educação física prestada por pessoa jurídica.
+    - **Serviços de saúde (art. 130, Anexo III):** redução de 60%, só para os serviços do anexo (classificação NBS), o que alcança a medicina humana quando o serviço consta do anexo.
+    - **ISS fixo na transição:** a LC 214 **não** traz regra própria para o ISS fixo. A LC 116/2003, art. 8º-B (incluído pelo art. 508 da LC 214), reduz as alíquotas do ISS em 10%, 20%, 30%
+      e 40% em 2029 a 2032 e, no § 1º, reduz os benefícios e incentivos na mesma proporção; o Decreto-Lei 406/1968, que tem o ISS fixo, é revogado em 1º/01/2033 (art. 543, I). O Tolaris
+      aplica ao ISS fixo a redução de 2029 a 2032 (leitura por analogia ao § 1º) e o zera em 2033, e avisa disso em todo resultado. Depois de 2033 a sociedade paga IBS e CBS sobre a
+      receita (com a redução de 30% se couber), o que aumenta muito a carga (exemplo: 3 sócios, R$ 600 mil, ISS fixo de R$ 3.000: carga de 4,3% em 2026 e 18,6% em 2033).
+    - **No Tolaris:** a calculadora da Reforma tem o bloco "Sociedade uniprofissional" (profissionais x ISS fixo, profissão do art. 127 e seus requisitos); o planejamento completo tem o mesmo seletor
+      de profissão, que preenche a redução de 30% (ou de 60% para saúde). **A redução nunca é aplicada sem o contador escolher a profissão**, e o enquadramento nos requisitos do art. 127 é dele.
+    - **Limites:** valor do ISS fixo e regras locais vêm da lei do município (não lida); o Simples (inclusive o escritório contábil com ISS fixo) usa a partilha do ano e não tem esta transição; o
+      tratamento do ISS fixo de 2029 a 2032 é interpretação, e o Comitê Gestor ou o regulamento podem dispor diferente.
 
 ## Pontos para o contador validar
 
@@ -445,8 +463,9 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] Percentuais de partilha do DAS (tabela em `simples_nacional.json`, campo `partilha`), inclusive as vigências de 2027 a 2033.
 - [ ] Modelo da decisão do Simples na Reforma (preços ajustados para o mesmo custo líquido do cliente).
 - [ ] Carnê-leão: livro-caixa × desconto simplificado (o motor usa o maior dos dois).
-- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (102 casos, incluindo ENQ*, ADV1, CONT1, HOSP1, RG* (Presumido e Real de 2027 em diante), SR* de 2027 a 2033, AU*, REC* e AV*).
+- [ ] Casos da planilha `validacao/casos_validacao.xlsx` (106 casos, incluindo ENQ*, ADV1, CONT1, HOSP1, RG* (Presumido e Real de 2027 em diante), RT5 (sociedade de advogados), SR* de 2027 a 2033, AU*, REC* e AV*).
 - [ ] **Presumido e Real a partir de 2027 (premissa 80):** conferir a receita-base de IRPJ/CSLL sem CBS e IBS, o crédito integral das compras, o tratamento do ISS fixo na transição e as reduções de 30% e 60% (quais clientes se enquadram); conferir os casos RG1 a RG4 da planilha.
+- [ ] **Sociedades uniprofissionais (premissa 81):** conferir a leitura do ISS fixo na transição (redução de 2029 a 2032 e fim em 2033), a lista de 18 profissões e os requisitos do art. 127, § 1º, II, e o caso RT5 da planilha.
 - [ ] Importação: quais CFOPs excluir da receita (remessas, devoluções, transferências).
 - [ ] **Tabela de NCM monofásicos** (`src/tolaris_motor/tabelas/monofasico.json`): conferir cada prefixo e as
       exceções por subitem na tabela oficial da Receita; hoje é uma lista inicial montada sem acesso à fonte oficial.

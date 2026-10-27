@@ -119,7 +119,7 @@ def test_planilha_de_validacao_vai_no_kit(kit: Path):
     wb = openpyxl.load_workbook(kit / "6-casos-de-validacao.xlsx")
     codigos = {linha[0] for linha in wb["Casos"].iter_rows(min_row=2, values_only=True)}
     assert {f"ENQ{i}" for i in range(1, 7)} <= codigos and {"SR4-2028", "SR6-2032"} <= codigos
-    assert "102 casos" in wb["Instruções"]["A2"].value
+    assert "106 casos" in wb["Instruções"]["A2"].value
     leia_me = (kit / "LEIA-ME.txt").read_text(encoding="utf-8")
     assert "6-casos-de-validacao.xlsx" in leia_me and "ENQ1" in leia_me
 

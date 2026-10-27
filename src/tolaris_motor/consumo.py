@@ -40,7 +40,8 @@ def _entrada(perfil: PerfilEmpresa, nao_cumulativo: bool) -> reforma.EntradaRefo
         despesas_creditaveis_anual=perfil.despesas_creditaveis_anual,
         aliquota_icms=perfil.aliquota_icms,
         aliquota_icms_credito=perfil.aliquota_icms_credito,
-        aliquota_iss=_aliquota_local_efetiva(perfil),
+        aliquota_iss=perfil.aliquota_iss,
+        iss_fixo_anual=perfil.iss_fixo_anual,
         reducao_setorial=perfil.reducao_ibs_cbs,
         anos=[perfil.ano],
     )
@@ -98,21 +99,21 @@ def alertas(perfil: PerfilEmpresa, res: Resultado) -> None:
         "crédito menor) e Imposto Seletivo fora. ICMS e ISS seguem a transição do ADCT, art. 128."
     )
     res.alerta(
-        "IRPJ e CSLL calculados sobre a receita sem PIS/Cofins, CBS e IBS (a LC 214/2025, art. 12, § 2º, I, afasta IBS e CBS da base de "
-        "outros tributos, mas não há decisão judicial sobre o Lucro Presumido). Confirme com o contador."
+        "IRPJ e CSLL calculados sobre a receita sem PIS/Cofins, CBS e IBS. É uma tese (IBS e CBS não compõem a receita bruta, como o IPI "
+        "destacado): a LC 214/2025, art. 12, § 2º, I, tira o IBS e a CBS só da base do próprio IBS e da CBS, e não há decisão judicial sobre o "
+        "Lucro Presumido. Confirme com o contador."
     )
     if perfil.reducao_ibs_cbs:
         res.alerta(
-            f"Redução de {pct(perfil.reducao_ibs_cbs, 0)} nas alíquotas de IBS e CBS aplicada (LC 214/2025, arts. 127 e seguintes); "
-            "vale só para as profissões e serviços listados na lei. Confirme o enquadramento."
+            f"Redução de {pct(perfil.reducao_ibs_cbs, 0)} nas alíquotas de IBS e CBS aplicada (LC 214/2025, art. 127 para as 18 profissões "
+            "regulamentadas, art. 128 e seguintes para os demais setores); vale só para o que a lei lista e, para sociedades, se cumpridos "
+            "os requisitos do art. 127, § 1º, II. Confirme o enquadramento."
         )
     elif perfil.sociedade_profissionais or perfil.servicos_hospitalares:
         res.alerta(
-            "Sem redução de alíquota de IBS e CBS: profissões regulamentadas listadas na lei têm 30% de redução e serviços de saúde "
-            "listados, 60% (LC 214/2025). Se o cliente se enquadra, informe a redução para não superestimar o custo."
+            "Sem redução de alíquota de IBS e CBS: as 18 profissões regulamentadas do art. 127 da LC 214/2025 (por exemplo advogados, contabilistas, "
+            "engenheiros e administradores) têm 30% e os serviços de saúde do Anexo III (art. 130), 60%. Medicina humana não está na lista de 30%. Se o "
+            "cliente se enquadra, informe a redução para não superestimar o custo."
         )
     if perfil.sociedade_profissionais:
-        res.alerta(
-            "O ISS fixo da sociedade de profissionais foi tratado como o ISS comum na transição (cai de 2029 a 2033 e some em 2033); "
-            "a LC 214/2025 pode ter regra própria para essas sociedades. Confirme com o contador."
-        )
+        res.alerta(reforma.ALERTA_ISS_FIXO)
