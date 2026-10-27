@@ -36,6 +36,7 @@ ROTULOS = {
     "escritorio_atualizado": "Alterou os dados do escritório",
     "cliente_criado": "Cadastrou um cliente",
     "cliente_excluido": "Excluiu um cliente",
+    "impedimentos_atualizados": "Atualizou a conferência dos impedimentos do Simples de um cliente",
     "cliente_exportado": "Exportou os dados de um cliente",
     "clientes_importados": "Importou clientes por planilha",
     "documentos_importados": "Importou documentos fiscais",

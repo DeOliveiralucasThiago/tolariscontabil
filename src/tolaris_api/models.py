@@ -77,6 +77,8 @@ class Cliente(Base):
     natureza_juridica: Mapped[str | None] = mapped_column(String(150))
     """Descrição da natureza jurídica do CNPJ (ex.: "Sociedade Empresária Limitada"); decide, por exemplo, se o Simples Nacional é permitido."""
     natureza_juridica_codigo: Mapped[str | None] = mapped_column(String(4))
+    impedimentos_simples: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    """Conferência dos impedimentos do Simples: ``{"respostas": {chave: true|false|null}, "receita_outras_empresas": número|null}``."""
     municipio: Mapped[str | None] = mapped_column(String(120))
     uf: Mapped[str | None] = mapped_column(String(2))
     atividade: Mapped[str | None] = mapped_column(String(30))

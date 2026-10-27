@@ -251,6 +251,7 @@ export interface Cliente {
   natureza_juridica: string | null;
   natureza_juridica_codigo: string | null;
   natureza_info: NaturezaInfo | null;
+  impedimentos: { impedem: number; dependem: number; pendentes: number; total: number } | null;
   municipio: string | null;
   uf: string | null;
   atividade: Atividade | null;
@@ -277,7 +278,7 @@ export interface NaturezaInfo {
   base_legal: string;
 }
 
-export type ClienteForm = Partial<Omit<Cliente, "id" | "criado_em" | "atualizado_em" | "total_simulacoes" | "ultima_simulacao_em" | "cadastro_pendente" | "natureza_info">> & {
+export type ClienteForm = Partial<Omit<Cliente, "id" | "criado_em" | "atualizado_em" | "total_simulacoes" | "ultima_simulacao_em" | "cadastro_pendente" | "natureza_info" | "impedimentos">> & {
   razao_social: string;
 };
 
@@ -302,6 +303,27 @@ export interface DadosCnpj {
   natureza_juridica_codigo: string | null;
   natureza_info: NaturezaInfo | null;
   cnaes_classificados: CnaesDoCliente;
+}
+
+export interface PerguntaImpedimento {
+  chave: string;
+  texto: string;
+  base_legal: string;
+  ajuda: string;
+  depende_da_receita_global: boolean;
+  resposta: boolean | null;
+}
+
+export interface ConferenciaImpedimentos {
+  grupos: { grupo: string; perguntas: PerguntaImpedimento[] }[];
+  receita_outras_empresas: number | null;
+  achados: { chave: string; status: "impede" | "depende_da_receita"; texto: string; base_legal: string }[];
+  automaticos: { origem: string; texto: string; base_legal: string }[];
+  pendentes: number;
+  total: number;
+  limite_receita_global: number;
+  /** ``null`` enquanto há perguntas por responder ou impedimentos que dependem da receita. */
+  simples_possivel: boolean | null;
 }
 
 export interface PassoMemoria {

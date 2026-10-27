@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Any
 
 from tolaris_motor import avisos, natureza_juridica
 
+from .impedimentos_servico import achados_do_cliente
 from .models import Cliente
 
 ACAO = {"tipo": "cliente", "rotulo": "Abrir dados cadastrais", "aba": "dados"}
@@ -33,6 +35,37 @@ def aviso_natureza(cliente: Cliente) -> tuple[avisos.Aviso, dict[str, Any]] | No
                 f"{n.explicacao} Se o cliente recolhe o DAS, confirme o cadastro e a opção na Receita; pode haver exclusão do Simples e cobrança dos tributos "
                 "pelo regime normal.",
                 None, natureza_juridica.BASE_LEGAL_ELEGIBILIDADE,
+            ),
+            ACAO,
+        )
+    return None
+
+
+def aviso_impedimentos(cliente: Cliente, receita: Decimal | None) -> tuple[avisos.Aviso, dict[str, Any]] | None:
+    """Crítico quando o cliente está no Simples e a conferência confirmou um impedimento; atenção quando ele depende da receita das outras empresas."""
+    if cliente.regime_atual != "simples":
+        return None
+    achados = achados_do_cliente(cliente, receita)
+    impedem = [a for a in achados if a.status == "impede"]
+    dependem = [a for a in achados if a.status == "depende_da_receita"]
+    if impedem:
+        lista = "; ".join(f"{a.texto} ({a.base_legal})" for a in impedem)
+        return (
+            avisos.Aviso(
+                "impedimento_simples", "critico", f"Impedimento ao Simples Nacional confirmado no cadastro ({len(impedem)})",
+                f"{lista}. Quem incorre em impedimento é excluído do Simples com efeitos a partir do mês seguinte (LC 123/2006, art. 3º, § 6º): "
+                "confirme a situação e, se for o caso, a comunicação de exclusão e a mudança de regime.",
+                None, "LC 123/2006, art. 3º, §§ 4º e 6º, e art. 17",
+            ),
+            ACAO,
+        )
+    if dependem:
+        return (
+            avisos.Aviso(
+                "impedimento_simples_receita", "atencao", "Impedimento ao Simples que depende da receita das outras empresas dos sócios",
+                "; ".join(f"{a.texto} ({a.base_legal})" for a in dependem)
+                + f". O impedimento só vale se a receita bruta global passar de R$ 4.800.000: informe a receita das outras empresas dos sócios na conferência.",
+                None, "LC 123/2006, art. 3º, § 4º, III a V",
             ),
             ACAO,
         )

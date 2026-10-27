@@ -135,6 +135,8 @@ class PerfilEmpresa:
     folha_so_outros_anexos_pct: Numero = 0
     """Parcela da folha de quem trabalha só nas atividades dos Anexos I, II, III ou V (CPP já dentro do DAS). O resto da folha é de quem atua nas
     duas (exercício concomitante), com a CPP fora do DAS na proporção da receita do Anexo IV."""
+    impedimentos_simples: list = field(default_factory=list)
+    """Impedimentos ao Simples confirmados na conferência do cadastro (``impedimentos.textos_que_impedem``); qualquer um torna o Simples inaplicável."""
     natureza_juridica: str | None = None
     """Descrição da natureza jurídica do cadastro (ex.: "Sociedade Empresária Limitada"); veja ``natureza_juridica.classificar``."""
     reducao_ibs_cbs: Numero = 0
@@ -207,6 +209,7 @@ class PerfilEmpresa:
             raise ValueError("As parcelas da folha por atividade devem estar entre 0 e 1")
         if self.folha_so_anexo_iv_pct + self.folha_so_outros_anexos_pct > 1:
             raise ValueError("A soma das parcelas da folha por atividade não pode passar de 100%")
+        self.impedimentos_simples = [str(t) for t in self.impedimentos_simples]
         self.reducao_ibs_cbs = D(self.reducao_ibs_cbs)
         if self.reducao_ibs_cbs not in (D(0), D("0.3"), D("0.6"), D(1)):
             raise ValueError("reducao_ibs_cbs deve ser 0, 0.3, 0.6 ou 1")

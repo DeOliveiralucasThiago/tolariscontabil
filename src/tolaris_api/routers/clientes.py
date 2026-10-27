@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
@@ -8,8 +10,9 @@ from sqlalchemy.orm import Session
 from ..auditoria import auditar
 from ..cnpj import classificar_cnaes, info_natureza
 from ..db import get_db
+from ..impedimentos_servico import conferencia, resumo as resumo_impedimentos
 from ..models import Cliente, RegistroAuditoria, Simulacao, Usuario
-from ..schemas import ClienteAtualizar, ClienteEntrada, ClienteSaida
+from ..schemas import ClienteAtualizar, ClienteEntrada, ClienteSaida, ImpedimentosEntrada
 from ..seguranca import somente_admin, usuario_atual
 
 router = APIRouter(prefix="/clientes", tags=["clientes"])
@@ -29,6 +32,7 @@ def cliente_saida(db: Session, cliente: Cliente) -> ClienteSaida:
     saida = ClienteSaida.model_validate(cliente)
     saida.total_simulacoes, saida.ultima_simulacao_em = total, ultima
     saida.natureza_info = info_natureza(cliente.natureza_juridica, cliente.natureza_juridica_codigo)
+    saida.impedimentos = resumo_impedimentos(cliente)
     return saida
 
 
@@ -59,6 +63,30 @@ def listar(
 def cnaes_do_cliente(cliente_id: int, usuario: Usuario = Depends(usuario_atual), db: Session = Depends(get_db)) -> dict:
     c = obter_cliente(db, usuario, cliente_id)
     return classificar_cnaes(c.cnae_principal, c.cnae_descricao, c.cnaes_secundarios, c.atividade)
+
+
+@router.get("/{cliente_id}/impedimentos")
+def impedimentos_do_cliente(
+    cliente_id: int, receita: Decimal | None = Query(default=None, ge=0), usuario: Usuario = Depends(usuario_atual), db: Session = Depends(get_db)
+) -> dict:
+    """Conferência dos impedimentos do Simples (art. 3º, § 4º, e art. 17 da LC 123): perguntas, respostas, achados e verificações automáticas."""
+    return conferencia(obter_cliente(db, usuario, cliente_id), receita)
+
+
+@router.put("/{cliente_id}/impedimentos")
+def salvar_impedimentos(
+    cliente_id: int, dados: ImpedimentosEntrada, receita: Decimal | None = Query(default=None, ge=0),
+    usuario: Usuario = Depends(usuario_atual), db: Session = Depends(get_db),
+) -> dict:
+    cliente = obter_cliente(db, usuario, cliente_id)
+    cliente.impedimentos_simples = {
+        "respostas": dados.respostas,
+        "receita_outras_empresas": float(dados.receita_outras_empresas) if dados.receita_outras_empresas is not None else None,
+    }
+    auditar(db, usuario.escritorio_id, "impedimentos_atualizados", usuario, entidade="cliente", entidade_id=cliente.id,
+            detalhe={"respondidas": sum(1 for v in dados.respostas.values() if v is not None)})
+    db.commit()
+    return conferencia(cliente, receita)
 
 
 @router.post("", response_model=ClienteSaida, status_code=status.HTTP_201_CREATED)

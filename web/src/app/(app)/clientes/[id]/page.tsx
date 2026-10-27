@@ -13,6 +13,7 @@ import { PortalCliente } from "@/components/PortalCliente";
 import { PropostaHonorarios } from "@/components/PropostaHonorarios";
 import { useSessao } from "@/components/Sessao";
 import { ResultadoSimulacao } from "@/components/ResultadoSimulacao";
+import { ConferenciaImpedimentos } from "@/components/ConferenciaImpedimentos";
 import { Abas, Botao, BotaoLink, Cartao, Etiqueta, MensagemErro, Titulo } from "@/components/ui";
 import { api, ErroApi, urlProposta } from "@/lib/api";
 import { brl, dataHora, mascaraCnpj } from "@/lib/formato";
@@ -189,6 +190,9 @@ function DetalheClienteConteudo() {
             {cliente.atividade && <span>· {ROTULO_ATIVIDADE[cliente.atividade]}</span>}
             {cliente.regime_atual && <span>· hoje no {ROTULO_REGIME[cliente.regime_atual]}</span>}
             {cliente.municipio && <span>· {cliente.municipio}/{cliente.uf}</span>}
+            {cliente.impedimentos && cliente.impedimentos.impedem > 0 && (
+              <span data-testid="impedimento-do-cliente">· <Etiqueta tom="perigo">{cliente.impedimentos.impedem} impedimento(s) ao Simples</Etiqueta></span>
+            )}
             {cliente.natureza_info && (
               <span data-testid="natureza-do-cliente">
                 · {cliente.natureza_info.rotulo}
@@ -361,6 +365,7 @@ function DetalheClienteConteudo() {
               }}
             />
           </Cartao>
+          <ConferenciaImpedimentos clienteId={cliente.id} onSalvo={() => api<Cliente>(`/clientes/${cliente.id}`).then(setCliente)} />
           {sessao.usuario.papel === "admin" && (
             <Cartao titulo="Privacidade e dados (LGPD)">
               <div className="flex flex-col gap-3 text-sm">

@@ -176,6 +176,26 @@ class ClienteSaida(ClienteBase):
     ultima_simulacao_em: datetime | None = None
     natureza_info: dict[str, Any] | None = None
     """Natureza jurídica classificada (tipo, rótulo, Simples permitido?, MEI?, explicação)."""
+    impedimentos: dict[str, int] | None = None
+    """Conferência dos impedimentos do Simples: quantos impedem, dependem da receita e faltam responder."""
+
+
+class ImpedimentosEntrada(BaseModel):
+    """Respostas da conferência dos impedimentos do Simples (``true`` confirma o impedimento, ``false`` descarta, ``null`` ainda não respondida)."""
+
+    respostas: dict[str, bool | None] = Field(default_factory=dict)
+    receita_outras_empresas: Dinheiro | None = Field(default=None, ge=0)
+    """Receita bruta das outras empresas dos sócios: só entra nos impedimentos que dependem da receita global (limite de R$ 4,8 milhões)."""
+
+    @field_validator("respostas")
+    @classmethod
+    def _chaves_validas(cls, v: dict[str, bool | None]) -> dict[str, bool | None]:
+        from tolaris_motor import impedimentos
+
+        desconhecidas = sorted(set(v) - set(impedimentos.POR_CHAVE))
+        if desconhecidas:
+            raise ValueError(f"Pergunta desconhecida: {', '.join(desconhecidas)}")
+        return v
 
 
 # --- CNPJ -------------------------------------------------------------------
@@ -213,6 +233,8 @@ class ExpressaEntrada(BaseModel):
     """Parte do faturamento mensal que vem do exterior (exportação), em reais."""
     natureza_juridica: str | None = Field(default=None, max_length=150)
     """Natureza jurídica do cadastro; impede o Simples quando a lei veda (sociedade por ações, cooperativa)."""
+    impedimentos_simples: list[str] = Field(default_factory=list, max_length=40)
+    """Impedimentos ao Simples confirmados na conferência do cadastro (textos); qualquer um torna o Simples inaplicável."""
     ano: int = Field(default=2026, ge=2025, le=2033)
     reducao_ibs_cbs: Decimal = Field(default=Decimal(0), ge=0, le=1)
     """Redução de IBS e CBS a partir de 2027: 0, 0,3 (profissões regulamentadas), 0,6 (saúde) ou 1."""
@@ -266,6 +288,8 @@ class CompletaEntrada(BaseModel):
     """Presunção reduzida de serviços hospitalares no Lucro Presumido (IRPJ 8% e CSLL 12%)."""
     natureza_juridica: str | None = Field(default=None, max_length=150)
     """Natureza jurídica do cadastro; impede o Simples quando a lei veda (sociedade por ações, cooperativa)."""
+    impedimentos_simples: list[str] = Field(default_factory=list, max_length=40)
+    """Impedimentos ao Simples confirmados na conferência do cadastro (textos); qualquer um torna o Simples inaplicável."""
     ano: int = Field(default=2026, ge=2025, le=2033)
     reducao_ibs_cbs: Decimal = Field(default=Decimal(0), ge=0, le=1)
     """Redução de IBS e CBS a partir de 2027: 0, 0,3 (profissões regulamentadas), 0,6 (saúde) ou 1."""

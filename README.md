@@ -257,6 +257,8 @@ sua presunção no Presumido, e o ICMS e o ISS incidem sobre mercadorias e servi
 
 **Segregações do art. 25 (Res. CGSN 140/2018):** além das atividades comuns, o Tolaris calcula locação de bens móveis, indústria com IPI e ISS, transporte intermunicipal de cargas e de passageiros e comunicação, com a partilha do Anexo ajustada no Simples (tira o ISS ou o ICMS que não é devido e põe o outro) e ICMS ou ISS próprios nos demais regimes. A conta do ajuste é a leitura do Tolaris do texto da lei e vem com aviso (item 85 de `docs/premissas.md`).
 
+**Impedimentos do Simples:** a aba "Dados cadastrais" do cliente traz as 23 perguntas dos impedimentos da LC 123 (art. 3º, § 4º, e art. 17). Cada "sim" torna o Simples inaplicável nas simulações do cliente e gera aviso crítico na Central; os impedimentos que dependem da receita global (R$ 4,8 milhões) usam a receita das outras empresas dos sócios (item 86 de `docs/premissas.md`).
+
 **Legislação lida:** LC 123/2006 (texto completo), LC 214/2025 (pontos do Simples), LC 227/2026 e LC 238/2026 (MEI de R$ 110 mil em 2027 e
 R$ 140 mil em 2028) e as Resoluções CGSN 190, 191, 194 e 195 (itens 71 a 75 de `docs/premissas.md`). `docs/fontes-da-legislacao.md` diz onde
 cada texto foi lido e o que cada fonte entrega. O feed de mudanças (`tabelas/mudancas.json`) marca o que ainda não entrou no cálculo

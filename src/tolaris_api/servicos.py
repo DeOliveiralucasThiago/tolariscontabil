@@ -84,6 +84,7 @@ def executar_expressa(e: ExpressaEntrada) -> dict[str, Any]:
         receita_exterior_mensal=e.receita_exterior_mensal,
         reducao_ibs_cbs=e.reducao_ibs_cbs,
         natureza_juridica=e.natureza_juridica,
+        impedimentos_simples=e.impedimentos_simples,
     )
     return serializar_comparativo(c)
 

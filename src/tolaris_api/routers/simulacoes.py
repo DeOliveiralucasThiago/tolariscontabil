@@ -19,6 +19,9 @@ from ..schemas import (
     SimulacaoSaida,
 )
 from ..seguranca import usuario_atual
+from decimal import Decimal
+
+from ..impedimentos_servico import impedimentos_para_simulacao
 from ..servicos import VERSAO_MOTOR, executar_completa, executar_expressa, titulo_simulacao
 from .clientes import cliente_saida, obter_cliente
 
@@ -41,10 +44,18 @@ def _salvar(db: Session, usuario: Usuario, cliente: Cliente, tipo: str, entrada:
 
 
 def _com_natureza(dados: Any, cliente: Cliente) -> Any:
-    """Leva a natureza jurídica do cadastro para a simulação quando a tela não a informou."""
+    """Leva a natureza jurídica e os impedimentos do Simples do cadastro para a simulação quando a tela não os informou."""
+    mudancas: dict[str, Any] = {}
     if dados.natureza_juridica is None and cliente.natureza_juridica:
-        return dados.model_copy(update={"natureza_juridica": cliente.natureza_juridica})
-    return dados
+        mudancas["natureza_juridica"] = cliente.natureza_juridica
+    if not dados.impedimentos_simples:
+        receita = getattr(dados, "receita_bruta_anual", None)
+        if receita is None:
+            receita = dados.faturamento_mensal * 12
+        impedimentos = impedimentos_para_simulacao(cliente, Decimal(receita))
+        if impedimentos:
+            mudancas["impedimentos_simples"] = impedimentos
+    return dados.model_copy(update=mudancas) if mudancas else dados
 
 
 def _obter_simulacao(db: Session, usuario: Usuario, simulacao_id: int) -> Simulacao:

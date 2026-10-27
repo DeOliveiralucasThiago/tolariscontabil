@@ -23,7 +23,7 @@ from .acompanhamento_servico import analisar as analisar_acompanhamento
 from .acompanhamento_servico import carregar_series, curta, perfil_da_simulacao
 from .honorarios import FUSO
 from .models import Cliente, DocumentoFiscal, ItemFiscal, PortalCliente, Simulacao
-from .natureza_aviso import aviso_natureza
+from .natureza_aviso import aviso_impedimentos, aviso_natureza
 from .recuperacao_servico import analisar
 from .regime_regular import aviso_regime_regular
 from .servicos import diferencas, pode_recalcular, recalcular_resultado
@@ -135,7 +135,13 @@ def reunir(db: Session, escritorio_id: int, hoje: date | None = None) -> dict[st
         natureza = aviso_natureza(c)  # natureza jurídica x regime (S.A. e cooperativa no Simples, MEI que não é empresário individual)
         if natureza is not None:
             lista.append(_item(natureza[0], c, natureza[1]))
-        sem_simples = impede_simples(classificar_natureza(c.natureza_juridica, c.natureza_juridica_codigo))  # fator R e regime regular são do Simples
+        receita_planejada = perfil.receita_bruta_anual if perfil is not None else None
+        impedimento = aviso_impedimentos(c, receita_planejada)  # conferência dos impedimentos do art. 3º, § 4º, e art. 17
+        if impedimento is not None:
+            lista.append(_item(impedimento[0], c, impedimento[1]))
+        sem_simples = impede_simples(classificar_natureza(c.natureza_juridica, c.natureza_juridica_codigo)) or (
+            impedimento is not None and impedimento[0].gravidade == "critico"
+        )  # fator R e regime regular são do Simples
 
         # Fator R (só quem está no Simples)
         if perfil is not None and c.regime_atual == "simples" and not sem_simples:

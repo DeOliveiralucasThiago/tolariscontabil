@@ -58,6 +58,7 @@ def simulacao_expressa(
     receita_exterior_mensal: Numero = 0,
     reducao_ibs_cbs: Numero = 0,
     natureza_juridica: str | None = None,
+    impedimentos_simples: list[str] | None = None,
 ) -> Comparativo:
     """Previsão rápida com faturamento, folha e atividade.
 
@@ -82,6 +83,7 @@ def simulacao_expressa(
         receita_exterior_anual=D(receita_exterior_mensal) * 12,
         reducao_ibs_cbs=reducao_ibs_cbs,
         natureza_juridica=natureza_juridica,
+        impedimentos_simples=impedimentos_simples or [],
         ano=ano,
     )
     comp = comparar(perfil)

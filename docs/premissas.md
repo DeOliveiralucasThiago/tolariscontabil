@@ -495,6 +495,19 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
     venda de veículos em consignação (comissão no Anexo III, contrato estimatório no Anexo I: § 16) e agência de viagem (receita é a comissão quando só intermedia: § 15): informe a receita já com essa regra
     e escolha a atividade.
 
+86. **Conferência dos impedimentos do Simples (27/10/2026; LC 123/2006, art. 3º, § 4º, e art. 17, lidos na pasta `legislação/`):** na aba "Dados cadastrais" do cliente há 23 perguntas, em três grupos (sócios e
+    participações, atividade, regularidade), que o contador responde "sim", "não" ou deixa em branco. **Cada "sim" é um impedimento** e torna o Simples inaplicável nas simulações do cliente (a simulação leva os
+    textos para o cálculo, e a tela pode simular sem eles), gera aviso crítico na Central de Avisos para o cliente que está no Simples (fundamento: exclusão com efeitos a partir do mês seguinte, art. 3º, § 6º) e
+    uma etiqueta no cabeçalho do cliente. **Perguntas:** sócio pessoa jurídica (§ 4º, I); participação no capital de outra pessoa jurídica (VII, com as exceções do § 5º); sócio domiciliado no exterior (art. 17,
+    II); capital público (art. 17, III); sócio empresário ou de outra empresa do Simples/MEI (§ 4º, III); sócio com mais de 10% de outra empresa (IV); sócio administrador de outra empresa (V); pessoalidade,
+    subordinação e habitualidade (XI); cisão nos últimos 5 anos (IX); filial no Brasil de empresa estrangeira (II) e filial no exterior (XII); atividade financeira (VIII); factoring (art. 17, I); transporte
+    intermunicipal de passageiros (VI); energia elétrica (VII); automóveis e motos (VIII); importação de combustíveis (IX); cigarros, armas e bebidas (X); cessão de mão de obra (XII); loteamento e
+    incorporação (XIV); locação de imóveis próprios (XV); débito exigível (V); irregularidade cadastral (XVI). **Receita global:** os incisos III, IV e V do § 4º só valem quando a receita bruta global (a da
+    empresa mais a das outras empresas dos sócios) passa de R$ 4,8 milhões; o contador informa a receita das outras empresas e, sem ela, o impedimento fica "depende da receita" (aviso de atenção, sem
+    bloquear o cálculo). Conferidas à parte, sem pergunta: a natureza jurídica (sociedade por ações e cooperativa, premissa 84) e os CNAEs vedados do cadastro (Anexos VI e VII da Res. CGSN 140; os ambíguos só
+    aparecem como alerta). **Limites:** as respostas são do contador, que é quem sabe; o Tolaris não verifica nada em cadastros externos; o art. 17, § 1º (as vedações de atividade não valem para quem exerce só
+    as atividades dos §§ 5º-B a 5º-E do art. 18) aparece nas dicas das perguntas, mas a decisão é do contador; a lista é a da lei de hoje, sem os impedimentos das leis estaduais e municipais de adesão.
+
 ## Pontos para o contador validar
 
 - [ ] Composição da folha do fator R (salários + pró-labore + FGTS; incluir 13º, férias? A lei, art. 18, § 24, soma também a CPP efetivamente recolhida).
@@ -516,6 +529,7 @@ pelo contador. Atualize-o junto com as tabelas em `src/tolaris_motor/tabelas/`.
 - [ ] **Atividades mistas (premissa 82):** a divisão da folha entre os Anexos para a CPP do Anexo IV (IN RFB 2.110/2022), a presunção por atividade no Presumido, o ICMS sobre as mercadorias e o ISS sobre os serviços, e os casos MIX1 a MIX3 da planilha.
 - [ ] **Natureza jurídica (premissa 84):** conferir a classificação por descrição (por exemplo, "Sociedade Simples Pura" e "Sociedade Unipessoal de Advogados" como sociedade simples) e os clientes do Simples que o Tolaris marcar como vedados.
 - [ ] **Segregações do art. 25 (premissa 85):** a conta da alíquota aplicada (alíquota efetiva x repartição, com o tributo retirado e o acrescentado) contra o PGDAS-D, e os casos SEG1 a SEG4 da planilha.
+- [ ] **Impedimentos do Simples (premissa 86):** conferir as 23 perguntas e a regra da receita global (R$ 4,8 milhões) com os clientes do escritório que já foram excluídos ou ameaçados de exclusão do Simples.
 - [ ] Importação: quais CFOPs excluir da receita (remessas, devoluções, transferências).
 - [ ] **Tabela de NCM monofásicos** (`src/tolaris_motor/tabelas/monofasico.json`): conferir cada prefixo e as
       exceções por subitem na tabela oficial da Receita; hoje é uma lista inicial montada sem acesso à fonte oficial.

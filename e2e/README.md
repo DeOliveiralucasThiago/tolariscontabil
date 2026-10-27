@@ -166,3 +166,9 @@ O fluxo das segregações do art. 25 (locação de bens móveis, transporte inte
 ```bash
 node fluxo_segregacoes.mjs saida
 ```
+
+O fluxo da conferência dos impedimentos do Simples (respostas, receita global, simulação e Central de Avisos) não usa rede externa:
+
+```bash
+node fluxo_impedimentos.mjs saida
+```

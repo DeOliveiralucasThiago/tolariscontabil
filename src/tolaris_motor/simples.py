@@ -243,6 +243,12 @@ def calcular(perfil: PerfilEmpresa) -> Resultado:
         res.alerta(f"Natureza jurídica \"{natureza.rotulo}\": {natureza.explicacao} ({natureza_juridica.BASE_LEGAL_ELEGIBILIDADE}).")
         return res
 
+    if perfil.impedimentos_simples:
+        res.aplicavel = False
+        for texto in perfil.impedimentos_simples:
+            res.alerta(f"Impedimento ao Simples Nacional confirmado no cadastro: {texto}.")
+        return res
+
     # Mercado interno e exportação têm, cada um, o limite de R$ 4,8 mi (Res. CGSN 140/2018, art. 2º, §1º)
     if interna > limite or exterior > limite:
         res.aplicavel = False
